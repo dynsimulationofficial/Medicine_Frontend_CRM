@@ -423,7 +423,7 @@ const LeadSchema = Yup.object({
   
       // ✅ Perform the upload
       const res = await fetch(
-        "https://manageleadcrmbackend-prod.dynsimulation.com/api/v1/managelead/leads/bulk/upload",
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8016/api/v1/managelead"}/leads/bulk/upload`,
         {
           method: "POST",
           body: fd,

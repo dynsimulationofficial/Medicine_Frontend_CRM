@@ -7,7 +7,7 @@ import axios, {
 import StorageManager from "./StorageManager";
 
 const defaultBaseURL =
-  "https://manageleadcrmbackend-prod.dynsimulation.com/api/v1/managelead";
+  "http://localhost:8016/api/v1/managelead";
 
 class AxiosProvider {
   private static instance: AxiosInstance = axios.create({
