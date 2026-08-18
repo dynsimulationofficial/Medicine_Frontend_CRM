@@ -12,30 +12,13 @@ import { useRouter } from "next/navigation";
 import { HiChevronDoubleLeft, HiChevronDoubleRight } from "react-icons/hi";
 import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
 
-export interface AgentAssignedLead {
-  id: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  lead_status: string;
-  payment_status: string;
-  delivery_status: string;
-  medicine_name: string;
-  order_amount: string;
-  currency: string;
-  address?: {
-    country?: string;
-    state?: string;
-  };
-}
-
 export default function AgentDashboardPage() {
   const isChecking = useAuthRedirect();
   const router = useRouter();
   const storage = new StorageManager();
   const userRole = storage.getUserRole();
 
-  const [assignedLeads, setAssignedLeads] = useState<AgentAssignedLead[]>([]);
+  const [assignedLeads, setAssignedLeads] = useState<any[]>([]);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalLeads, setTotalLeads] = useState<number>(0);

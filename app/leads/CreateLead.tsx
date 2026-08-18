@@ -9,37 +9,7 @@ interface CreateLeadProps {
   closeFlyOut: () => void;
 }
 
-interface LeadSource {
-  id: string;
-  name: string;
-  created_at: string;
-  updated_at: string;
-}
 
-interface Agent {
-  id: string;
-  name: string;
-  email: string;
-  mobile_number: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface Consolidation {
-  id: string;
-  name: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-interface DebtConsolidation {
-  id: string;
-  name: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string | null;
-}
 
 export const countryOptions = [
   { id: "India", name: "India 🇮🇳" },
@@ -185,10 +155,10 @@ const currencyOptions = [
 ];
 
 const CreateLead: React.FC<CreateLeadProps> = ({ closeFlyOut }) => {
-  const [leadSourceData, setLeadSourceData] = useState<LeadSource[]>([]);
-  const [agentList, setAgentList] = useState<Agent[]>([]);
-  const [debtConsolidation, setDebtConsolidation] = useState<DebtConsolidation[]>([]);
-  const [consolidationData, setConsolidationData] = useState<Consolidation[]>([]);
+  const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
+  const [agentList, setAgentList] = useState<any[]>([]);
+  const [debtConsolidation, setDebtConsolidation] = useState<any[]>([]);
+  const [consolidationData, setConsolidationData] = useState<any[]>([]);
 
   useEffect(() => {
     const leadSource = async () => {
@@ -317,7 +287,7 @@ const CreateLead: React.FC<CreateLeadProps> = ({ closeFlyOut }) => {
               <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Full Name */}
                 <div>
-                  <p className="text-white mb-2">Full Name</p>
+                  <p className="text-white mb-2">Full Name <span className="text-red-500">*</span></p>
                   <Field
                     type="text"
                     name="full_name"
@@ -329,7 +299,7 @@ const CreateLead: React.FC<CreateLeadProps> = ({ closeFlyOut }) => {
 
                 {/* Email */}
                 <div>
-                  <p className="text-white mb-2">Email</p>
+                  <p className="text-white mb-2">Email <span className="text-red-500">*</span></p>
                   <Field
                     type="email"
                     name="email"
@@ -341,7 +311,7 @@ const CreateLead: React.FC<CreateLeadProps> = ({ closeFlyOut }) => {
 
                 {/* Phone */}
                 <div>
-                  <p className="text-white mb-2">Phone</p>
+                  <p className="text-white mb-2">Phone <span className="text-red-500">*</span></p>
                   <Field
                     type="text"
                     name="phone"

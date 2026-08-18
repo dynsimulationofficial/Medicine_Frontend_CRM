@@ -16,22 +16,13 @@ import { HiChevronDoubleLeft, HiChevronDoubleRight } from "react-icons/hi";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 
-export interface AgentStats {
-  agent_id: string;
-  agent_name: string;
-  done_today: number;
-  overdue: number;
-  pending_today: number;
-  total_today: number;
-}
-
 export default function AdminDashboardPage() {
   const isChecking = useAuthRedirect();
   const router = useRouter();
   const storage = new StorageManager();
   const userRole = storage.getUserRole();
 
-  const [agentStats, setAgentStats] = useState<AgentStats[]>([]);
+  const [agentStats, setAgentStats] = useState<any[]>([]);
   const [totalLeads, setTotalLeads] = useState<number>(0);
   const [unassignedLeads, setUnassignedLeads] = useState<number>(0);
   const [assignedLeads, setAssignedLeads] = useState<number>(0);

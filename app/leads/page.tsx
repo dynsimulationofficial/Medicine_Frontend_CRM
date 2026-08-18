@@ -47,159 +47,13 @@ import "react-datepicker/dist/react-datepicker.css";
 
 const axiosProvider = new AxiosProvider();
 
-interface FilterData {
-  name: string;
-  mobilephonenumber?: string;
-  birthdate?: string;
-}
 
-// ALL LEADS
-interface Lead {
-  id: string;
-  lead_number: string;
-  owner_name: string | null;
-  account_manager: string | null;
-  best_time_to_call: string | null;
-
-  lead_source: string | null;
-  debt_consolidation_status: string | null;
-  consolidated_credit_status: string | null;
-  whatsapp_status: string | null;
-  loan_application_status: string | null;
-
-  full_name: string;
-  email: string | null;
-  phone: string | null;
-
-  address: {
-    line1: string | null;
-    line2: string | null;
-    city: string | null;
-    state: string | null;
-    postal_code: string | null;
-    country: string | null;
-  };
-
-  lead_score: number | null;
-  lead_quality: string | null;
-
-  agent: {
-    id: string;
-    name: string;
-  } | null;
-
-  created_at: string;
-  updated_at: string;
-
-}
-
-const leadStatusOptions = [
-  { id: "New", name: "New" },
-  { id: "In Progress", name: "In Progress" },
-  { id: "Follow-up", name: "Follow-up" },
-  { id: "Converted", name: "Converted" },
-  { id: "Lost", name: "Lost" },
-];
-
-const paymentStatusOptions = [
-  { id: "Pending", name: "Pending" },
-  { id: "Paid", name: "Paid" },
-  { id: "Failed", name: "Failed" },
-  { id: "Refunded", name: "Refunded" },
-];
-
-const deliveryStatusOptions = [
-  { id: "Pending", name: "Pending" },
-  { id: "Dispatched", name: "Dispatched" },
-  { id: "Delivered", name: "Delivered" },
-  { id: "Failed", name: "Failed" },
-];
-
-const currencyOptions = [
-  { id: "USD", name: "USD ($)" },
-  { id: "INR", name: "INR (₹)" },
-  { id: "GBP", name: "GBP (£)" },
-];
-type CreateLead = {
-  id: string;
-  full_name?: string;
-  email: string;
-  phone: string;
-  address_line1: string;
-  address_line2?: string;
-  city: string;
-  state: string;
-  postal_code: string;
-  country: string;
-  lead_score?: number;
-  lead_quality?: string;
-  best_time_to_call?: string;
-  lead_source_id: string;
-  debt_consolidation_status_id: string;
-  whatsapp_number: string;
-  consolidated_credit_status_id?: string;
-};
-export interface LeadSource {
-  id: string;
-  name: string;
-  created_at: string; // ISO datetime
-  updated_at: string; // ISO datetime
-}
-export interface Consolidation {
-  id: string;
-  name: string;
-  is_active: boolean;
-  created_at: string; // ISO datetime
-  updated_at: string; // ISO datetime
-}
-export interface DebtConsolidation {
-  id: string;
-  name: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string | null;
-}
-interface Agent {
-  id: string;
-  name: string;
-  email: string;
-  mobile_number: string;
-  created_at: string; // ISO date string
-  updated_at: string; // ISO date string
-}
-type FilterValues = {
-  first_name: string;
-  last_name: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  lead_number: string;
-  city: string;
-  state: string;
-  agent_id: string;
-  lead_source_id: string;
-  debt_consolidation_status_id: string;
-  consolidated_credit_status_id: string;
-};
-type LeadSourceOption = { id: string | number; name: string };
-    type FilterFormValues = {
-      full_name: string;
-      email: string;
-      phone: string;
-      lead_number: string;
-      city: string;
-      state: string;
-      agent_ids: string[];
-      lead_source_id: string;
-      debt_consolidation_status_id: string;
-      consolidated_credit_status_id: string;
-    };
     
 export default function Home() {
    const checking = useAuthRedirect();
   const [isFlyoutOpen, setFlyoutOpen] = useState<boolean>(false);
-  const [notAssignData, setNotAssignData] = useState<Lead[]>([]);
-  const [assignLeadData, setAssignLeadData] = useState<Lead[]>([]);
+  const [notAssignData, setNotAssignData] = useState<any[]>([]);
+  const [assignLeadData, setAssignLeadData] = useState<any[]>([]);
   
   // PAGINATION USE STATES
     const [globalPageSize] = useState<number>(10)
@@ -224,30 +78,30 @@ export default function Home() {
   const [pageSize] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalPagesFilter, setTotalPagesFilter] = useState<number>(1);
-  const [filterData, setFilterData] = useState<FilterData>({
+  const [filterData, setFilterData] = useState<any>({
     name: "",
     mobilephonenumber: "",
   });
   const [isError, setIsError] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [appliedFilters, setAppliedFilters] = useState<string[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<Lead | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
   const [isCreateLeads, setIsCreateLeads] = useState<boolean>(false);
   const [isBulkLeads, setIsBulkLeads] = useState<boolean>(false);
   const [isFilter, setIsFilter] = useState<boolean>(false);
   const [isEditLead, setIsEditLead] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [selectedData, setSelectedData] = useState<Lead | null>(null);
+  const [selectedData, setSelectedData] = useState<any | null>(null);
   const [hitApi, setHitApi] = useState<boolean>(false);
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const [editLeadData, setEditLeadData] = useState(null);
-  const [leadSourceData, setLeadSourceData] = useState<LeadSource[]>([]);
-  const [consolidationData, setConsolidationData] = useState<Consolidation[]>([]);
-  const [debtConsolidation, setDebtConsolidation] = useState<DebtConsolidation[]>([]);
+  const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
+  const [consolidationData, setConsolidationData] = useState<any[]>([]);
+  const [debtConsolidation, setDebtConsolidation] = useState<any[]>([]);
   const [isAgent, setIsAgent] = useState<boolean>(false);
   const [isAgentBulkCheckAssign, setIsagentBulkCehckAssign] = useState<boolean>(false)
-  const [agentList, setAgentList] = useState<Agent[]>([]);
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [agentList, setAgentList] = useState<any[]>([]);
+  const [selectedAgent, setSelectedAgent] = useState<any | null>(null);
   const [currentLeadId, setCurrentLeadId] = useState<string>(null);
   const [leadSourceDisplay, setLeadSourceDisplay] = useState<any>(null);
   const [agentDisplay, setAgentDisplay] = useState<any>(null);
@@ -334,7 +188,7 @@ useEffect(() => {
 
   const router = useRouter();
 
-  const handleClick = async (customer: Lead) => {
+  const handleClick = async (customer: any) => {
     router.push(`/leadsdetails?id=${customer.id}`);
   };
 
@@ -387,7 +241,7 @@ const LeadSchema = Yup.object({
 });
 
 
-  const handleCreateLead = async (value: CreateLead) => {
+  const handleCreateLead = async (value: any) => {
     setIsLoading(true);
     setFlyoutOpen(false);
 
@@ -402,7 +256,7 @@ const LeadSchema = Yup.object({
     }
   };
   
-  const handleUpdateLead = async (value: CreateLead) => {
+  const handleUpdateLead = async (value: any) => {
     setIsLoading(true);
     setFlyoutOpen(false);
 
@@ -563,7 +417,7 @@ const exportLeadsFlyout = () => {
   setIsExport(true);
 };
 
-const editLead = (editData: CreateLead) => {
+const editLead = (editData: any) => {
   setEditLeadData(editData);
   setFlyoutOpen(true);
   setIsEditLead(true);
@@ -683,7 +537,7 @@ const test = (id: string) => {
 const fetchAgent = async () => {
   try {
     const res = await AxiosProvider.get("/allagents");
-    const list: Agent[] = res.data?.data?.data ?? [];
+    const list: any[] = res.data?.data?.data ?? [];
     setAgentList(list);
   } catch (error: any) {
     console.error("Error fetching agents:", error);
@@ -742,7 +596,7 @@ const deleteUserLead = async (leadId: string) => {
   });
 };
 
-const toCleanFilter = (raw: FilterValues) => {
+const toCleanFilter = (raw: any) => {
   const out: Record<string, any> = {};
   Object.entries(raw).forEach(([k, v]) => {
     const t = String(v ?? "").trim();
@@ -3276,7 +3130,7 @@ return (
               }}
               validationSchema={LeadSchema}
               onSubmit={(values, { setSubmitting, resetForm }) => {
-                const value: CreateLead = {
+                const value: any = {
                   id: values.id,
                   full_name: values.full_name,
                   email: values.email,
@@ -3679,8 +3533,8 @@ return (
                   value={selectedAgent}
                   onChange={(selected: any) => setSelectedAgent(selected)}
                   options={agentList}
-                  getOptionLabel={(opt: Agent) => opt.name}
-                  getOptionValue={(opt: Agent) => String(opt.id)}
+                  getOptionLabel={(opt: any) => opt.name}
+                  getOptionValue={(opt: any) => String(opt.id)}
                   placeholder="Select Agent"
                   isClearable
                   classNames={{
@@ -3746,8 +3600,8 @@ return (
                   value={selectedAgent} // show selected agent
                   onChange={(selected: any) => setSelectedAgent(selected)}
                   options={agentList} // list from API
-                  getOptionLabel={(opt: Agent) => opt.name} // show agent name
-                  getOptionValue={(opt: Agent) => String(opt.id)} // use id as value
+                  getOptionLabel={(opt: any) => opt.name} // show agent name
+                  getOptionValue={(opt: any) => String(opt.id)} // use id as value
                   placeholder="Select Agent"
                   isClearable
                   classNames={{
