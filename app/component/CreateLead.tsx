@@ -48,20 +48,25 @@ interface DebtConsolidation {
    const [debtConsolidation, setDebtConsolidation] = useState<DebtConsolidation[]>([]);
  const [consolidationData, setConsolidationData] = useState<Consolidation[]>([]);
   // console.log("FFFFFFFFFFFFFFFFFFFFFFFF",debtConsolidation)
- const provinceOptions = [
-  { id: "alberta", name: "Alberta" },
-  { id: "british-columbia", name: "British Columbia" },
-  { id: "manitoba", name: "Manitoba" },
-  { id: "new-brunswick", name: "New Brunswick" },
-  { id: "newfoundland-labrador", name: "Newfoundland and Labrador" },
-  { id: "northwest-territories", name: "Northwest Territories" },
-  { id: "nova-scotia", name: "Nova Scotia" },
-  { id: "nunavut", name: "Nunavut" },
-  { id: "ontario", name: "Ontario" },
-  { id: "prince-edward-island", name: "Prince Edward Island" },
-  { id: "quebec", name: "Quebec" },
-  { id: "saskatchewan", name: "Saskatchewan" },
-  { id: "yukon", name: "Yukon" },
+ const stateOptions = [
+  // India
+  { id: "delhi", name: "Delhi (India)" },
+  { id: "maharashtra", name: "Maharashtra (India)" },
+  { id: "karnataka", name: "Karnataka (India)" },
+  { id: "tamil-nadu", name: "Tamil Nadu (India)" },
+  { id: "gujarat", name: "Gujarat (India)" },
+  { id: "punjab", name: "Punjab (India)" },
+  // USA
+  { id: "california", name: "California (USA)" },
+  { id: "new-york", name: "New York (USA)" },
+  { id: "texas", name: "Texas (USA)" },
+  { id: "florida", name: "Florida (USA)" },
+  { id: "illinois", name: "Illinois (USA)" },
+  // UK
+  { id: "london", name: "London (UK)" },
+  { id: "england", name: "England (UK)" },
+  { id: "scotland", name: "Scotland (UK)" },
+  { id: "wales", name: "Wales (UK)" },
 ];
 
 // USE EFFECT FOR FETCHING DROP DOWN DATA
@@ -252,17 +257,17 @@ const handleCreateLead = async(payload: any)=>{
           />
         </div>
 
-        {/* Province */}
+        {/* State / Region */}
         <div>
-          <p className="text-white mb-2">Province</p>
+          <p className="text-white mb-2">State / Region</p>
           <Select
-            value={provinceOptions.find((opt) => opt.id === values.state) || null}
+            value={stateOptions.find((opt) => opt.id === values.state) || null}
             onChange={(selected: any) => setFieldValue("state", selected ? selected.id : "")}
             onBlur={() => setFieldTouched("state", true)}
             getOptionLabel={(opt: any) => opt.name}
             getOptionValue={(opt: any) => opt.id}
-            options={provinceOptions}
-            placeholder="Select Province"
+            options={stateOptions}
+            placeholder="Select State / Region"
             isClearable
                 classNames={{
                 control: ({ isFocused }: any) =>
@@ -384,9 +389,9 @@ const handleCreateLead = async(payload: any)=>{
           />
         </div>
 
-        {/* Debt Consolidation Status */}
+        {/* Order Pipeline Status */}
         <div>
-          <p className="text-white mb-2">Debt Consolidation Status</p>
+          <p className="text-white mb-2">Order Pipeline Status</p>
           <Select
             value={debtConsolidation.find((opt) => opt.id === values.debt_consolidation_status_id) || null}
             onChange={(selected: any) =>
@@ -396,7 +401,7 @@ const handleCreateLead = async(payload: any)=>{
             getOptionLabel={(opt: any) => opt.name}
             getOptionValue={(opt: any) => opt.id}
             options={debtConsolidation}
-            placeholder="Select Debt Consolidation Status"
+            placeholder="Select Order Status"
             isClearable
                 classNames={{
                 control: ({ isFocused }: any) =>
@@ -419,9 +424,9 @@ const handleCreateLead = async(payload: any)=>{
           />
         </div>
 
-        {/* Consolidated Credit Status */}
+        {/* Order Category */}
         <div>
-          <p className="text-white mb-2">Consolidated Credit Status</p>
+          <p className="text-white mb-2">Order Category</p>
           <Select
             value={consolidationData.find((opt) => opt.id === values.consolidated_credit_status_id) || null}
             onChange={(selected: any) =>
@@ -431,7 +436,7 @@ const handleCreateLead = async(payload: any)=>{
             getOptionLabel={(opt: any) => opt.name}
             getOptionValue={(opt: any) => opt.id}
             options={consolidationData}
-            placeholder="Select Consolidated Credit Status"
+            placeholder="Select Order Category"
             isClearable
                 classNames={{
                 control: ({ isFocused }: any) =>
