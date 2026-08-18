@@ -10,7 +10,6 @@ import { FaUserEdit } from "react-icons/fa";
 import { MdOutlineDashboard, MdOutlinePeopleOutline } from "react-icons/md";
 import { storage } from "firebase-admin";
 import StorageManager from "../../provider/StorageManager";
-import { HiTemplate } from "react-icons/hi";
 
 const axiosProvider = new AxiosProvider();
 
@@ -116,26 +115,7 @@ const LeftSideBar: React.FC = () => {
             </div>
           </Link>
         )}
-        {userRole === "Admin" && (
-          <Link href="/template">
-            <div
-              className={`mb-4 flex items-center gap-4 group px-3 py-2 rounded-[4px] relative cursor-pointer text-base leading-normal font-medium text-white hover:bg-primary-600 active:bg-primary-700   ${
-                pathname === "/template"
-                  ? "bg-primary-600 text-white  hover:!text-white"
-                  : ""
-              }`}
-            >
-              <div className="h-6 w-6 shrink-0 grid place-items-center">
-                <HiTemplate className="h-5 w-5" />
-              </div>
-              {isExpanded && (
-                <p className="whitespace-nowrap leading-none">
-                  Template Management
-                </p>
-              )}
-            </div>
-          </Link>
-        )}
+
         {userRole === "Admin" && (
           <Link href="/user-activity">
             <div

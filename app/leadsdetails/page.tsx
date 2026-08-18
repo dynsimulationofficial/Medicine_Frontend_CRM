@@ -76,7 +76,6 @@ import { useRouter } from "next/navigation";
 
 
 
-type TemplateOption = { id: string; title: string };
 interface Lead {
   id: string;
   lead_number: string;
@@ -302,31 +301,7 @@ export default function Home() {
   const [lead, setLead] = useState<Lead | null>(null);
   const [isTotpPopupOpen, setIsTotpPopupOpen] = useState<boolean>(false);
   const [data, setData] = useState<any>(null);
-  const [isSendTemplate, setIsSendtTemplate] = useState<boolean>(false);
-  const [templateData, setTemplateData] = useState<string[]>([]);
-  console.log("++++++++++++++++++++++++++++++++++++++++", templateData);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await AxiosProvider.post("/gettemplate");
 
-        // const result = response.data.data.data;
-        //   console.log("888888888888888888", response.data.data);
-        setTemplateData(response.data.data);
-        // console.log(
-        //   "888888888888888888",
-        //   response.data.data.pagination.totalPages
-        // );
-        //  setTotalPages(response.data.data.pagination.totalPages);
-      } catch (error: any) {
-        console.error("Error fetching data:", error);
-      } finally {
-        closeFlyOut();
-      }
-    };
-
-    fetchData();
-  }, [hitApi]); // 👈 depends on `page`
   // 2️⃣ run useEffect when id changes in URL
   useEffect(() => {
     const newId = searchParams.get("id") ?? undefined;
@@ -645,10 +620,6 @@ const INITIAL_VALUES = {
 
   // END ETCH AGENT CONSILATION AND DEBT CONSILATION and lead source
 
-  const openSendTemplateFlyout = () => {
-    setFlyoutFilterOpen(true);
-    setIsSendtTemplate(true);
-  };
   const openActivityFlyout = () => {
     setFlyoutFilterOpen(true);
     setActivity(true);
@@ -701,7 +672,6 @@ const INITIAL_VALUES = {
     setIsDocumentFilter(false);
     setIsDocumentEdit(false);
     setIsTaskEdit(false);
-    setIsSendtTemplate(false);
   };
   const handleChangepagination = (newPage: number) => {
     if (newPage > 0 && newPage <= totalPages) {
@@ -1324,17 +1294,6 @@ const INITIAL_VALUES = {
                 {/* Buttons */}
 
                 <div className="flex justify-end items-center mb-6 w-full gap-2">
-                  <div className="flex justify-center items-center gap-4 ">
-                    <div
-                      className="flex gap-2 py-3 px-0 justify-center rounded-[4px] border border-[#E7E7E7] cursor-pointer bg-primary-600 items-center hover:bg-primary-700 active:bg-primary-800 group min-w-40"
-                      onClick={() => openSendTemplateFlyout()}
-                    >
-                      <LuSquareActivity className="w-5 h-5 text-white group-hover:text-white" />
-                      <p className="text-white text-base font-medium group-hover:text-white">
-                        Send Email
-                      </p>
-                    </div>
-                  </div>
                   <div className="flex justify-center items-center gap-4 ">
                     <div
                       className="flex gap-2 py-3 px-0 justify-center rounded-[4px] border border-[#E7E7E7] cursor-pointer bg-primary-600 items-center hover:bg-primary-700 active:bg-primary-800 group min-w-32"
@@ -4432,147 +4391,7 @@ const INITIAL_VALUES = {
             </div>
           </>
         )}
-        {isSendTemplate && (
-          <div className="w-full min-h-auto  text-white p-4">
-            {/* Flyout Header */}
-            <div className="flex justify-between mb-4">
-              <p className="text-primary-600 text-[26px] font-bold leading-9">
-                Send Template
-              </p>
-              <IoCloseOutline
-                onClick={() => closeFlyOut()}
-                className="h-8 w-8 border border-gray-700 text-white rounded cursor-pointer"
-              />
-            </div>
-            <div className="w-full border-b border-gray-700 mb-4"></div>
 
-            {/* FORM */}
-
-            <Formik
-              initialValues={{
-                templateId: "",
-                recipientEmail: data?.email || "",
-              }}
-              validationSchema={Yup.object({
-                templateId: Yup.string().required("Template is required"),
-              })}
-              onSubmit={async (values, { setSubmitting }) => {
-                try {
-                  setSubmitting(true); // ensure submitting state
-                  const payload = {
-                    templateId: values.templateId,
-                    recipientEmail: values.recipientEmail,
-                  };
-                  await AxiosProvider.post("/email-template", payload);
-                  toast.success("Template sent successfully");
-                  closeFlyOut();
-                } catch (error: any) {
-                  console.error("Error sending template:", error);
-                  toast.error("Failed to send template");
-                } finally {
-                  setSubmitting(false);
-                }
-              }}
-            >
-              {({
-                values,
-                errors,
-                touched,
-                handleSubmit,
-                setFieldValue,
-                setFieldTouched,
-                isSubmitting,
-              }) => {
-                const options: TemplateOption[] = (templateData as any[]).map(
-                  (o: any) =>
-                    typeof o === "string"
-                      ? { id: o, title: o }
-                      : { id: o.id, title: o.title }
-                );
-
-                const selected =
-                  options.find((opt) => opt.id === values.templateId) || null;
-
-                return (
-                  <form onSubmit={handleSubmit} noValidate>
-                    {/* Single Required Dropdown */}
-                    <div className="w-full grid grid-cols-1 gap-4 mb-4 sm:mb-6">
-                      <div className="w-full relative">
-                        <p className="text-white font-medium text-base leading-6 mb-2">
-                          Template
-                        </p>
-
-                        <Select
-                          value={selected}
-                          onChange={(opt: any) =>
-                            setFieldValue("templateId", opt ? opt.id : "")
-                          }
-                          onBlur={() => setFieldTouched("templateId", true)}
-                          getOptionLabel={(opt: any) =>
-                            opt.title ?? opt.name ?? String(opt)
-                          }
-                          getOptionValue={(opt: any) => opt.id}
-                          options={options}
-                          placeholder="Select Template"
-                          isClearable
-                          isDisabled={isSubmitting} // ⬅️ disable while submitting
-                          classNames={{
-                            control: ({ isFocused }: any) =>
-                              `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                isFocused
-                                  ? "!border-primary-500"
-                                  : "!border-gray-700"
-                              }`,
-                          }}
-                          styles={{
-                            menu: (base) => ({
-                              ...base,
-                              borderRadius: 4,
-                              backgroundColor: "#000",
-                            }),
-                            option: (base, { isFocused, isSelected }) => ({
-                              ...base,
-                              backgroundColor: isSelected
-                                ? "var(--primary-500)"
-                                : isFocused
-                                ? "#222"
-                                : "#000",
-                              color: "#fff",
-                              cursor: "pointer",
-                            }),
-                            singleValue: (base) => ({ ...base, color: "#fff" }),
-                            input: (base) => ({ ...base, color: "#fff" }),
-                            placeholder: (base) => ({ ...base, color: "#aaa" }),
-                          }}
-                        />
-
-                        {touched.templateId && errors.templateId && (
-                          <p className="text-red-500 absolute top-[85px] text-xs">
-                            {String(errors.templateId)}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Button */}
-                    <div className="mt-10 w-full flex flex-col gap-y-4 md:flex-row justify-between items-center">
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        aria-busy={isSubmitting}
-                        className={`py-[13px] px-[26px] bg-primary-600 rounded-[4px] text-base font-medium leading-6 text-white hover:text-dark cursor-pointer w-full text-center hover:bg-primary-700 hover:text-white ${
-                          isSubmitting ? "opacity-70 pointer-events-none" : ""
-                        }`}
-                      >
-                        {isSubmitting ? "Sending…" : "Send Template"}
-                      </button>
-                    </div>
-                  </form>
-                );
-              }}
-            </Formik>
-          </div>
-        )}
       </div>
 
       {/* FITLER FLYOUT END */}
