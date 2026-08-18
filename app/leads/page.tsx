@@ -37,7 +37,6 @@ import Select from "react-select";
 import Swal from "sweetalert2";
 import CreateLead from "./CreateLead";
 import Tabs from "../component/Tabs";
-import page from "../page";
 import { BiUserPin } from "react-icons/bi";
 import { FaRegCheckCircle, FaSearchPlus } from "react-icons/fa";
 import { ImUserTie } from "react-icons/im";
@@ -1284,13 +1283,13 @@ const tabs = [
 
 if (checking) {
   return (
-    <div className="h-screen flex flex-col gap-5 justify-center items-center bg-white">
+    <div className="h-screen flex flex-col gap-5 justify-center items-center bg-black">
       <Image
-        src="/images/orizonIcon.svg"
+        src="/images/crmlogo.jpg"
         alt="Loading"
         width={150}
         height={150}
-        className="animate-pulse rounded"
+        className="animate-pulse rounded-full"
       />
     </div>
   );

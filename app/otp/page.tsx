@@ -54,8 +54,16 @@ export default function OtpHome() {
       //localStorage.setItem("authToken", res.data.data.token);
       await storage.saveAccessToken(res.data.data.token);
       await storage.saveUserId(res.data.data.system_user_id);
+      if (res.data.data?.role_name || res.data.data?.role) {
+        await storage.saveUserRole(res.data.data.role_name || res.data.data.role);
+      }
+      const userRole = storage.getUserRole();
       toast.success("Login Successful");
-      router.push("/dashboard");
+      if (userRole === "Admin") {
+        router.push("/dashboard-admin");
+      } else {
+        router.push("/dashboard-agent");
+      }
       setIsLogged(true);
       const activityLogger = new UserActivityLogger();
       // await activityLogger.userLogin();
@@ -69,17 +77,17 @@ export default function OtpHome() {
     }
   };
 
-  //   useEffect(() => {
-  //   const token = storage.getAccessToken();
-  //   if (token && token !== "null") router.replace("/dashboard");
-  // }, []);
-
   useEffect(() => {
     const token = storage.getAccessToken(); // Get token from localStorage via StorageManager
 
-    // If token exists and is not expired, redirect to dashboard
+    // If token exists and is not expired, redirect to dashboard based on role
     if (token && !isTokenExpired(token)) {
-      router.replace("/dashboard"); // Redirect to the Dashboard page
+      const userRole = storage.getUserRole();
+      if (userRole === "Admin") {
+        router.replace("/dashboard-admin");
+      } else {
+        router.replace("/dashboard-agent");
+      }
     }
   }, [router]);
 
