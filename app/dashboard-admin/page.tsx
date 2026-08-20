@@ -42,32 +42,39 @@ export default function AdminDashboardPage() {
   const fetchAdminStats = async () => {
     setIsLoading(true);
     try {
-      const statsRes = await AxiosProvider.get("/agents/stats");
-      if (statsRes.data?.data) {
-        setAgentStats(
-          Array.isArray(statsRes.data.data) ? statsRes.data.data : [],
-        );
+      // 1. Fetch Admin Dashboard stats (Team & Agent workload)
+      try {
+        const statsRes = await AxiosProvider.post("/leads/admin/dashboard");
+        const agentWorkload = statsRes.data?.data?.tables?.team_tasks_by_agent || [];
+        setAgentStats(agentWorkload);
+      } catch (err) {
+        console.error("Error fetching agent workload:", err);
       }
 
-      const leadsRes = await AxiosProvider.get(`/leads?page=${page}&limit=10`);
-      if (leadsRes.data?.pagination) {
-        setTotalLeads(leadsRes.data.pagination.total || 0);
-        setTotalPages(leadsRes.data.pagination.totalPages || 1);
+      // 2. Fetch Unassigned Leads
+      let unassignedCount = 0;
+      try {
+        const unassignedRes = await AxiosProvider.get("/leads/notassigned?page=1&pageSize=10");
+        const unassignedData = unassignedRes.data?.data;
+        unassignedCount = unassignedData?.pagination?.total ?? (Array.isArray(unassignedData?.data) ? unassignedData.data.length : 0);
+        setUnassignedLeads(unassignedCount);
+      } catch (err) {
+        console.error("Error fetching unassigned leads:", err);
       }
 
-      const unassignedRes = await AxiosProvider.get(
-        "/leads/unassigned?page=1&limit=10",
-      );
-      if (unassignedRes.data?.pagination) {
-        setUnassignedLeads(unassignedRes.data.pagination.total || 0);
+      // 3. Fetch Assigned Leads
+      let assignedCount = 0;
+      try {
+        const assignedRes = await AxiosProvider.get("/leads/assigned?page=1&pageSize=10");
+        const assignedData = assignedRes.data?.data;
+        assignedCount = assignedData?.pagination?.total ?? (Array.isArray(assignedData?.data) ? assignedData.data.length : 0);
+        setAssignedLeads(assignedCount);
+      } catch (err) {
+        console.error("Error fetching assigned leads:", err);
       }
 
-      const assignedRes = await AxiosProvider.get(
-        "/leads/assigned?page=1&limit=10",
-      );
-      if (assignedRes.data?.pagination) {
-        setAssignedLeads(assignedRes.data.pagination.total || 0);
-      }
+      // 4. Total Leads = Unassigned + Assigned
+      setTotalLeads(unassignedCount + assignedCount);
     } catch (error) {
       console.error("Error fetching admin dashboard data:", error);
     } finally {
@@ -167,16 +174,17 @@ export default function AdminDashboardPage() {
               <thead className="text-xs text-gray-400 uppercase bg-[#1e1e1e] border-b border-gray-800">
                 <tr>
                   <th className="p-4">Agent Name</th>
-                  <th className="p-4 text-center">Total Today</th>
+                  <th className="p-4 text-center">Assigned Leads</th>
+                  <th className="p-4 text-center">New Leads</th>
+                  <th className="p-4 text-center">Tasks Today</th>
                   <th className="p-4 text-center">Done Today</th>
-                  <th className="p-4 text-center">Pending Today</th>
                   <th className="p-4 text-center">Overdue</th>
                 </tr>
               </thead>
               <tbody>
                 {agentStats.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-6 text-center text-gray-500">
+                    <td colSpan={6} className="p-6 text-center text-gray-500">
                       No agent performance statistics available.
                     </td>
                   </tr>
@@ -192,17 +200,22 @@ export default function AdminDashboardPage() {
                         </div>
                         {agent.agent_name}
                       </td>
-                      <td className="p-4 text-center font-semibold text-white">
-                        {agent.total_today}
-                      </td>
-                      <td className="p-4 text-center font-semibold text-green-400">
-                        {agent.done_today}
+                      <td className="p-4 text-center font-bold text-blue-400">
+                        <span className="px-2.5 py-1 rounded bg-blue-900/40 border border-blue-800">
+                          {agent.total_assigned_leads || 0}
+                        </span>
                       </td>
                       <td className="p-4 text-center font-semibold text-yellow-400">
-                        {agent.pending_today}
+                        {agent.new_leads || 0}
+                      </td>
+                      <td className="p-4 text-center font-semibold text-white">
+                        {agent.total_today || 0}
+                      </td>
+                      <td className="p-4 text-center font-semibold text-green-400">
+                        {agent.done_today || 0}
                       </td>
                       <td className="p-4 text-center font-semibold text-red-400">
-                        {agent.overdue}
+                        {agent.overdue || 0}
                       </td>
                     </tr>
                   ))

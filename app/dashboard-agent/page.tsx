@@ -10,7 +10,8 @@ import StorageManager from "../../provider/StorageManager";
 import React from "react";
 import { useRouter } from "next/navigation";
 import { HiChevronDoubleLeft, HiChevronDoubleRight } from "react-icons/hi";
-import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
+import { FaPhoneAlt, FaEnvelope, FaCheckCircle, FaExclamationTriangle, FaCalendarCheck, FaClock } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 export default function AgentDashboardPage() {
   const isChecking = useAuthRedirect();
@@ -24,6 +25,16 @@ export default function AgentDashboardPage() {
   const [totalLeads, setTotalLeads] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Task Stats & Lists
+  const [taskStats, setTaskStats] = useState<any>({
+    total_today: 0,
+    pending_today: 0,
+    done_today: 0,
+    overdue: 0,
+  });
+  const [todayTasksList, setTodayTasksList] = useState<any[]>([]);
+  const [overdueTasksList, setOverdueTasksList] = useState<any[]>([]);
+
   // Role Protection: Redirect Admin to /dashboard-admin
   useEffect(() => {
     if (!isChecking && userRole === "Admin") {
@@ -34,17 +45,40 @@ export default function AgentDashboardPage() {
   const fetchAgentDashboardData = async () => {
     setIsLoading(true);
     try {
-      // Fetch Assigned Leads for logged in agent
-      const res = await AxiosProvider.get(
-        `/leads/assigned?page=${page}&limit=10`,
-      );
-      if (res.data?.data) {
-        setAssignedLeads(Array.isArray(res.data.data) ? res.data.data : []);
-        setTotalPages(res.data.pagination?.totalPages || 1);
-        setTotalLeads(res.data.pagination?.total || 0);
+      // 1. Fetch Assigned Leads
+      try {
+        const res = await AxiosProvider.get(`/leads/assigned?page=${page}&pageSize=10`);
+        const leadsList = res.data?.data?.data || (Array.isArray(res.data?.data) ? res.data.data : []);
+        const pagination = res.data?.data?.pagination || res.data?.pagination;
+        setAssignedLeads(leadsList);
+        setTotalPages(pagination?.totalPages || 1);
+        setTotalLeads(pagination?.total || leadsList.length);
+      } catch (err) {
+        console.error("Error fetching assigned leads:", err);
+      }
+
+      // 2. Fetch Agent Task Stats & Lists
+      try {
+        const taskRes = await AxiosProvider.post("/leads/task/agent/dashboard");
+        const taskData = taskRes.data?.data;
+        if (taskData) {
+          setTaskStats({
+            total_today: (taskData.cards?.today?.pending || 0) + (taskData.cards?.today?.completed || 0),
+            pending_today: taskData.cards?.today?.pending || 0,
+            done_today: taskData.cards?.today?.completed || 0,
+            overdue: taskData.cards?.overdue || 0,
+          });
+          const pending = taskData.lists?.pending_today || [];
+          const done = taskData.lists?.done_today || [];
+          const overdue = taskData.lists?.overdue || [];
+          setTodayTasksList([...pending, ...done]);
+          setOverdueTasksList(overdue);
+        }
+      } catch (err) {
+        console.error("Error fetching task dashboard stats:", err);
       }
     } catch (error) {
-      console.error("Error fetching agent dashboard data:", error);
+      console.error("Error in dashboard fetch:", error);
     } finally {
       setIsLoading(false);
     }
@@ -55,6 +89,17 @@ export default function AgentDashboardPage() {
       fetchAgentDashboardData();
     }
   }, [page, userRole]);
+
+  // Mark task as done
+  const handleMarkTaskDone = async (taskId: string) => {
+    try {
+      await AxiosProvider.post("/leads/tasks/complete", { task_id: taskId });
+      toast.success("Task marked as completed!");
+      fetchAgentDashboardData();
+    } catch (err) {
+      toast.error("Failed to complete task");
+    }
+  };
 
   if (isChecking || (isLoading && assignedLeads.length === 0)) {
     return (
@@ -70,15 +115,9 @@ export default function AgentDashboardPage() {
     );
   }
 
-  // Calculate quick stats from assigned leads
-  const newLeadsCount = assignedLeads.filter(
-    (l) => l.lead_status === "New",
-  ).length;
-  const inProgressCount = assignedLeads.filter(
-    (l) => l.lead_status === "In Progress" || l.lead_status === "Follow-up",
-  ).length;
+  // Quick count for converted deals
   const convertedCount = assignedLeads.filter(
-    (l) => l.lead_status === "Converted",
+    (l) => l.lead_status === "Converted" || l.payment_status === "Paid",
   ).length;
 
   return (
@@ -101,52 +140,74 @@ export default function AgentDashboardPage() {
           </div>
 
           {/* Agent Personal Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+            {/* Total Assigned */}
             <div className="bg-[#1e1e1e] p-5 rounded-xl border border-gray-800">
               <p className="text-xs text-gray-400 font-medium uppercase">
-                Total Assigned
+                Assigned Leads
               </p>
-              <h3 className="text-3xl font-bold text-white mt-2">
+              <h3 className="text-3xl font-bold text-blue-400 mt-2">
                 {totalLeads}
               </h3>
               <span className="text-xs text-blue-400 mt-1 inline-block">
-                Active Leads Assigned
+                My Lead Portfolio
               </span>
             </div>
 
+            {/* Tasks Due Today */}
             <div className="bg-[#1e1e1e] p-5 rounded-xl border border-gray-800">
               <p className="text-xs text-gray-400 font-medium uppercase">
-                New Leads
+                Tasks Today
               </p>
               <h3 className="text-3xl font-bold text-cyan-400 mt-2">
-                {newLeadsCount}
+                {taskStats.total_today}
               </h3>
               <span className="text-xs text-cyan-400 mt-1 inline-block">
-                Needs Initial Call
+                {taskStats.pending_today} Pending Follow-up{taskStats.pending_today === 1 ? '' : 's'}
               </span>
             </div>
 
-            <div className="bg-[#1e1e1e] p-5 rounded-xl border border-gray-800">
-              <p className="text-xs text-gray-400 font-medium uppercase">
-                In Progress / Follow-up
-              </p>
-              <h3 className="text-3xl font-bold text-yellow-400 mt-2">
-                {inProgressCount}
+            {/* Overdue */}
+            <div className="bg-[#1e1e1e] p-5 rounded-xl border border-red-900/50 bg-red-950/20">
+              <div className="flex justify-between items-start">
+                <p className="text-xs text-red-400 font-medium uppercase">
+                  Overdue Tasks
+                </p>
+                {taskStats.overdue > 0 && (
+                  <FaExclamationTriangle className="text-red-400 w-4 h-4 animate-bounce" />
+                )}
+              </div>
+              <h3 className="text-3xl font-bold text-red-400 mt-2">
+                {taskStats.overdue}
               </h3>
-              <span className="text-xs text-yellow-400 mt-1 inline-block">
-                Active Call Pipeline
+              <span className="text-xs text-red-400 mt-1 inline-block font-medium">
+                {taskStats.overdue > 0 ? "Requires Immediate Call!" : "All on Track"}
               </span>
             </div>
 
+            {/* Done Today */}
             <div className="bg-[#1e1e1e] p-5 rounded-xl border border-gray-800">
               <p className="text-xs text-gray-400 font-medium uppercase">
-                Converted Deals
+                Done Today
               </p>
               <h3 className="text-3xl font-bold text-green-400 mt-2">
-                {convertedCount}
+                {taskStats.done_today}
               </h3>
               <span className="text-xs text-green-400 mt-1 inline-block">
-                Successful Orders
+                Completed Tasks
+              </span>
+            </div>
+
+            {/* Converted Orders */}
+            <div className="bg-[#1e1e1e] p-5 rounded-xl border border-gray-800">
+              <p className="text-xs text-gray-400 font-medium uppercase">
+                Converted
+              </p>
+              <h3 className="text-3xl font-bold text-purple-400 mt-2">
+                {convertedCount}
+              </h3>
+              <span className="text-xs text-purple-400 mt-1 inline-block">
+                Successful Deals
               </span>
             </div>
           </div>

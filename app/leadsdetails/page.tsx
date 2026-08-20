@@ -33,7 +33,7 @@ import { HiChevronDoubleLeft } from "react-icons/hi";
 import { HiChevronDoubleRight } from "react-icons/hi";
 import AxiosProvider from "../../provider/AxiosProvider";
 //import CustomerViewDetails from "../component/CustomerViewDetails";
-import { statesByCountry } from "../leads/CreateLead";
+import { statesByCountry, countryOptions, leadStatusOptions, paymentStatusOptions, deliveryStatusOptions, currencyOptions } from "../leads/CreateLead";
 import ReactPlayer from "react-player";
 import DesktopHeader from "../component/DesktopHeader";
 import { Tooltip } from "react-tooltip";
@@ -77,184 +77,7 @@ import {
 import { BiSkipNextCircle } from "react-icons/bi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { useRouter } from "next/navigation";
-
-interface Lead {
-  id: string;
-  lead_number: string;
-  first_name: string;
-  last_name: string;
-  full_name?: string; // optional because API may or may not return it
-  email: string;
-  phone: string;
-  whatsapp_number?: string | null;
-
-  address: {
-    line1: string;
-    line2?: string | null;
-    city: string;
-    state: string;
-    postal_code: string;
-    country: string;
-  };
-
-  agent: {
-    id: string | null;
-    name: string | null;
-  };
-
-  best_time_to_call?: string | null;
-  consolidated_credit_status?: string | null;
-  debt_consolidation_status?: string | null;
-
-  lead_quality: string;
-  lead_score: number;
-  lead_age_days: number;
-  lead_age_label: string;
-
-  lead_source?: string | null;
-  owner_name?: string | null;
-
-  created_at: string; // ISO string
-  updated_at: string; // ISO string
-  note: string;
-}
-interface LeadActivity {
-  id: string;
-  disposition: string;
-  disposition_id: string;
-  conversation: string;
-  //occurred_at: string; // ISO date string
-  agent_name: string;
-  agent_id: string;
-}
-interface Disposition {
-  id: string;
-  name: string;
-  description: string;
-  is_active: boolean;
-  created_at: string; // ISO date string
-  updated_at: string | null; // can be null
-}
-interface Agent {
-  id: string;
-  name: string;
-  email: string;
-  mobile_number: string;
-  created_at: string; // ISO date string
-  updated_at: string; // ISO date string
-}
-interface CreateLeadsActivityForm {
-  conversation: string;
-  createdAt: string; // optional
-  disposition: string; // id
-  agent: string; // optional id
-}
-interface LeadActivityData {
-  id: string;
-  disposition: string;
-  disposition_id: string;
-  conversation: string;
-  occurred_at: string; // ISO date string
-  created_at: string; // ISO date string
-  agent_name: string;
-  agent_id: string;
-  created_at_ca: string;
-  edited: boolean;
-}
-type UpdateLead = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  full_name?: string;
-  email: string;
-  phone: string;
-  address_line1: string;
-  address_line2?: string;
-  city: string;
-  state: string;
-  postal_code: string;
-  country: string;
-  lead_score?: number;
-  lead_quality?: string;
-  best_time_to_call?: string;
-  lead_source_id: string;
-  debt_consolidation_status_id: string;
-  whatsapp_number: string;
-  consolidated_credit_status_id?: string;
-};
-export interface LeadDocument {
-  id: string;
-  file_name: string;
-  file_size: number;
-  mime_type: string;
-  storage_path: string;
-  notes: string | null;
-  is_image: boolean;
-  download: string; // presigned url
-  uploaded_by: string;
-  created_at: string;
-  updated_at: string;
-  created_at_ca: string;
-  updated_at_ca: string;
-  created_date_ca: string;
-  updated_date_ca: string;
-  is_edited: boolean;
-}
-export interface ActivityHistory {
-  id: string;
-  agent_id: string;
-  agent_name: string;
-  disposition_id: string;
-  disposition: string;
-  conversation: string;
-  occurred_at: string; // ISO datetime (e.g. "2025-09-13T18:30:00.000Z")
-  created_at: string; // ISO datetime
-}
-const UPDATE_ACTIVITY_URL = "/leads/update/activity"; // <-- set your real update endpoint
-
-type UpdateActivityPayload = {
-  id: string;
-  lead_id?: string;
-  conversation?: string;
-  occurred_at?: string;
-  disposition_id?: string;
-  agent_id?: string;
-};
-export interface Consolidation {
-  id: string;
-  name: string;
-  is_active: boolean;
-  created_at: string; // ISO datetime
-  updated_at: string; // ISO datetime
-}
-export interface DebtConsolidation {
-  id: string;
-  name: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string | null;
-}
-type CreateLead = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  full_name?: string;
-  email: string;
-  phone: string;
-  address_line1: string;
-  address_line2?: string;
-  city: string;
-  state: string;
-  postal_code: string;
-  country: string;
-  lead_score?: number;
-  lead_quality?: string;
-  best_time_to_call?: string;
-  lead_source_id: string;
-  debt_consolidation_status_id: string;
-  whatsapp_number: string;
-  consolidated_credit_status_id?: string;
-};
+const UPDATE_ACTIVITY_URL = "/leads/update/activity";
 
 const DISPO_AUTOFILL = new Set([
   "Blank Call",
@@ -264,12 +87,9 @@ const DISPO_AUTOFILL = new Set([
   "No Answer",
 ]);
 const storage = new StorageManager();
-// -----------get user role and name id-------------
 const loggedInUserName = storage.getUserName();
 const loggedInUserRole = storage.getUserRole();
 const loggedInUserId = storage.getUserId();
-
-// -----------END get user role and name id-------------
 
 export default function Home() {
   const router = useRouter();
@@ -300,7 +120,7 @@ export default function Home() {
   // console.log("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL", leadId);
   const [totp, setTotp] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [lead, setLead] = useState<Lead | null>(null);
+  const [lead, setLead] = useState<any | null>(null);
   const [isTotpPopupOpen, setIsTotpPopupOpen] = useState<boolean>(false);
   const [data, setData] = useState<any>(null);
 
@@ -325,20 +145,19 @@ export default function Home() {
     }
   }, [data]);
   //console.log("LEAD SINGLE DATA", data.agent.name);
-  const [leadActivityData, setLeadActivityData] = useState<LeadActivity>();
-  const [disposition, setDisposition] = useState<Disposition[]>([]);
+  const [leadActivityData, setLeadActivityData] = useState<any>();
+  const [disposition, setDisposition] = useState<any[]>([]);
   useEffect(() => {
     console.log("DISOSIOT NAME:", disposition);
   }, [disposition]);
 
-  const [agent, setAgent] = useState<Agent[]>([]);
+  const [agent, setAgent] = useState<any[]>([]);;
+  const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
   console.log("AGWNTTTTTTTTTTTTTTT", agent);
-  const [consolidationData, setConsolidationData] = useState<Consolidation[]>(
+  const [consolidationData, setConsolidationData] = useState<any[]>(
     [],
   );
-  const [debtConsolidation, setDebtConsolidation] = useState<
-    DebtConsolidation[]
-  >([]);
+  const [debtConsolidation, setDebtConsolidation] = useState<any[]>([]);;
 
   const [activity, setActivity] = useState<boolean>(false);
   const [task, setTask] = useState<boolean>(false);
@@ -350,14 +169,14 @@ export default function Home() {
   const [pageSize] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [fetchLeadActivityData, setFetchLeadaActivityData] = useState<
-    LeadActivityData[]
+    any[]
   >([]);
   //console.log("fetched single lead data 111111111111111111", fetchLeadActivityData);
   const [reloadKey, setReloadKey] = useState(0);
-  const [docs, setDocs] = useState<LeadDocument[]>([]); // start empty
+  const [docs, setDocs] = useState<any[]>([]); // start empty
   //console.log("DDDDDDDDDDDDOOOOOOOOOOOOOOCCCCCCCCSSSSSS",docs)
   const [activityHistoryData, setActivityHistoryData] =
-    useState<ActivityHistory>(null);
+    useState<any>(null);
   const [isEditFirstLead, setIsEditFirstLead] = useState<boolean>(true);
   const [documentName, setDocumentName] = useState<string>("");
   const [selectedDropDownTaskValue, setSelectedDropDownTaskValue] =
@@ -372,7 +191,7 @@ export default function Home() {
   const [isleadPropertyEdit, setIsLeadPropertyEdit] = useState<boolean>(true);
   const [isDocumentEdit, setIsDocumentEdit] = useState<boolean>(false);
   const [documentEditObjectData, setDocumentEditObjectData] =
-    useState<LeadDocument>(null);
+    useState<any>(null);
   const [isTaskEdit, setIsTaskEdit] = useState<boolean>(false);
   const [taskEditObject, setTaskEditObject] = useState<any>(null);
   const [userRole, setUserRole] = useState(storage.getUserRole());
@@ -396,11 +215,11 @@ export default function Home() {
   });
   const CreateLeadsActivitySchema = Yup.object({
     conversation: Yup.string().required("Conversation is required"),
-    createdAt: Yup.string().nullable(), // optional
+    createdAt: Yup.string().nullable().optional(),
     disposition_id: Yup.string().required("Disposition is required"),
-    agent_id: Yup.string().required("Agent is required"), // optional
+    agent_id: Yup.string().nullable().optional(),
   });
-  async function UpdateLeadsActivity(payload: UpdateActivityPayload) {
+  async function UpdateLeadsActivity(payload: any) {
     console.log("UpdateLeadsActivity → payload:", payload);
     const res = await AxiosProvider.post(UPDATE_ACTIVITY_URL, payload, {
       headers: { "Content-Type": "application/json" },
@@ -417,7 +236,7 @@ export default function Home() {
     conversation: "",
     occurred_at: "",
     disposition_id: "",
-    agent_id: loggedInUserRole === "Agent" ? loggedInUserId : "",
+    agent_id: (storage.getUserRole() === "Agent" ? storage.getUserId() : "") || "",
   };
 
   const formInitialValues = activityHistoryData
@@ -464,20 +283,30 @@ export default function Home() {
 
   // ✅ Submit handler
   const CreateLeadsActivity = async (n: typeof INITIAL_VALUES) => {
-    // console.log("Submitted values:", n);
-
-    const { occurred_at, ...payload } = n; // removes occurred_at
-    console.log("Payload without occurred_at:", payload);
     try {
+      const activeAgentId =
+        n.agent_id ||
+        (storage.getUserRole() === "Agent" ? storage.getUserId() : null) ||
+        data?.agent?.id ||
+        null;
+
+      const payload = {
+        lead_id: leadId,
+        disposition_id: n.disposition_id,
+        conversation: n.conversation,
+        agent_id: activeAgentId || undefined,
+      };
+
       await AxiosProvider.post("/leads/activities/create", payload);
-      toast.success("Lead activity is created");
-      setHitApi(!hitApi);
+      toast.success("Lead activity created successfully");
+      setHitApi((prev) => !prev);
       closeFlyOut();
     } catch (error: any) {
-      toast.error("Lead activity is created");
+      console.error("Error creating activity:", error);
+      const msg =
+        error.response?.data?.message || "Failed to create lead activity";
+      toast.error(msg);
     }
-    // 👉 Replace with your API call
-    // await AxiosProvider.post("/leads/activity/create", n);
   };
   //  END CREATE ACTIVITY LEAD
   const fetchData = async () => {
@@ -605,11 +434,7 @@ export default function Home() {
   const debtConsolidationStatus = async () => {
     try {
       const response = await AxiosProvider.get("/leaddebtstatuses");
-      //  console.log("GGGGGGGGGGGGGGGG", response.data.data.data);
-      setDebtConsolidation(response.data.data.data);
-
-      // const result = response.data.data.data;
-      // console.log("ALL CRM USER", result);
+      setDebtConsolidation(response.data?.data?.data || []);
     } catch (error: any) {
       console.log(error);
     }
@@ -618,7 +443,20 @@ export default function Home() {
     debtConsolidationStatus();
   }, []);
 
-  // END ETCH AGENT CONSILATION AND DEBT CONSILATION and lead source
+  const fetchLeadSource = async () => {
+    try {
+      const response = await AxiosProvider.get("/leadsources");
+      const list = response.data?.data?.data || (Array.isArray(response.data?.data) ? response.data.data : []);
+      setLeadSourceData(list);
+    } catch (error: any) {
+      console.error("Error fetching lead sources:", error);
+    }
+  };
+  useEffect(() => {
+    fetchLeadSource();
+  }, []);
+
+  // END FETCH AGENT AND LEAD SOURCE
 
   const openActivityFlyout = () => {
     setFlyoutFilterOpen(true);
@@ -644,12 +482,12 @@ export default function Home() {
     setFlyoutFilterOpen(true);
     setIsDocumentFilter(true);
   };
-  const openActivityHistoryFlyout = (activity: ActivityHistory) => {
+  const openActivityHistoryFlyout = (activity: any) => {
     setFlyoutFilterOpen(true);
     setUpdateActivityHistory(true);
     setActivityHistoryData(activity);
   };
-  const openEditDocumentFlyOut = (d: LeadDocument) => {
+  const openEditDocumentFlyOut = (d: any) => {
     setDocumentEditObjectData(d);
     setDocumentName(d.notes);
     setFlyoutFilterOpen(true);
@@ -820,42 +658,65 @@ export default function Home() {
     (name?.split(".").pop() || "").toUpperCase();
   // ----------------- DOWNLOAD IMAGE
 
-  const downloadDocument = (src: string | Blob, fileName = "image.jpg") => {
+  const downloadDocument = async (src: string | Blob, fileName = "document") => {
+    if (!src) {
+      toast.error("Download link not available");
+      return;
+    }
     if (typeof src === "string") {
-      // case 1: URL string
-      const a = window.document.createElement("a");
-      a.href = src;
-      a.download = fileName;
-      window.document.body.appendChild(a);
-      a.click();
-      a.remove();
+      try {
+        const response = await fetch(src);
+        if (!response.ok) throw new Error("Fetch failed");
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = window.document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        window.document.body.appendChild(a);
+        a.click();
+        window.document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } catch (e) {
+        // Fallback: direct window open if cross-origin fetch is blocked
+        const a = window.document.createElement("a");
+        a.href = src;
+        a.target = "_blank";
+        a.rel = "noreferrer noopener";
+        a.download = fileName;
+        window.document.body.appendChild(a);
+        a.click();
+        window.document.body.removeChild(a);
+      }
     } else {
-      // case 2: Blob object
       const url = URL.createObjectURL(src);
       const a = window.document.createElement("a");
       a.href = url;
       a.download = fileName;
       window.document.body.appendChild(a);
       a.click();
-      a.remove();
+      window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
   };
   // -----------------------END DOWNLOAD IMAGE
 
-  const deleteActivityHistory = async (deleteId: ActivityHistory) => {
+  const deleteActivityHistory = async (deleteId: any) => {
     const activityHistoryId = deleteId.id;
-    console.log("ACTIVITY HISTORY DELETE ID", activityHistoryId);
-    //return;
     Swal.fire({
       title: "Are you sure?",
       text: "Do you really want to delete this activity?",
       icon: "warning",
+      background: "#181818",
+      color: "#ffffff",
+      iconColor: "#eab308",
       showCancelButton: true,
-      confirmButtonText: "Yes",
-      cancelButtonText: "No",
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#374151",
+      customClass: {
+        popup: "border border-gray-700 rounded-2xl shadow-2xl",
+      },
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
@@ -863,40 +724,44 @@ export default function Home() {
             id: activityHistoryId,
           });
 
-          toast.success("Successfully Deleted");
+          toast.success("Activity successfully deleted");
           setHitApi(!hitApi);
         } catch (error) {
-          console.error("Error deleting user:", error);
-          toast.error("Failed to delete user");
+          console.error("Error deleting activity:", error);
+          toast.error("Failed to delete activity");
         }
       }
     });
   };
-  const deleteDocument = async (deleteId: LeadDocument) => {
+  const deleteDocument = async (deleteId: any) => {
     const documentId = deleteId.id;
-    console.log("ACTIVITY HISTORY DELETE ID", documentId);
-    //return;
     Swal.fire({
       title: "Are you sure?",
-      text: "Do you really want to delete this user?",
+      text: "Do you really want to delete this document?",
       icon: "warning",
+      background: "#181818",
+      color: "#ffffff",
+      iconColor: "#eab308",
       showCancelButton: true,
-      confirmButtonText: "Yes",
-      cancelButtonText: "No",
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "d33",
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#374151",
+      customClass: {
+        popup: "border border-gray-700 rounded-2xl shadow-2xl",
+      },
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
           await AxiosProvider.post("/leads/documents/soft-delete", {
-            id: deleteId.id,
+            id: documentId,
           });
 
-          toast.success("Successfully Deleted");
+          toast.success("Document successfully deleted");
           setHitApi(!hitApi);
         } catch (error) {
-          console.error("Error deleting user:", error);
-          toast.error("Failed to delete user");
+          console.error("Error deleting document:", error);
+          toast.error("Failed to delete document");
         }
       }
     });
@@ -1086,13 +951,12 @@ export default function Home() {
                     </div>
 
                     <div className="flex gap-2 flex-wrap mt-2 md:mt-0">
-                      <a
-                        href={d.download}
-                        download
-                        className="py-2 px-3 border border-gray-600 rounded text-sm text-white hover:bg-primary-500 hover:text-white transition-colors"
+                      <button
+                        onClick={() => downloadDocument(d.download, d.file_name)}
+                        className="py-2 px-3 border border-gray-600 rounded text-sm text-white hover:bg-primary-500 hover:text-white transition-colors cursor-pointer"
                       >
                         Download
-                      </a>
+                      </button>
                       <button
                         onClick={() => openEditDocumentFlyOut(d)}
                         className="py-2 px-3 border border-gray-600 rounded text-sm text-white hover:bg-primary-500 hover:text-white transition-colors"
@@ -1337,130 +1201,113 @@ export default function Home() {
                 <div className=" grid grid-cols-[30%_70%]  gap-4">
                   <div className="  w-full">
                     {/* LEAD */}
+                    {/* CONTACT & ADDRESS INFORMATION */}
                     {isEditFirstLead ? (
-                      /* ---------- VIEW MODE (unchanged) ---------- */
+                      /* ---------- VIEW MODE ---------- */
                       <div className="w-full rounded bg-primary-600 px-4 py-6 mb-6">
-                        <div className=" flex justify-between text-white  mb-5 capitalize">
-                          <div className=" flex gap-2">
-                            <FaStar />
+                        <div className="flex justify-between text-white mb-5 capitalize">
+                          <div className="flex gap-2 items-center">
+                            <FaStar className="text-yellow-400" />
                             <div>
-                              <p className=" text-base font-medium leading-none">
+                              <p className="text-base font-medium leading-none">
                                 {data?.full_name || "-"}
                               </p>
-                              {/* <p>{data?.address?.country || "-"}</p> */}
+                              {data?.address?.country && (
+                                <p className="text-xs text-gray-200 mt-1">{data?.address?.country}</p>
+                              )}
                             </div>
                           </div>
                           <button
                             type="button"
-                            onClick={() => setIsEditFirstLead(false)} // flip state
-                            className="px-4 py-2 rounded-[4px] bg-white text-secondBlack text-sm font-medium flex gap-1 items-center"
+                            onClick={() => setIsEditFirstLead(false)}
+                            className="px-4 py-2 rounded-[4px] bg-white text-secondBlack text-sm font-medium flex gap-1 items-center hover:bg-gray-100"
                           >
                             <span>
                               <MdEdit />
                             </span>
-                            {/* Edit */}
+                            Edit
                           </button>
                         </div>
 
-                        <div className=" flex text-white items-center  gap-2 mb-3">
-                          <IoIosMail />
-                          <p className=" text-sm font-medium leading-none">
+                        {/* Email */}
+                        <div className="flex text-white items-center gap-2 mb-3">
+                          <IoIosMail className="text-lg flex-shrink-0" />
+                          <p className="text-sm font-medium leading-none truncate">
                             {data?.email || "-"}
                           </p>
                         </div>
 
-                        <div className=" flex text-white items-center  gap-2 mb-3">
-                          <IoIosCall />
-                          <p className=" text-sm font-medium leading-none">
+                        {/* Phone / Mobile */}
+                        <div className="flex text-white items-center gap-2 mb-3">
+                          <IoIosCall className="text-lg flex-shrink-0" />
+                          <p className="text-sm font-medium leading-none">
                             {data?.phone || "-"}
                           </p>
                         </div>
 
-                        <div className=" flex text-white items-center  gap-2 mb-3">
-                          <MdLocationPin />
-                          <p className=" text-sm font-medium leading-none">
-                            {data?.address?.line1 || "-"}{" "}
-                            {/* {data?.address?.line2 || "-"}{" "} */}
-                            {/* {data?.address?.city || "-"}{" "} */}
-                            {data?.address?.state || "-"}
+                        {/* Address */}
+                        <div className="flex text-white items-start gap-2 mb-3">
+                          <MdLocationPin className="text-lg flex-shrink-0 mt-0.5" />
+                          <p className="text-sm font-medium leading-relaxed">
+                            {[
+                              data?.address?.line1,
+                              data?.address?.line2,
+                              data?.address?.city,
+                              data?.address?.state,
+                              data?.address?.postal_code,
+                              data?.address?.country
+                            ].filter(Boolean).join(", ") || "-"}
                           </p>
                         </div>
 
-                        <div className=" flex text-white items-center  gap-2 mb-3">
-                          <FaCity />
-                          <p className=" text-sm font-medium leading-none">
-                            {data?.address?.postal_code || "-"}
-                          </p>
-                        </div>
-
-                        <div className=" flex text-white items-center  gap-2 mb-3">
-                          <p className="text-sm font-medium leading-none">
-                            State / Region:
-                          </p>
-                          <p className=" text-sm font-medium leading-none">
-                            {data?.address?.state || "-"}
-                          </p>
-                        </div>
-                        <div className=" flex text-white items-center  gap-2 mb-3">
-                          <p className="text-sm font-medium leading-none">
-                            Note:
-                          </p>
-                          <p className=" text-sm font-medium leading-none">
-                            {data?.note || "-"}
-                          </p>
-                        </div>
-
-                        {/* ✅ Edit button */}
-                        <div className="flex justify-end pt-4"></div>
+                        {/* Note */}
+                        {data?.note && (
+                          <div className="flex text-white items-start gap-2 mb-3 border-t border-white/20 pt-3">
+                            <PiNotepadLight className="text-lg flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-xs text-gray-200 font-medium">Note:</p>
+                              <p className="text-sm font-medium leading-relaxed">{data?.note}</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       /* ---------- EDIT MODE (Formik form) ---------- */
-                      /* ---------- EDIT MODE (Formik form) ---------- */
-                      <div className="w-full rounded  px-0 py-0 mb-6">
+                      <div className="w-full rounded px-0 py-0 mb-6">
                         <Formik
                           enableReinitialize
                           initialValues={{
                             full_name: data?.full_name ?? "",
-                            country: data?.address?.country ?? "",
                             email: data?.email ?? "",
                             phone: data?.phone ?? "",
-                            address_line1: data?.address?.line1 ?? "",
-                            address_line2: data?.address?.line2 ?? "",
-                            city: data?.address?.city ?? "",
-                            state: data?.address?.state ?? "",
-                            note: data?.note ?? "", // ✅ Added note
+                            country: data?.address?.country ?? data?.country ?? "India",
+                            state: data?.address?.state ?? data?.state ?? "",
+                            city: data?.address?.city ?? data?.city ?? "",
+                            address_line1: data?.address?.line1 ?? data?.address_line1 ?? "",
+                            address_line2: data?.address?.line2 ?? data?.address_line2 ?? "",
+                            postal_code: data?.address?.postal_code ?? data?.postal_code ?? "",
+                            note: data?.note ?? "",
                           }}
                           validationSchema={Yup.object({
-                            full_name: Yup.string()
-                              .trim()
-                              .required("Full name is required"),
-                            email: Yup.string()
-                              .trim()
-                              .email("Invalid email")
-                              .required("Email is required"),
-                            phone: Yup.string()
-                              .trim()
-                              .required("Mobile is required"),
+                            full_name: Yup.string().trim().required("Full name is required"),
+                            email: Yup.string().trim().email("Invalid email").required("Email is required"),
+                            phone: Yup.string().trim().required("Mobile is required"),
                             country: Yup.string().trim().nullable(),
+                            state: Yup.string().trim().nullable(),
+                            city: Yup.string().trim().nullable(),
                             address_line1: Yup.string().trim().nullable(),
                             address_line2: Yup.string().trim().nullable(),
-                            city: Yup.string().trim().nullable(),
-                            state: Yup.string().trim().nullable(),
-                            note: Yup.string().trim().nullable(), // ✅ Optional note
+                            postal_code: Yup.string().trim().nullable(),
+                            note: Yup.string().trim().nullable(),
                           })}
                           onSubmit={async (values, { setSubmitting }) => {
                             try {
                               const payload = {
                                 id: data?.id,
-                                ...values, // ✅ includes note
+                                ...values,
                               };
-                              //console.log("PPPPPPPPPPPPPPPPP",payload)
-                              //return;
-                              await AxiosProvider.post(
-                                "/leads/update",
-                                payload,
-                              );
-                              toast.success("Lead updated successfully");
+                              await AxiosProvider.post("/leads/update", payload);
+                              toast.success("Lead contact updated successfully");
                               setIsEditFirstLead(true);
                               setHitApi(!hitApi);
                             } catch (e) {
@@ -1476,300 +1323,242 @@ export default function Home() {
                             values,
                             setFieldValue,
                             setFieldTouched,
-                          }) => (
-                            <Form className="w-full rounded bg-primary-600 px-4 py-6 mb-6 ">
-                              {/* Name row */}
-                              <div className="grid grid-cols-1  text-white">
+                          }) => {
+                            const currentStates = statesByCountry[values.country] || Object.values(statesByCountry).flat();
+
+                            return (
+                              <Form className="w-full rounded bg-primary-600 px-4 py-6 mb-6 space-y-4 text-white">
+                                <div className="flex justify-between items-center mb-2">
+                                  <p className="text-base font-semibold">Edit Contact & Address</p>
+                                </div>
+
+                                {/* Full Name */}
                                 <div>
-                                  <label className="block text-sm font-medium text-white mb-1">
-                                    Full Name{" "}
-                                    <span className=" text-red-400">*</span>
+                                  <label className="block text-xs font-medium text-white mb-1">
+                                    Full Name <span className="text-red-300">*</span>
                                   </label>
                                   <Field
                                     name="full_name"
                                     type="text"
-                                    className="w-full border-b border-white pl-0.5 text-sm leading-6 px-0 py-0 focus:outline-none bg-transparent mb-2 placeholder-white placeholder:opacity-[0.9]"
-                                    placeholder="Enter first name"
+                                    className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                                    placeholder="Enter full name"
                                   />
-                                  <ErrorMessage
-                                    name="full_name"
-                                    component="p"
-                                    className="text-red-500 text-xs mt-1"
-                                  />
+                                  <ErrorMessage name="full_name" component="p" className="text-red-300 text-xs mt-1" />
                                 </div>
-                              </div>
 
-                              {/* Email / Phone */}
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {/* Email */}
                                 <div>
-                                  <label className="block text-sm font-medium text-white mb-1">
-                                    Email{" "}
-                                    <span className=" text-red-400">*</span>
+                                  <label className="block text-xs font-medium text-white mb-1">
+                                    Email <span className="text-red-300">*</span>
                                   </label>
                                   <Field
                                     name="email"
                                     type="email"
-                                    className="w-full border-b border-white pl-0.5 text-sm leading-6 px-0 py-0 focus:outline-none bg-transparent text-white mb-2 placeholder-white placeholder:opacity-[0.9]"
+                                    className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
                                     placeholder="name@example.com"
                                   />
-                                  <ErrorMessage
-                                    name="email"
-                                    component="p"
-                                    className="text-red-500 text-xs mt-1"
-                                  />
+                                  <ErrorMessage name="email" component="p" className="text-red-300 text-xs mt-1" />
                                 </div>
+
+                                {/* Mobile / Phone */}
                                 <div>
-                                  <label className="block text-sm font-medium text-white mb-1">
-                                    Mobile{" "}
-                                    <span className=" text-red-400">*</span>
+                                  <label className="block text-xs font-medium text-white mb-1">
+                                    Mobile <span className="text-red-300">*</span>
                                   </label>
-                                  <Field
-                                    name="phone"
-                                    type="text"
-                                    className="w-full border-b border-white pl-0.5 text-sm leading-6 px-0 py-0 focus:outline-none bg-transparent text-white mb-2 placeholder-white placeholder:opacity-[0.9]"
-                                    placeholder="Enter mobile number"
-                                  />
-                                  <ErrorMessage
-                                    name="phone"
-                                    component="p"
-                                    className="text-red-500 text-xs mt-1"
-                                  />
+                                  <div className="flex w-full border border-white/30 rounded-[4px] bg-black/40 overflow-hidden focus-within:border-white">
+                                    <select 
+                                      className="bg-black text-white text-xs border-r border-white/30 px-2 py-2 outline-none cursor-pointer"
+                                      value={values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91"}
+                                      onChange={(e) => {
+                                        const currentCode = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
+                                        const numberPart = (values.phone || "").replace(currentCode, "");
+                                        setFieldValue("phone", numberPart ? e.target.value + numberPart : "");
+                                      }}
+                                    >
+                                      <option value="+91">+91</option>
+                                      <option value="+1">+1</option>
+                                      <option value="+44">+44</option>
+                                    </select>
+                                    <input
+                                      type="text"
+                                      maxLength={10}
+                                      className="w-full bg-transparent text-white text-sm px-3 py-2 outline-none placeholder-gray-300"
+                                      placeholder="Enter mobile number"
+                                      value={(() => {
+                                        const code = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
+                                        return (values.phone || "").substring(code.length);
+                                      })()}
+                                      onChange={(e) => {
+                                        const code = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
+                                        const digitsOnly = e.target.value.replace(/\D/g, "");
+                                        setFieldValue("phone", digitsOnly ? code + digitsOnly : "");
+                                      }}
+                                      onBlur={() => setFieldTouched("phone", true)}
+                                    />
+                                  </div>
+                                  <ErrorMessage name="phone" component="p" className="text-red-300 text-xs mt-1" />
                                 </div>
-                              </div>
 
-                              {/* Country */}
-                              {/* <div>
-          <label className="block text-sm font-medium text-white mb-1">
-            Country
-          </label>
-          <Field
-            name="country"
-            type="text"
-            className="w-full border-b border-white pl-0.5 text-sm leading-6 px-0 py-0 focus:outline-none bg-transparent text-white mb-2 placeholder-white placeholder:opacity-[0.9]"
-            placeholder="Country"
-          />
-          <ErrorMessage
-            name="country"
-            component="p"
-            className="text-red-500 text-xs mt-1"
-          />
-        </div> */}
-
-                              {/* Address lines */}
-                              <div>
-                                <label className="block text-sm font-medium text-white mb-1">
-                                  Address Line 1
-                                </label>
-                                <Field
-                                  name="address_line1"
-                                  type="text"
-                                  className="w-full border-b border-white pl-0.5 text-sm leading-6 px-0 py-0 focus:outline-none bg-transparent text-white mb-2"
-                                  placeholder="House / Street / Area"
-                                />
-                                <ErrorMessage
-                                  name="address_line1"
-                                  component="p"
-                                  className="text-red-500 text-xs mt-1"
-                                />
-                              </div>
-                              {/* <div>
-          <label className="block text-sm font-medium text-white mb-1">
-            Address Line 2
-          </label>
-          <Field
-            name="address_line2"
-            type="text"
-            className="w-full border-b border-white pl-0.5 text-sm leading-6 px-0 py-0 focus:outline-none bg-transparent text-white mb-2"
-            placeholder="Landmark / Apartment"
-          />
-          <ErrorMessage
-            name="address_line2"
-            component="p"
-            className="text-red-500 text-xs mt-1"
-          />
-        </div> */}
-
-                              {/* City / State */}
-                              <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
-                                {/* <div>
-    <label className="block text-sm font-medium text-white mb-1">City</label>
-    <Field
-      name="city"
-      type="text"
-      className="w-full border-b border-white pl-0.5 text-sm leading-6 px-0 py-0 focus:outline-none bg-transparent text-white mb-2 placeholder-white placeholder:opacity-[0.9]"
-      placeholder="City"
-    />
-    <ErrorMessage name="city" component="p" className="text-red-500 text-xs mt-1" />
-  </div> */}
-
-                                {/* State / Region (stored in backend as "state") */}
-                                  <div>
-                                    <label className="block text-sm font-medium text-white mb-1 ">
-                                      State / Region
-                                    </label>
-                                    <Select
-                                      value={
-                                        (statesByCountry[values.country] || Object.values(statesByCountry).flat()).find(
-                                          (opt: any) =>
-                                            (opt.name || "").toLowerCase() ===
-                                            (values.state || "").toLowerCase(),
-                                        ) || null
-                                      }
-                                      onChange={(selected: any) =>
-                                        setFieldValue(
-                                          "state",
-                                          selected ? selected.name : "",
-                                        )
-                                      }
-                                      getOptionLabel={(opt: any) => opt.name}
-                                      getOptionValue={(opt: any) => opt.name}
-                                      options={statesByCountry[values.country] || Object.values(statesByCountry).flat()}
-                                      placeholder="State / Region"
-                                    isClearable
-                                    // Keep className minimal; we'll do most via 'styles'
-                                    className="mb-2"
+                                {/* Country */}
+                                <div>
+                                  <label className="block text-xs font-medium text-white mb-1">Country</label>
+                                  <Select
+                                    value={countryOptions.find((opt) => opt.id === values.country) || null}
+                                    onChange={(selected: any) => {
+                                      const countryId = selected ? selected.id : "";
+                                      setFieldValue("country", countryId);
+                                      setFieldValue("state", "");
+                                    }}
+                                    onBlur={() => setFieldTouched("country", true)}
+                                    getOptionLabel={(opt: any) => opt.name}
+                                    getOptionValue={(opt: any) => opt.id}
+                                    options={countryOptions}
+                                    placeholder="Select Country"
+                                    classNames={{
+                                      control: () => "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black/40 !border-white/30",
+                                    }}
                                     styles={{
-                                      // Make it look like your text input (underline, transparent, white text)
-                                      control: (base, state) => ({
+                                      menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                                      option: (base, { isFocused, isSelected }) => ({
                                         ...base,
-                                        backgroundColor: "transparent",
-                                        border: "none",
-                                        borderBottom: "1px solid #FFFFFF",
-                                        borderRadius: 0,
-                                        boxShadow: "none",
-                                        minHeight: "unset",
-                                        paddingLeft: "2px",
-                                        cursor: "text",
+                                        backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                                        color: "#fff",
                                       }),
-                                      valueContainer: (base) => ({
-                                        ...base,
-                                        padding: 0,
-                                      }),
-                                      placeholder: (base) => ({
-                                        ...base,
-                                        color: "rgba(255,255,255,0.9)",
-                                        margin: 0,
-                                      }),
-                                      singleValue: (base) => ({
-                                        ...base,
-                                        color: "#FFFFFF",
-                                        margin: 0,
-                                      }),
-                                      input: (base) => ({
-                                        ...base,
-                                        color: "#FFFFFF",
-                                        margin: 0,
-                                      }),
-                                      indicatorSeparator: () => ({
-                                        display: "none",
-                                      }),
-                                      dropdownIndicator: (base) => ({
-                                        ...base,
-                                        color: "#FFFFFF",
-                                        padding: 0,
-                                      }),
-                                      clearIndicator: (base) => ({
-                                        ...base,
-                                        color: "#FFFFFF",
-                                        padding: 0,
-                                      }),
-                                      menu: (base) => ({
-                                        ...base,
-                                        backgroundColor: "#FFFFFF",
-                                        color: "#333",
-                                        borderRadius: 4,
-                                        boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-                                        overflow: "hidden",
-                                        zIndex: 50,
-                                      }),
-                                      option: (
-                                        base,
-                                        { isFocused, isSelected },
-                                      ) => ({
-                                        ...base,
-                                        backgroundColor: isSelected
-                                          ? "var(--primary-500)"
-                                          : isFocused
-                                            ? "var(--primary-100)"
-                                            : "#fff",
-                                        color: isSelected ? "#fff" : "#333",
-                                        cursor: "pointer",
-                                      }),
+                                      singleValue: (base) => ({ ...base, color: "#fff" }),
+                                      input: (base) => ({ ...base, color: "#fff" }),
+                                      placeholder: (base) => ({ ...base, color: "#ccc" }),
                                     }}
                                   />
-                                  <ErrorMessage
-                                    name="state"
-                                    component="p"
-                                    className="text-red-500 text-xs mt-1"
+                                </div>
+
+                                {/* State / Region */}
+                                <div>
+                                  <label className="block text-xs font-medium text-white mb-1">State / Region</label>
+                                  <Select
+                                    value={currentStates.find((opt: any) => opt.id === values.state || opt.name === values.state) || null}
+                                    onChange={(selected: any) => setFieldValue("state", selected ? selected.id : "")}
+                                    onBlur={() => setFieldTouched("state", true)}
+                                    getOptionLabel={(opt: any) => opt.name}
+                                    getOptionValue={(opt: any) => opt.id}
+                                    options={currentStates}
+                                    placeholder="Select State / Region"
+                                    isClearable
+                                    classNames={{
+                                      control: () => "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black/40 !border-white/30",
+                                    }}
+                                    styles={{
+                                      menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                                      option: (base, { isFocused, isSelected }) => ({
+                                        ...base,
+                                        backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                                        color: "#fff",
+                                      }),
+                                      singleValue: (base) => ({ ...base, color: "#fff" }),
+                                      input: (base) => ({ ...base, color: "#fff" }),
+                                      placeholder: (base) => ({ ...base, color: "#ccc" }),
+                                    }}
                                   />
                                 </div>
-                              </div>
 
-                              {/* ✅ Note field */}
-                              <div>
-                                <label className="block text-sm font-medium text-white mb-1">
-                                  Note
-                                </label>
-                                <Field
-                                  as="textarea"
-                                  name="note"
-                                  rows={3}
-                                  className="w-full border-b border-white pl-0.5 text-sm leading-6 px-0 py-0 focus:outline-none bg-transparent text-white mb-2 placeholder-white placeholder:opacity-[0.9]"
-                                  placeholder="Enter notes here"
-                                />
-                                <ErrorMessage
-                                  name="note"
-                                  component="p"
-                                  className="text-red-500 text-xs mt-1"
-                                />
-                              </div>
+                                {/* City */}
+                                <div>
+                                  <label className="block text-xs font-medium text-white mb-1">City</label>
+                                  <Field
+                                    name="city"
+                                    type="text"
+                                    className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                                    placeholder="Enter city"
+                                  />
+                                </div>
 
-                              {/* Actions */}
-                              <div className="flex items-center justify-end gap-3 pt-4">
-                                <button
-                                  type="button"
-                                  onClick={() => setIsEditFirstLead(true)}
-                                  className="px-4 py-2 rounded-[4px] border border-[#DFEAF2] text-secondBlack text-sm font-medium bg-white mb-2"
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  type="submit"
-                                  disabled={isSubmitting}
-                                  className="px-4 py-2 rounded-[4px] border border-[#DFEAF2] text-secondBlack text-sm font-medium bg-white mb-2 disabled:opacity-60"
-                                >
-                                  {isSubmitting ? "Saving..." : "Save"}
-                                </button>
-                              </div>
-                            </Form>
-                          )}
+                                {/* Address Line 1 */}
+                                <div>
+                                  <label className="block text-xs font-medium text-white mb-1">Address Line 1</label>
+                                  <Field
+                                    name="address_line1"
+                                    type="text"
+                                    className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                                    placeholder="House / Street / Area"
+                                  />
+                                </div>
+
+                                {/* Address Line 2 */}
+                                <div>
+                                  <label className="block text-xs font-medium text-white mb-1">Address Line 2</label>
+                                  <Field
+                                    name="address_line2"
+                                    type="text"
+                                    className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                                    placeholder="Apartment / Suite / Landmark"
+                                  />
+                                </div>
+
+                                {/* Postal Code */}
+                                <div>
+                                  <label className="block text-xs font-medium text-white mb-1">Postal Code</label>
+                                  <Field
+                                    name="postal_code"
+                                    type="text"
+                                    className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                                    placeholder="Enter postal code"
+                                  />
+                                </div>
+
+                                {/* Note */}
+                                <div>
+                                  <label className="block text-xs font-medium text-white mb-1">Note</label>
+                                  <Field
+                                    as="textarea"
+                                    name="note"
+                                    rows={2}
+                                    className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                                    placeholder="Enter notes..."
+                                  />
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex justify-end gap-3 pt-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsEditFirstLead(true)}
+                                    className="px-4 py-2 rounded-[4px] border border-white text-white text-sm font-medium hover:bg-white/10"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="px-4 py-2 rounded-[4px] bg-white text-primary-700 text-sm font-medium hover:bg-gray-100 disabled:opacity-60"
+                                  >
+                                    {isSubmitting ? "Saving..." : "Save"}
+                                  </button>
+                                </div>
+                              </Form>
+                            );
+                          }}
                         </Formik>
                       </div>
                     )}
 
-                    {/* LEAD PROPERTIES */}
+                    {/* LEAD PROPERTIES & ORDER INFORMATION */}
                     {isleadPropertyEdit ? (
-                      <div className="w-full border border-white rounded overflow-hidden">
+                      <div className="w-full border border-gray-700 rounded overflow-hidden mb-6">
                         <table className="w-full text-sm text-left text-white">
-                          <thead className="text-xs ">
-                            <tr className="border talbleheaderBg">
+                          <thead className="text-xs">
+                            <tr className="border border-gray-700 talbleheaderBg">
                               <th
                                 scope="col"
                                 colSpan={2}
                                 className="px-3 py-3 md:p-3 border border-gray-700 font-semibold text-white text-base"
                               >
                                 <div className="flex justify-between items-center">
-                                  <span>Lead Properties</span>
+                                  <span>Lead & Order Properties</span>
                                   <span
-                                    className="flex gap-1 items-center px-4 py-2 rounded-[4px] bg-primary-600 text-white text-sm font-medium cursor-pointer disabled:opacity-60"
-                                    onClick={() =>
-                                      setIsLeadPropertyEdit(!isleadPropertyEdit)
-                                    }
+                                    className="flex gap-1 items-center px-4 py-2 rounded-[4px] bg-primary-600 text-white text-sm font-medium cursor-pointer hover:bg-primary-700"
+                                    onClick={() => setIsLeadPropertyEdit(!isleadPropertyEdit)}
                                   >
-                                    <span>
-                                      <MdEdit />
-                                    </span>
-                                    {/* Edit */}
+                                    <MdEdit />
+                                    <span>Edit</span>
                                   </span>
                                 </div>
                               </th>
@@ -1778,48 +1567,33 @@ export default function Home() {
 
                           <tbody>
                             {[
-                              {
-                                label: "Lead Number",
-                                value: data?.lead_number,
+                              { label: "Lead Number", value: data?.lead_number },
+                              { label: "Lead Status", value: data?.lead_status || "New" },
+                              { label: "Agent Name", value: data?.agent?.name || data?.owner_name || "Unassigned" },
+                              { label: "Lead Source", value: data?.lead_source },
+                              { label: "Best time to call", value: data?.best_time_to_call },
+                              { label: "WhatsApp Number", value: data?.whatsapp_number },
+                              { label: "Medicine Name", value: data?.medicine_name },
+                              { 
+                                label: "Order Amount", 
+                                value: data?.order_amount ? `${data?.currency || 'USD'} ${data?.order_amount}` : "-" 
                               },
-                              { label: "Agent Name", value: data?.agent.name },
-                              {
-                                label: "Best time to call",
-                                value: data?.best_time_to_call,
-                              },
-                              {
-                                label: "Lead Source",
-                                value: data?.lead_source,
-                              },
-                              {
-                                label: "Debt Consolidation Status",
-                                value: data?.debt_consolidation_status,
-                              },
-                              {
-                                label: "Consolidation Status",
-                                value: data?.consolidated_credit_status,
-                              },
-                              {
-                                label: "WHATSAPP",
-                                value: data?.whatsapp_number,
-                              },
+                              { label: "Payment Status", value: data?.payment_status || "Pending" },
+                              { label: "Delivery Status", value: data?.delivery_status || "Pending" },
+                              { label: "Courier Name", value: data?.courier_name },
+                              { label: "Tracking Number", value: data?.tracking_number },
                               ...(userRole === "Admin"
-                                ? [
-                                    {
-                                      label: "Lead Age",
-                                      value: data?.lead_age_days,
-                                    },
-                                  ]
+                                ? [{ label: "Lead Age", value: data?.lead_age_label || (data?.lead_age_days ? `${data?.lead_age_days} Days` : "-") }]
                                 : []),
                             ].map((row, idx) => (
                               <tr
                                 key={idx}
-                                className="border    transition-colors border-b border-[#E7E7E7] odd:bg-[#404040]"
+                                className="border transition-colors border-b border-gray-700 odd:bg-[#1E1E1E] even:bg-[#141414]"
                               >
-                                <td className="text-sm text-gray-400 py-4 px-4">
+                                <td className="text-sm text-gray-400 py-3 px-4 font-medium w-1/3">
                                   {row.label}
                                 </td>
-                                <td className="text-sm font-medium text-white py-4 px-4">
+                                <td className="text-sm font-medium text-white py-3 px-4">
                                   {row.value || "-"}
                                 </td>
                               </tr>
@@ -1829,241 +1603,360 @@ export default function Home() {
                       </div>
                     ) : (
                       // LEAD PROPERTIES EDIT FORM
-                      <>
-                        <div className="w-full">
-                          <Formik
-                            enableReinitialize
-                            initialValues={{
-                              id: leadId,
-                              agent_id: data?.agent?.id ?? "",
-                              debt_consolidation_status_id:
-                                data?.debt_consolidation_status_id ??
-                                getIdFromName(
-                                  debtConsolidation,
-                                  data?.debt_consolidation_status,
-                                ) ??
-                                "",
-                              consolidated_credit_status_id:
-                                data?.consolidated_credit_status_id ??
-                                getIdFromName(
-                                  consolidationData,
-                                  data?.consolidated_credit_status,
-                                ) ??
-                                "",
-                              best_time_to_call: data?.best_time_to_call ?? "",
-                              whatsapp_number: data?.whatsapp_number ?? "",
-                            }}
-                            validationSchema={Yup.object({
-                              agent_id: Yup.string().nullable(),
-                              debt_consolidation_status_id:
-                                Yup.string().nullable(),
-                              consolidated_credit_status_id:
-                                Yup.string().nullable(),
-                              best_time_to_call: Yup.string().trim().nullable(),
-                              whatsapp_number: Yup.string().trim().nullable(),
-                            })}
-                            onSubmit={async (values) => {
-                              try {
-                                await AxiosProvider.post(
-                                  "/leads/update",
-                                  values,
-                                );
-                                toast.success("Lead is Updated");
-                                setHitApi(!hitApi);
-                                setIsLeadPropertyEdit(!isleadPropertyEdit);
-                              } catch (error: any) {
-                                toast.error("Lead is not Updated");
-                              }
-                            }}
-                          >
-                            {({
-                              setFieldValue,
-                              setFieldTouched,
-                              values,
-                              isSubmitting,
-                            }) => {
-                              const findById = (
-                                list: any[],
-                                id: string | number,
-                              ) =>
-                                list?.find(
-                                  (o: any) => String(o.id) === String(id),
-                                ) || null;
+                      <div className="w-full border border-gray-700 rounded overflow-hidden mb-6 bg-[#181818] p-4">
+                        <p className="text-base font-semibold text-white mb-4 border-b border-gray-700 pb-2">
+                          Edit Lead & Order Properties
+                        </p>
+                        <Formik
+                          enableReinitialize
+                          initialValues={{
+                            id: leadId,
+                            agent_id: data?.agent?.id ?? "",
+                            lead_status: data?.lead_status ?? "New",
+                            lead_source_id: data?.lead_source_id || data?.lead_source?.id || (leadSourceData.find((s) => s.name?.toLowerCase() === (typeof data?.lead_source === 'string' ? data?.lead_source?.toLowerCase() : ''))?.id) || "",
+                            best_time_to_call: data?.best_time_to_call ?? "",
+                            whatsapp_number: data?.whatsapp_number ?? "",
+                            medicine_name: data?.medicine_name ?? "",
+                            order_amount: data?.order_amount ?? "",
+                            currency: data?.currency ?? "USD",
+                            payment_status: data?.payment_status ?? "Pending",
+                            delivery_status: data?.delivery_status ?? "Pending",
+                            courier_name: data?.courier_name ?? "",
+                            tracking_number: data?.tracking_number ?? "",
+                          }}
+                          validationSchema={Yup.object({
+                            agent_id: Yup.string().nullable(),
+                            lead_status: Yup.string().nullable(),
+                            lead_source_id: Yup.string().nullable(),
+                            best_time_to_call: Yup.string().trim().nullable(),
+                            whatsapp_number: Yup.string().trim().nullable(),
+                            medicine_name: Yup.string().trim().nullable(),
+                            order_amount: Yup.number().typeError("Order amount must be a number").nullable(),
+                            currency: Yup.string().nullable(),
+                            payment_status: Yup.string().nullable(),
+                            delivery_status: Yup.string().nullable(),
+                            courier_name: Yup.string().trim().nullable(),
+                            tracking_number: Yup.string().trim().nullable(),
+                          })}
+                          onSubmit={async (values, { setSubmitting }) => {
+                            try {
+                              const payload: any = {
+                                id: leadId,
+                                agent_id: values.agent_id || undefined,
+                                lead_status: values.lead_status || undefined,
+                                lead_source_id: values.lead_source_id || undefined,
+                                best_time_to_call: values.best_time_to_call || undefined,
+                                whatsapp_number: values.whatsapp_number || undefined,
+                                medicine_name: values.medicine_name || undefined,
+                                order_amount: values.order_amount !== "" && values.order_amount !== null ? Number(values.order_amount) : undefined,
+                                currency: values.currency || undefined,
+                                payment_status: values.payment_status || undefined,
+                                delivery_status: values.delivery_status || undefined,
+                                courier_name: values.courier_name || undefined,
+                                tracking_number: values.tracking_number || undefined,
+                              };
+                              await AxiosProvider.post("/leads/update", payload);
+                              toast.success("Lead properties updated successfully");
+                              setHitApi(!hitApi);
+                              setIsLeadPropertyEdit(true);
+                            } catch (error: any) {
+                              toast.error("Failed to update lead properties");
+                            } finally {
+                              setSubmitting(false);
+                            }
+                          }}
+                        >
+                          {({
+                            setFieldValue,
+                            setFieldTouched,
+                            values,
+                            isSubmitting,
+                          }) => (
+                            <Form className="space-y-4">
+                              {/* Assign Agent */}
+                              <div>
+                                <label className="block text-xs font-medium text-gray-300 mb-1">Agent Name</label>
+                                <Select
+                                  value={agent.find((opt) => opt.id === values.agent_id) || null}
+                                  onChange={(selected: any) => setFieldValue("agent_id", selected ? selected.id : "")}
+                                  onBlur={() => setFieldTouched("agent_id", true)}
+                                  getOptionLabel={(opt: any) => opt.name}
+                                  getOptionValue={(opt: any) => opt.id}
+                                  options={agent}
+                                  placeholder="Select Agent"
+                                  isClearable
+                                  classNames={{
+                                    control: () => "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
+                                  }}
+                                  styles={{
+                                    menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                                    option: (base, { isFocused, isSelected }) => ({
+                                      ...base,
+                                      backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                                      color: "#fff",
+                                    }),
+                                    singleValue: (base) => ({ ...base, color: "#fff" }),
+                                    input: (base) => ({ ...base, color: "#fff" }),
+                                    placeholder: (base) => ({ ...base, color: "#888" }),
+                                  }}
+                                />
+                              </div>
 
-                              const agentValue = findById(
-                                agent,
-                                values.agent_id,
-                              );
-                              const debtConsValue = findById(
-                                debtConsolidation,
-                                values.debt_consolidation_status_id,
-                              );
-                              const consValue = findById(
-                                consolidationData,
-                                values.consolidated_credit_status_id,
-                              );
+                              {/* Lead Status */}
+                              <div>
+                                <label className="block text-xs font-medium text-gray-300 mb-1">Lead Status</label>
+                                <Select
+                                  value={leadStatusOptions.find((opt) => opt.id === values.lead_status) || null}
+                                  onChange={(selected: any) => setFieldValue("lead_status", selected ? selected.id : "New")}
+                                  onBlur={() => setFieldTouched("lead_status", true)}
+                                  getOptionLabel={(opt: any) => opt.name}
+                                  getOptionValue={(opt: any) => opt.id}
+                                  options={leadStatusOptions}
+                                  placeholder="Select Lead Status"
+                                  classNames={{
+                                    control: () => "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
+                                  }}
+                                  styles={{
+                                    menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                                    option: (base, { isFocused, isSelected }) => ({
+                                      ...base,
+                                      backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                                      color: "#fff",
+                                    }),
+                                    singleValue: (base) => ({ ...base, color: "#fff" }),
+                                    input: (base) => ({ ...base, color: "#fff" }),
+                                    placeholder: (base) => ({ ...base, color: "#888" }),
+                                  }}
+                                />
+                              </div>
 
-                              return (
-                                <Form>
-                                  <table className="w-full text-sm text-left  text-white">
-                                    <thead className="text-xs bg-primary-500 text-white">
-                                      <tr className="border border-tableBorder">
-                                        <th
-                                          scope="col"
-                                          className="px-3 py-3 md:p-3 border border-tableBorder font-semibold text-white text-base"
-                                          colSpan={2}
-                                        >
-                                          Lead Properties (Edit)
-                                        </th>
-                                      </tr>
-                                    </thead>
+                              {/* Lead Source */}
+                              <div>
+                                <label className="block text-xs font-medium text-gray-300 mb-1">Lead Source</label>
+                                <Select
+                                  value={leadSourceData.find((opt) => opt.id === values.lead_source_id || opt.name?.toLowerCase() === values.lead_source_id?.toLowerCase() || (data?.lead_source && opt.name?.toLowerCase() === (typeof data.lead_source === 'string' ? data.lead_source.toLowerCase() : ''))) || null}
+                                  onChange={(selected: any) => setFieldValue("lead_source_id", selected ? selected.id : "")}
+                                  onBlur={() => setFieldTouched("lead_source_id", true)}
+                                  getOptionLabel={(opt: any) => opt.name}
+                                  getOptionValue={(opt: any) => opt.id}
+                                  options={leadSourceData}
+                                  placeholder="Select Lead Source"
+                                  isClearable
+                                  classNames={{
+                                    control: () => "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
+                                  }}
+                                  styles={{
+                                    menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                                    option: (base, { isFocused, isSelected }) => ({
+                                      ...base,
+                                      backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                                      color: "#fff",
+                                    }),
+                                    singleValue: (base) => ({ ...base, color: "#fff" }),
+                                    input: (base) => ({ ...base, color: "#fff" }),
+                                    placeholder: (base) => ({ ...base, color: "#888" }),
+                                  }}
+                                />
+                              </div>
 
-                                    <tbody>
-                                      {/* Agent -> Dropdown */}
-                                      <tr className="border border-tableBorder  hover:bg-primary-600 transition-colors">
-                                        <td className="text-sm text-text-gray-400 py-4 px-4">
-                                          Agent Name
-                                        </td>
-                                        <td className="py-4 px-4">
-                                          <Select
-                                            value={agentValue}
-                                            onChange={(selected: any) =>
-                                              setFieldValue(
-                                                "agent_id",
-                                                selected ? selected.id : "",
-                                              )
-                                            }
-                                            onBlur={() =>
-                                              setFieldTouched("agent_id", true)
-                                            }
-                                            getOptionLabel={(opt: any) =>
-                                              opt.name
-                                            }
-                                            getOptionValue={(opt: any) =>
-                                              String(opt.id)
-                                            }
-                                            options={agent}
-                                            placeholder="Select Agent"
-                                            isClearable
-                                            classNames={{
-                                              control: ({ isFocused }: any) =>
-                                                `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                                  isFocused
-                                                    ? "!border-primary-500"
-                                                    : "!border-gray-700"
-                                                }`,
-                                            }}
-                                            styles={{
-                                              menu: (base) => ({
-                                                ...base,
-                                                borderRadius: 4,
-                                                backgroundColor: "#000",
-                                              }),
-                                              option: (
-                                                base,
-                                                { isFocused, isSelected },
-                                              ) => ({
-                                                ...base,
-                                                backgroundColor: isSelected
-                                                  ? "var(--primary-600)"
-                                                  : isFocused
-                                                    ? "#222"
-                                                    : "#000",
-                                                color: "#fff",
-                                                cursor: "pointer",
-                                              }),
-                                              singleValue: (base) => ({
-                                                ...base,
-                                                color: "#fff",
-                                              }),
-                                              input: (base) => ({
-                                                ...base,
-                                                color: "#fff",
-                                              }),
-                                              placeholder: (base) => ({
-                                                ...base,
-                                                color: "#aaa",
-                                              }),
-                                            }}
-                                          />
-                                        </td>
-                                      </tr>
+                              {/* Best time to call */}
+                              <div>
+                                <label className="block text-xs font-medium text-gray-300 mb-1">Best time to call</label>
+                                <Field
+                                  name="best_time_to_call"
+                                  type="text"
+                                  className="w-full border border-gray-700 rounded-[4px] text-white bg-black text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
+                                  placeholder="e.g. 3-5 PM"
+                                />
+                              </div>
 
-                                      {/* Best time to call -> Input */}
-                                      <tr className="border border-tableBorder  hover:bg-primary-600 transition-colors">
-                                        <td className="text-sm text-text-gray-400 py-4 px-4">
-                                          Best time to call
-                                        </td>
-                                        <td className="py-4 px-4">
-                                          <Field
-                                            name="best_time_to_call"
-                                            type="text"
-                                            className="w-full border border-primary-500 rounded-[4px] text-white bg-black text-sm px-3 py-2 focus:outline-none"
-                                            placeholder="Enter best time to call"
-                                          />
-                                          <ErrorMessage
-                                            name="best_time_to_call"
-                                            component="p"
-                                            className="text-red-500 text-xs mt-1"
-                                          />
-                                        </td>
-                                      </tr>
+                              {/* WhatsApp Number */}
+                              <div>
+                                <label className="block text-xs font-medium text-gray-300 mb-1">WhatsApp Number</label>
+                                <div className="flex w-full border border-gray-700 rounded-[4px] bg-black overflow-hidden focus-within:border-primary-500">
+                                  <select 
+                                    className="bg-black text-white text-xs border-r border-gray-700 px-2 py-2 outline-none cursor-pointer"
+                                    value={values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91"}
+                                    onChange={(e) => {
+                                      const currentCode = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
+                                      const numberPart = (values.whatsapp_number || "").replace(currentCode, "");
+                                      setFieldValue("whatsapp_number", e.target.value + numberPart);
+                                    }}
+                                  >
+                                    <option value="+91">+91</option>
+                                    <option value="+1">+1</option>
+                                    <option value="+44">+44</option>
+                                  </select>
+                                  <input
+                                    type="text"
+                                    maxLength={10}
+                                    className="w-full bg-transparent text-white text-sm px-3 py-2 outline-none placeholder-gray-500"
+                                    placeholder="Enter whatsapp number"
+                                    value={(() => {
+                                      const code = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
+                                      return (values.whatsapp_number || "").substring(code.length);
+                                    })()}
+                                    onChange={(e) => {
+                                      const code = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
+                                      const digitsOnly = e.target.value.replace(/\D/g, "");
+                                      setFieldValue("whatsapp_number", code + digitsOnly);
+                                    }}
+                                  />
+                                </div>
+                              </div>
 
-                                      
+                              {/* Medicine Name */}
+                              <div>
+                                <label className="block text-xs font-medium text-gray-300 mb-1">Medicine Name</label>
+                                <Field
+                                  name="medicine_name"
+                                  type="text"
+                                  className="w-full border border-gray-700 rounded-[4px] text-white bg-black text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
+                                  placeholder="e.g. Paracetamol 500mg"
+                                />
+                              </div>
 
-                                      
+                              {/* Order Amount & Currency */}
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-300 mb-1">Order Amount</label>
+                                  <Field
+                                    name="order_amount"
+                                    type="number"
+                                    className="w-full border border-gray-700 rounded-[4px] text-white bg-black text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
+                                    placeholder="0.00"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-300 mb-1">Currency</label>
+                                  <Select
+                                    value={currencyOptions.find((opt) => opt.id === values.currency) || null}
+                                    onChange={(selected: any) => setFieldValue("currency", selected ? selected.id : "USD")}
+                                    onBlur={() => setFieldTouched("currency", true)}
+                                    getOptionLabel={(opt: any) => opt.name}
+                                    getOptionValue={(opt: any) => opt.id}
+                                    options={currencyOptions}
+                                    placeholder="Select"
+                                    classNames={{
+                                      control: () => "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
+                                    }}
+                                    styles={{
+                                      menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                                      option: (base, { isFocused, isSelected }) => ({
+                                        ...base,
+                                        backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                                        color: "#fff",
+                                      }),
+                                      singleValue: (base) => ({ ...base, color: "#fff" }),
+                                      input: (base) => ({ ...base, color: "#fff" }),
+                                      placeholder: (base) => ({ ...base, color: "#888" }),
+                                    }}
+                                  />
+                                </div>
+                              </div>
 
-                                      {/* WhatsApp -> Input */}
-                                      <tr className="border border-tableBorder  hover:bg-primary-600 transition-colors">
-                                        <td className="text-sm text-text-gray-400 py-4 px-4">
-                                          WHATSAPP
-                                        </td>
-                                        <td className="py-4 px-4">
-                                          <Field
-                                            name="whatsapp_number"
-                                            type="text"
-                                            className="w-full border border-primary-500 rounded-[4px] text-white bg-black text-sm px-3 py-2 focus:outline-none"
-                                            placeholder="Enter WhatsApp number"
-                                          />
-                                          <ErrorMessage
-                                            name="whatsapp_number"
-                                            component="p"
-                                            className="text-red-500 text-xs mt-1"
-                                          />
-                                        </td>
-                                      </tr>
-                                    </tbody>
-                                  </table>
+                              {/* Payment Status */}
+                              <div>
+                                <label className="block text-xs font-medium text-gray-300 mb-1">Payment Status</label>
+                                <Select
+                                  value={paymentStatusOptions.find((opt) => opt.id === values.payment_status) || null}
+                                  onChange={(selected: any) => setFieldValue("payment_status", selected ? selected.id : "Pending")}
+                                  onBlur={() => setFieldTouched("payment_status", true)}
+                                  getOptionLabel={(opt: any) => opt.name}
+                                  getOptionValue={(opt: any) => opt.id}
+                                  options={paymentStatusOptions}
+                                  placeholder="Select Payment Status"
+                                  classNames={{
+                                    control: () => "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
+                                  }}
+                                  styles={{
+                                    menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                                    option: (base, { isFocused, isSelected }) => ({
+                                      ...base,
+                                      backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                                      color: "#fff",
+                                    }),
+                                    singleValue: (base) => ({ ...base, color: "#fff" }),
+                                    input: (base) => ({ ...base, color: "#fff" }),
+                                    placeholder: (base) => ({ ...base, color: "#888" }),
+                                  }}
+                                />
+                              </div>
 
-                                  {/* Buttons */}
-                                  <div className="flex items-center justify-end gap-3 pt-4">
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        setIsLeadPropertyEdit(
-                                          !isleadPropertyEdit,
-                                        )
-                                      }
-                                      className="px-4 py-2 rounded-[4px] border border-primary-500 text-white text-sm font-medium bg-black"
-                                    >
-                                      Cancel
-                                    </button>
-                                    <button
-                                      type="submit"
-                                      disabled={isSubmitting}
-                                      className="px-4 py-2 rounded-[4px] bg-primary-600 text-white text-sm font-medium disabled:opacity-60"
-                                    >
-                                      {isSubmitting ? "Saving..." : "Save"}
-                                    </button>
-                                  </div>
-                                </Form>
-                              );
-                            }}
-                          </Formik>
-                        </div>
-                      </>
+                              {/* Delivery Status */}
+                              <div>
+                                <label className="block text-xs font-medium text-gray-300 mb-1">Delivery Status</label>
+                                <Select
+                                  value={deliveryStatusOptions.find((opt) => opt.id === values.delivery_status) || null}
+                                  onChange={(selected: any) => setFieldValue("delivery_status", selected ? selected.id : "Pending")}
+                                  onBlur={() => setFieldTouched("delivery_status", true)}
+                                  getOptionLabel={(opt: any) => opt.name}
+                                  getOptionValue={(opt: any) => opt.id}
+                                  options={deliveryStatusOptions}
+                                  placeholder="Select Delivery Status"
+                                  classNames={{
+                                    control: () => "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
+                                  }}
+                                  styles={{
+                                    menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                                    option: (base, { isFocused, isSelected }) => ({
+                                      ...base,
+                                      backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                                      color: "#fff",
+                                    }),
+                                    singleValue: (base) => ({ ...base, color: "#fff" }),
+                                    input: (base) => ({ ...base, color: "#fff" }),
+                                    placeholder: (base) => ({ ...base, color: "#888" }),
+                                  }}
+                                />
+                              </div>
+
+                              {/* Courier Name */}
+                              <div>
+                                <label className="block text-xs font-medium text-gray-300 mb-1">Courier Name</label>
+                                <Field
+                                  name="courier_name"
+                                  type="text"
+                                  className="w-full border border-gray-700 rounded-[4px] text-white bg-black text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
+                                  placeholder="e.g. DHL / FedEx / SpeedPost"
+                                />
+                              </div>
+
+                              {/* Tracking Number */}
+                              <div>
+                                <label className="block text-xs font-medium text-gray-300 mb-1">Tracking Number</label>
+                                <Field
+                                  name="tracking_number"
+                                  type="text"
+                                  className="w-full border border-gray-700 rounded-[4px] text-white bg-black text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
+                                  placeholder="e.g. DHL123456789"
+                                />
+                              </div>
+
+                              {/* Actions */}
+                              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-700">
+                                <button
+                                  type="button"
+                                  onClick={() => setIsLeadPropertyEdit(true)}
+                                  className="px-4 py-2 rounded-[4px] border border-gray-700 text-white text-sm font-medium bg-black hover:bg-gray-900"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="submit"
+                                  disabled={isSubmitting}
+                                  className="px-4 py-2 rounded-[4px] bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 disabled:opacity-60"
+                                >
+                                  {isSubmitting ? "Saving..." : "Save Properties"}
+                                </button>
+                              </div>
+                            </Form>
+                          )}
+                        </Formik>
+                      </div>
                     )}
                   </div>
+
                   <div className=" md:flex relative w-full">
                     <Tabs tabs={tabs} />
                     <GrPowerReset
@@ -2350,8 +2243,9 @@ export default function Home() {
 
             {/* TASK FORM */}
             <Formik
+              enableReinitialize
               initialValues={{
-                owner: data?.agent.id || "",
+                owner: data?.agent?.id || (storage.getUserRole() === "Agent" ? storage.getUserId() : "") || "",
                 associated_lead: data?.full_name || "",
                 subject:
                   (selectedDropDownTaskValue
@@ -2376,9 +2270,13 @@ export default function Home() {
                   }),
               })}
               onSubmit={async (values, { setSubmitting }) => {
+                const activeAgentId =
+                  data?.agent?.id ||
+                  (storage.getUserRole() === "Agent" ? storage.getUserId() : "") ||
+                  "";
                 const payload = {
                   lead_id: leadId,
-                  assigned_agent_id: data?.agent?.id || "",
+                  assigned_agent_id: activeAgentId,
                   details: values.description || "",
                   subject: values.subject || "",
                   task_type: "followup",
@@ -2416,12 +2314,12 @@ export default function Home() {
                       <input
                         type="hidden"
                         name="owner"
-                        value={data?.agent?.id}
+                        value={data?.agent?.id || (storage.getUserRole() === "Agent" ? storage.getUserId() : "") || ""}
                         readOnly
                       />
                       <input
                         type="text"
-                        value={data?.agent?.name || ""}
+                        value={data?.agent?.name || (storage.getUserRole() === "Agent" ? storage.getUserName() : "") || "Unassigned"}
                         readOnly
                         className="capitalize w-full border border-gray-700 rounded-[4px] text-sm leading-4 font-medium placeholder-gray-400 py-4 px-4 bg-black text-white cursor-not-allowed"
                       />
@@ -2508,25 +2406,6 @@ export default function Home() {
                           placeholderText="MM-dd-yyyy hh:mmam/pm"
                           className="w-full border border-gray-700 rounded-[4px] text-sm leading-4 font-medium placeholder-gray-400 py-4 px-4 bg-black text-white"
                           popperClassName="custom-datepicker"
-                          minDate={startOfTodayCA()}
-                          filterTime={(candidate) => {
-                            const candCA = toPickerLocal(candidate)!; // candidate in CA time
-                            const wStart = windowStartCA(candCA); // 10:00
-                            const wEnd = windowEndCA(candCA); // 21:00
-                            let earliest = wStart;
-
-                            // If we're picking a time on "today" (Canada tz), earliest is the next slot after now
-                            if (isSameDay(candCA, nowCA())) {
-                              const nextSlot = roundUpToSlot(nowCA());
-                              if (nextSlot > wEnd) return false; // past the day window
-                              earliest = nextSlot < wStart ? wStart : nextSlot;
-                            }
-
-                            return (
-                              candCA.getTime() >= earliest.getTime() &&
-                              candCA.getTime() <= wEnd.getTime() // allow up to 21:00
-                            );
-                          }}
                           dayClassName={(date) => {
                             const todayCA = nowCA().toDateString();
                             const selectedCA = values.start_at
@@ -2714,7 +2593,7 @@ export default function Home() {
                 lead_id: Yup.string().nullable().notRequired(),
               })}
               onSubmit={async (values, { setSubmitting }) => {
-                const payload: UpdateActivityPayload = {
+                const payload: any = {
                   id: values.id,
                   lead_id: values.lead_id,
                   conversation: values.conversation,
@@ -2751,7 +2630,7 @@ export default function Home() {
                     onChange={handleChange}
                   />
 
-                  {/* Grid: Disposition, Agent */}
+                  {/* Grid: any, Agent */}
                   <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 md:justify-between mb-4 sm:mb-6">
                     {/* Disposition */}
                     <div className="w-full relative">
@@ -3066,18 +2945,18 @@ export default function Home() {
                         <Select
                           value={
                             (disposition || []).find(
-                              (opt: Option) => opt.id === values.disposition_id,
+                              (opt: any) => opt.id === values.disposition_id,
                             ) || null
                           }
-                          onChange={(selected: Option | null) =>
+                          onChange={(selected: any) =>
                             setFieldValue(
                               "disposition_id",
                               selected ? selected.id : "",
                             )
                           }
                           onBlur={() => setFieldTouched("disposition_id", true)}
-                          getOptionLabel={(opt: Option) => opt.name}
-                          getOptionValue={(opt: Option) => opt.id}
+                          getOptionLabel={(opt: any) => opt.name}
+                          getOptionValue={(opt: any) => opt.id}
                           options={disposition}
                           placeholder="Select Disposition"
                           isClearable
@@ -3118,18 +2997,18 @@ export default function Home() {
                         <Select
                           value={
                             (agent || []).find(
-                              (opt: Option) => opt.id === values.agent_id,
+                              (opt: any) => opt.id === values.agent_id,
                             ) || null
                           }
-                          onChange={(selected: Option | null) =>
+                          onChange={(selected: any) =>
                             setFieldValue(
                               "agent_id",
                               selected ? selected.id : "",
                             )
                           }
                           onBlur={() => setFieldTouched("agent_id", true)}
-                          getOptionLabel={(opt: Option) => opt.name}
-                          getOptionValue={(opt: Option) => opt.id}
+                          getOptionLabel={(opt: any) => opt.name}
+                          getOptionValue={(opt: any) => opt.id}
                           options={agent}
                           placeholder="Select Agent"
                           isClearable
@@ -3315,7 +3194,7 @@ export default function Home() {
                               (opt: any) => opt.id === values.assigned_agent_id,
                             ) || null
                           }
-                          onChange={(selected: Option | null) =>
+                          onChange={(selected: any) =>
                             setFieldValue(
                               "assigned_agent_id",
                               selected ? selected.id : "",
@@ -3324,8 +3203,8 @@ export default function Home() {
                           onBlur={() =>
                             setFieldTouched("assigned_agent_id", true)
                           }
-                          getOptionLabel={(opt: Option) => opt.name}
-                          getOptionValue={(opt: Option) => opt.id}
+                          getOptionLabel={(opt: any) => opt.name}
+                          getOptionValue={(opt: any) => opt.id}
                           options={agent}
                           placeholder="Select Agent"
                           isClearable
@@ -3988,12 +3867,12 @@ export default function Home() {
                               <input
                                 type="hidden"
                                 name="owner"
-                                value={data?.agent?.id}
+                                value={data?.agent?.id || (storage.getUserRole() === "Agent" ? storage.getUserId() : "") || ""}
                                 readOnly
                               />
                               <input
                                 type="text"
-                                value={data?.agent?.name || ""}
+                                value={data?.agent?.name || (storage.getUserRole() === "Agent" ? storage.getUserName() : "") || "Unassigned"}
                                 readOnly
                                 className="capitalize hover:shadow-hoverInputShadow focus-border-primary w-full border border-[#DFEAF2] rounded-[4px] text-sm leading-4 font-medium placeholder-[#717171] py-4 px-4 text-firstBlack bg-gray-50 cursor-not-allowed"
                               />
@@ -4103,53 +3982,6 @@ export default function Home() {
                                   if (selectedCA === date.toDateString())
                                     return "bg-[#A3000E] text-white";
                                   return "hover:bg-[#FFCCD0] hover:text-[#A3000E]";
-                                }}
-                                /* Disable past days */
-                                minDate={startOfTodayCA()}
-                                /* HIDE times outside 10:00am–8:30pm, and hide today's past times */
-                                filterTime={(candidate: Date) => {
-                                  const candCA = toPickerLocal(candidate)!;
-
-                                  // Build window bounds on the candidate's local day
-                                  const y = candCA.getFullYear();
-                                  const m = candCA.getMonth();
-                                  const d = candCA.getDate();
-                                  const wStart = new Date(y, m, d, 10, 0, 0, 0); // 10:00 AM
-                                  const wLastStart = new Date(
-                                    y,
-                                    m,
-                                    d,
-                                    20,
-                                    30,
-                                    0,
-                                    0,
-                                  ); // 8:30 PM (latest start)
-
-                                  // Default earliest = 10:00
-                                  let earliest = wStart;
-
-                                  // If candidate is today (Canada), earliest is the next 15-min slot within window
-                                  const now = nowCA();
-                                  const isToday =
-                                    now.getFullYear() === y &&
-                                    now.getMonth() === m &&
-                                    now.getDate() === d;
-                                  if (isToday) {
-                                    const next = new Date(now);
-                                    next.setSeconds(0, 0);
-                                    const mins = next.getMinutes();
-                                    next.setMinutes(
-                                      mins + ((15 - (mins % 15)) % 15),
-                                    ); // round up to 15
-                                    if (next > wLastStart) return false; // no slots left today
-                                    earliest = next < wStart ? wStart : next;
-                                  }
-
-                                  // Allow only [earliest, 20:30]
-                                  return (
-                                    candCA.getTime() >= earliest.getTime() &&
-                                    candCA.getTime() <= wLastStart.getTime()
-                                  );
                                 }}
                               />
                               {touched.start_at && (errors as any).start_at ? (

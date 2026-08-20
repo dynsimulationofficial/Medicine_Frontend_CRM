@@ -5,9 +5,7 @@ import * as Yup from "yup";
 import Select from "react-select";
 import { toast } from 'react-toastify';
 
-interface CreateLeadProps {
-  closeFlyOut: () => void;
-}
+
 
 
 
@@ -154,7 +152,7 @@ export const currencyOptions = [
   { id: "GBP", name: "GBP (£)" },
 ];
 
-const CreateLead: React.FC<CreateLeadProps> = ({ closeFlyOut }) => {
+const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
   const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
   const [agentList, setAgentList] = useState<any[]>([]);
 
