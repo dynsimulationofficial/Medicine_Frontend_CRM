@@ -19,8 +19,6 @@ import AxiosProvider from "../../provider/AxiosProvider";
 import { useContext } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import PhoneInput from "react-phone-input-2";
-import "react-phone-input-2/lib/style.css";
 import { FaRegEye } from "react-icons/fa";
 import { FaRegEyeSlash } from "react-icons/fa";
 import { AppContext } from "../AppContext";
@@ -46,12 +44,7 @@ const roleOptions = [
 
 const validationSchema = Yup.object().shape({
   name: Yup.string().required("Your name is required"),
-  mobile_number: Yup.string()
-    .matches(
-      /^\+91\d{10}$/,
-      "Mobile number must be in the format +91xxxxxxxxxx",
-    ) // Regex for valid mobile number format
-    .required("Mobile number is required"),
+  mobile_number: Yup.string().matches(/^(\+91|\+1|\+44)\d{10}$/, "Mobile number must be exactly 10 digits").required("Mobile number is required"),
   email: Yup.string()
     .email("Invalid email address")
     .required("Email is required"),
@@ -84,7 +77,7 @@ export default function Home() {
       //  await activityLogger.userRegister(res.data.data.userId);
     } catch (error: any) {
       if (error.response && error.response.status === 409) {
-        toast.error(error.response.data.msg || "Conflict error occurred.");
+        toast.error(error.response?.data?.message || error.response?.data?.msg || "Conflict error occurred.");
       } else {
         console.error("Error during registration:", error);
         toast.error("Failed to submit the form.");
@@ -102,7 +95,7 @@ export default function Home() {
             <Formik
               initialValues={{
                 name: "",
-                mobile_number: "",
+                mobile_number: "+91",
                 email: "",
                 password: "",
                 roleLevel: "1",
@@ -136,20 +129,36 @@ export default function Home() {
                         <p className="text-white text-base leading-normal mb-2">
                           Mobile Number
                         </p>
-                        <PhoneInput
-                          country={"in"}
-                          value={values.mobile_number}
-                          onChange={(phone: string) => {
-                            const formattedPhone = phone
-                              ? phone.startsWith("+")
-                                ? phone
-                                : `+${phone}`
-                              : "";
-                            setFieldValue("mobile_number", formattedPhone);
-                          }}
-                          placeholder="Mobile Number"
-                          inputClass="w-full h-[50px] text-white placeholder-gray-400 bg-black border border-gray-700 rounded-[4px] pl-4"
-                        />
+                        <div className="flex w-full h-[50px] border border-gray-700 rounded-[4px] bg-black overflow-hidden hover:shadow-hoverInputShadow focus-within:border-primary-600">
+                            <select 
+                              className="bg-black text-white text-sm border-r border-gray-700 px-2 py-3 outline-none cursor-pointer"
+                              value={values.mobile_number.startsWith('+1') ? '+1' : values.mobile_number.startsWith('+44') ? '+44' : '+91'}
+                              onChange={(e) => {
+                                const currentCode = values.mobile_number.startsWith('+1') ? '+1' : values.mobile_number.startsWith('+44') ? '+44' : '+91';
+                                const numberPart = values.mobile_number.replace(currentCode, '');
+                                setFieldValue('mobile_number', e.target.value + numberPart);
+                              }}
+                            >
+                              <option value="+91">+91</option>
+                              <option value="+1">+1</option>
+                              <option value="+44">+44</option>
+                            </select>
+                            <input
+                              type="text"
+                              maxLength={10}
+                              className="w-full bg-black text-white pl-4 outline-none placeholder-gray-400"
+                              placeholder="Enter mobile number"
+                              value={(() => {
+                                const code = values.mobile_number.startsWith('+1') ? '+1' : values.mobile_number.startsWith('+44') ? '+44' : '+91';
+                                return values.mobile_number.substring(code.length);
+                              })()}
+                              onChange={(e) => {
+                                const code = values.mobile_number.startsWith('+1') ? '+1' : values.mobile_number.startsWith('+44') ? '+44' : '+91';
+                                const digitsOnly = e.target.value.replace(/\D/g, '');
+                                setFieldValue('mobile_number', code + digitsOnly);
+                              }}
+                            />
+                          </div>
                         <ErrorMessage
                           name="mobile_number"
                           component="div"

@@ -435,14 +435,39 @@ const CreateLead: React.FC<CreateLeadProps> = ({ closeFlyOut }) => {
 
                 {/* WhatsApp Number */}
                 <div>
-                  <p className="text-white mb-2">WhatsApp Number</p>
-                  <Field
-                    type="text"
-                    name="whatsapp_number"
-                    placeholder="+91 9XXXXXXXXX"
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
-                  />
-                </div>
+                                      <p className="text-white mb-2">WhatsApp Number</p>
+                    <div className="flex w-full border border-gray-700 rounded-[4px] bg-black overflow-hidden hover:shadow-hoverInputShadow focus-within:border-primary-600">
+                      <select 
+                        className="bg-black text-white text-sm border-r border-gray-700 px-2 py-3 outline-none cursor-pointer"
+                        value={values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91'}
+                        onChange={(e) => {
+                          const currentCode = values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91';
+                          const numberPart = (values.whatsapp_number || '').replace(currentCode, '');
+                          setFieldValue('whatsapp_number', e.target.value + numberPart);
+                        }}
+                      >
+                        <option value="+91">+91</option>
+                        <option value="+1">+1</option>
+                        <option value="+44">+44</option>
+                      </select>
+                      <input
+                        type="text"
+                        maxLength={10}
+                        className="w-full bg-transparent text-white text-sm px-3 py-3 outline-none placeholder-gray-400"
+                        placeholder="Enter whatsapp number"
+                        value={(() => {
+                          const code = values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91';
+                          return (values.whatsapp_number || '').substring(code.length);
+                        })()}
+                        onChange={(e) => {
+                          const code = values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91';
+                          const digitsOnly = e.target.value.replace(/\D/g, '');
+                          setFieldValue('whatsapp_number', code + digitsOnly);
+                        }}
+                      />
+                    </div>
+                    <ErrorMessage name="whatsapp_number" component="div" className="text-red-500 text-xs mt-1" />
+                  </div>
 
                 {/* Assign to Agent */}
                 <div>

@@ -16,6 +16,13 @@ import { AppContext } from "../AppContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
+const getThemeSwal = () => Swal.mixin({
+  background: "#171717",
+  color: "#ffffff",
+  confirmButtonColor: "#138ab6",
+  cancelButtonColor: "#404040",
+});
+
 import SidebarUserUpdateForm from "../component/SidebarUserUpdateForm";
 import StorageManager from "../../provider/StorageManager";
 import React from "react";
@@ -92,7 +99,7 @@ export default function Home() {
   const deleteUserData = async (item: User) => {
     const userID = item.id;
 
-    Swal.fire({
+    getThemeSwal().fire({
       title: "Are you sure?",
       text: "Do you really want to delete this user?",
       icon: "warning",
@@ -119,7 +126,7 @@ export default function Home() {
   const blockUserData = async (item: User) => {
     const userID = item.id;
 
-    Swal.fire({
+    getThemeSwal().fire({
       title: "Block User",
       input: "textarea",
       inputPlaceholder: "Enter reason...",
@@ -212,7 +219,7 @@ export default function Home() {
       
       const res = await AxiosProvider.post("/leads/user/edit", payload);
       if (res.data?.success || res.status === 200) {
-        Swal.fire("Success", "User updated success", "success");
+        getThemeSwal().fire("Success", "User updated success", "success");
         setFlyoutOpen(false);
         setShouldRefetch((prev) => !prev);
       }
@@ -222,7 +229,7 @@ export default function Home() {
       const validationErrs = err.response?.data?.errors?.map((e:any)=>e).join(', ');
       
       const errorMessage = backendMsg || validationErrs || err.message || "User is not updated";
-      Swal.fire("Error", errorMessage, "error");
+      getThemeSwal().fire("Error", errorMessage, "error");
     } finally {
       if (setSubmitting) setSubmitting(false);
     }

@@ -1,4 +1,6 @@
 "use client";
+import { statesByCountry } from "./CreateLead";
+
 import Image from "next/image";
 import { SetStateAction, useContext, useEffect, useState } from "react";
 import { CiSettings } from "react-icons/ci";
@@ -133,8 +135,8 @@ export default function Home() {
     state: "",
     agent_ids: [] as string[],
     lead_source_id: "",
-    debt_consolidation_status_id: "",
-    consolidated_credit_status_id: "",
+    
+    
     created_from: "",
     created_to: "",
     lead_score: "",
@@ -242,7 +244,7 @@ export default function Home() {
 
     // optional dropdowns
     lead_source_id: Yup.string().nullable().notRequired(),
-    debt_consolidation_status_id: Yup.string().nullable().notRequired(),
+    
 
     // If you want to validate WhatsApp similarly, add this (optional)
     whatsapp_number: Yup.string()
@@ -314,12 +316,7 @@ export default function Home() {
         fd.append("agent_id", String(agentDisplay.id));
       }
 
-      if (debtConsolidationDisplay?.id) {
-        fd.append(
-          "debt_consolidation_status_id",
-          String(debtConsolidationDisplay.id),
-        );
-      }
+      
 
       // ✅ Perform the upload
       const res = await fetch(
@@ -695,21 +692,7 @@ export default function Home() {
   };
   // END PAGINATION HANDLE CHANGES
 
-  const provinceOptions = [
-    { id: "alberta", name: "Alberta" },
-    { id: "british-columbia", name: "British Columbia" },
-    { id: "manitoba", name: "Manitoba" },
-    { id: "new-brunswick", name: "New Brunswick" },
-    { id: "newfoundland-labrador", name: "Newfoundland and Labrador" },
-    { id: "northwest-territories", name: "Northwest Territories" },
-    { id: "nova-scotia", name: "Nova Scotia" },
-    { id: "nunavut", name: "Nunavut" },
-    { id: "ontario", name: "Ontario" },
-    { id: "prince-edward-island", name: "Prince Edward Island" },
-    { id: "quebec", name: "Quebec" },
-    { id: "saskatchewan", name: "Saskatchewan" },
-    { id: "yukon", name: "Yukon" },
-  ];
+  
 
   // Export handler function
   ;
@@ -1637,51 +1620,7 @@ export default function Home() {
                     />
                   </div>
 
-                  {/* Debt Consolidation */}
-                  <div className="w-full mb-4">
-                    <p className="text-white text-base leading-6 mb-2">
-                      Debt Consolidation Status
-                    </p>
-                    <Select
-                      value={debtConsolidationDisplay}
-                      onChange={(selected: any) =>
-                        setDebtConsolidationDisplay(selected)
-                      }
-                      getOptionLabel={(opt: any) => opt.name}
-                      getOptionValue={(opt: any) => String(opt.id)}
-                      options={debtConsolidation}
-                      placeholder="Select Debt Consolidation Status"
-                      isClearable
-                      classNames={{
-                        control: ({ isFocused }: any) =>
-                          `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                            isFocused
-                              ? "!border-primary-500"
-                              : "!border-gray-700"
-                          }`,
-                      }}
-                      styles={{
-                        menu: (base) => ({
-                          ...base,
-                          borderRadius: 4,
-                          backgroundColor: "#000",
-                        }),
-                        option: (base, { isFocused, isSelected }) => ({
-                          ...base,
-                          backgroundColor: isSelected
-                            ? "var(--primary-600)"
-                            : isFocused
-                              ? "#222"
-                              : "#000",
-                          color: "#fff",
-                          cursor: "pointer",
-                        }),
-                        singleValue: (base) => ({ ...base, color: "#fff" }),
-                        input: (base) => ({ ...base, color: "#fff" }),
-                        placeholder: (base) => ({ ...base, color: "#aaa" }),
-                      }}
-                    />
-                  </div>
+                  
                 </div>
 
                 <button
@@ -1744,13 +1683,7 @@ export default function Home() {
                       ) || null
                     : null;
 
-                  const debtDisplay = values.debt_consolidation_status_id
-                    ? (debtConsolidation || []).find(
-                        (o: any) =>
-                          norm(o.id) ===
-                          norm(values.debt_consolidation_status_id),
-                      ) || null
-                    : null;
+                  
 
                   const agentDisplay =
                     (values.agent_ids || [])
@@ -1761,20 +1694,11 @@ export default function Home() {
                       )
                       .filter(Boolean) || [];
 
-                  const creditDisplay = values.consolidated_credit_status_id
-                    ? (consolidationData || []).find(
-                        (o: any) =>
-                          norm(o.id) ===
-                          norm(values.consolidated_credit_status_id),
-                      ) || null
-                    : null;
+                  
 
-                  // Province dropdown
-                  const provinceDisplay = values.state
-                    ? (provinceOptions || []).find(
-                        (o: any) => norm(o.id) === norm(values.state),
-                      ) || null
-                    : null;
+                  // State dropdown
+const allStates = Object.values(statesByCountry).flat();
+const stateDisplay = values.state ? allStates.find((o: any) => norm(o.id) === norm(values.state)) || null : null;
 
                   // Date formatting helper
                   const fmt = (d: Date) => {
@@ -1936,24 +1860,17 @@ export default function Home() {
                           />
                         </div>
 
-                        {/* Province (Dropdown) */}
-                        <div className="w-full">
-                          <p className="text-white text-base leading-6 mb-2">
-                            Province
-                          </p>
-                          <Select
-                            value={provinceDisplay}
-                            onChange={(selected: any) =>
-                              setFieldValue(
-                                "state",
-                                selected ? selected.id : "",
-                              )
-                            }
-                            onBlur={() => setFieldTouched("state", true)}
-                            getOptionLabel={(opt: any) => opt.name}
-                            getOptionValue={(opt: any) => String(opt.id)}
-                            options={provinceOptions}
-                            placeholder="Select Province"
+                        {/* State / Region (Dropdown) */}
+<div className="w-full">
+  <p className="text-white text-base leading-6 mb-2">State / Region</p>
+  <Select
+    value={stateDisplay}
+    onChange={(selected: any) => setFieldValue("state", selected ? selected.id : "")}
+    onBlur={() => setFieldTouched("state", true)}
+    getOptionLabel={(opt: any) => opt.name}
+    getOptionValue={(opt: any) => String(opt.id)}
+    options={allStates}
+    placeholder="Select State / Region"
                             isClearable
                             classNames={{
                               control: ({ isFocused }: any) =>
@@ -2190,127 +2107,9 @@ export default function Home() {
                           />
                         </div>
 
-                        {/* Debt Consolidation */}
-                        <div className="w-full">
-                          <p className="text-white text-base leading-6 mb-2">
-                            Debt Consolidation Status
-                          </p>
-                          <Select
-                            value={debtDisplay}
-                            onChange={(selected: any) =>
-                              setFieldValue(
-                                "debt_consolidation_status_id",
-                                selected ? selected.id : "",
-                              )
-                            }
-                            onBlur={() =>
-                              setFieldTouched(
-                                "debt_consolidation_status_id",
-                                true,
-                              )
-                            }
-                            getOptionLabel={(opt: any) => opt.name}
-                            getOptionValue={(opt: any) => String(opt.id)}
-                            options={debtConsolidation}
-                            placeholder="Select Debt Consolidation Status"
-                            isClearable
-                            classNames={{
-                              control: ({ isFocused }: any) =>
-                                `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                  isFocused
-                                    ? "!border-primary-500"
-                                    : "!border-gray-700"
-                                }`,
-                            }}
-                            styles={{
-                              menu: (base) => ({
-                                ...base,
-                                borderRadius: 4,
-                                backgroundColor: "#000",
-                              }),
-                              option: (base, { isFocused, isSelected }) => ({
-                                ...base,
-                                backgroundColor: isSelected
-                                  ? "var(--primary-600)"
-                                  : isFocused
-                                    ? "#222"
-                                    : "#000",
-                                color: "#fff",
-                                cursor: "pointer",
-                              }),
-                              singleValue: (base) => ({
-                                ...base,
-                                color: "#fff",
-                              }),
-                              input: (base) => ({ ...base, color: "#fff" }),
-                              placeholder: (base) => ({
-                                ...base,
-                                color: "#aaa",
-                              }),
-                            }}
-                          />
-                        </div>
+                        
 
-                        {/* Consolidated Credit */}
-                        <div className="w-full">
-                          <p className="text-white text-base leading-6 mb-2">
-                            Consolidated Credit Status
-                          </p>
-                          <Select
-                            value={creditDisplay}
-                            onChange={(selected: any) =>
-                              setFieldValue(
-                                "consolidated_credit_status_id",
-                                selected ? selected.id : "",
-                              )
-                            }
-                            onBlur={() =>
-                              setFieldTouched(
-                                "consolidated_credit_status_id",
-                                true,
-                              )
-                            }
-                            getOptionLabel={(opt: any) => opt.name}
-                            getOptionValue={(opt: any) => String(opt.id)}
-                            options={consolidationData}
-                            placeholder="Select Consolidated Credit Status"
-                            isClearable
-                            classNames={{
-                              control: ({ isFocused }: any) =>
-                                `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                  isFocused
-                                    ? "!border-primary-500"
-                                    : "!border-gray-700"
-                                }`,
-                            }}
-                            styles={{
-                              menu: (base) => ({
-                                ...base,
-                                borderRadius: 4,
-                                backgroundColor: "#000",
-                              }),
-                              option: (base, { isFocused, isSelected }) => ({
-                                ...base,
-                                backgroundColor: isSelected
-                                  ? "var(--primary-600)"
-                                  : isFocused
-                                    ? "#222"
-                                    : "#000",
-                                color: "#fff",
-                                cursor: "pointer",
-                              }),
-                              singleValue: (base) => ({
-                                ...base,
-                                color: "#fff",
-                              }),
-                              input: (base) => ({ ...base, color: "#fff" }),
-                              placeholder: (base) => ({
-                                ...base,
-                                color: "#aaa",
-                              }),
-                            }}
-                          />
-                        </div>
+                        
                       </div>
 
                       <div className="flex gap-4">
@@ -2513,16 +2312,39 @@ export default function Home() {
 
                           {/* WhatsApp Number */}
                           <div className="w-full">
-                            <p className="text-white text-base leading-6 mb-2">
-                              WhatsApp Number
-                            </p>
-                            <Field
-                              type="text"
-                              name="whatsapp_number"
-                              placeholder="+91 9XXXXXXXXX"
-                              className="w-full border border-[#444] rounded-[4px] py-4 px-4 text-white bg-black placeholder-gray-400"
-                            />
-                          </div>
+                                                          <p className="text-white text-base leading-6 mb-2">WhatsApp Number</p>
+                              <div className="flex w-full border border-[#444] rounded-[4px] bg-black overflow-hidden hover:shadow-hoverInputShadow focus-within:border-primary-600">
+                                <select 
+                                  className="bg-black text-white text-sm border-r border-[#444] px-2 py-4 outline-none cursor-pointer"
+                                  value={values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91'}
+                                  onChange={(e) => {
+                                    const currentCode = values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91';
+                                    const numberPart = (values.whatsapp_number || '').replace(currentCode, '');
+                                    setFieldValue('whatsapp_number', e.target.value + numberPart);
+                                  }}
+                                >
+                                  <option value="+91">+91</option>
+                                  <option value="+1">+1</option>
+                                  <option value="+44">+44</option>
+                                </select>
+                                <input
+                                  type="text"
+                                  maxLength={10}
+                                  className="w-full bg-transparent text-white text-sm px-3 py-4 outline-none placeholder-gray-400"
+                                  placeholder="Enter whatsapp number"
+                                  value={(() => {
+                                    const code = values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91';
+                                    return (values.whatsapp_number || '').substring(code.length);
+                                  })()}
+                                  onChange={(e) => {
+                                    const code = values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91';
+                                    const digitsOnly = e.target.value.replace(/\D/g, '');
+                                    setFieldValue('whatsapp_number', code + digitsOnly);
+                                  }}
+                                />
+                              </div>
+                              <ErrorMessage name="whatsapp_number" component="div" className="text-red-500 text-xs mt-1" />
+                            </div>
 
                           {/* Address Line 1 */}
                           <div className="w-full">
@@ -2537,17 +2359,17 @@ export default function Home() {
                             />
                           </div>
 
-                          {/* Province (State renamed to Province) */}
+                          {/* State / Region (Dropdown) */}
                           <div className="w-full">
                             <p className="text-white text-base leading-6 mb-2">
-                              Province
+                              State / Region
                             </p>
                             <Select
-                              value={provinceOptions.find(
+                              value={(statesByCountry[values.country] || Object.values(statesByCountry).flat()).find(
                                 (option: any) =>
                                   option.id === values.state ||
                                   option.name === values.state,
-                              )}
+                              ) || null}
                               onChange={(selected: any) =>
                                 setFieldValue(
                                   "state",
@@ -2557,8 +2379,8 @@ export default function Home() {
                               onBlur={() => setFieldTouched("state", true)}
                               getOptionLabel={(opt: any) => opt.name}
                               getOptionValue={(opt: any) => String(opt.id)}
-                              options={provinceOptions}
-                              placeholder="Select Province"
+                              options={statesByCountry[values.country] || Object.values(statesByCountry).flat()}
+                              placeholder="Select State / Region"
                               isClearable
                               classNames={{
                                 control: ({ isFocused }: any) =>
@@ -2681,66 +2503,7 @@ export default function Home() {
                             />
                           </div>
 
-                          {/* Debt Consolidation Status Dropdown */}
-                          <div className="w-full">
-                            <p className="text-white text-base leading-6 mb-2">
-                              Debt Consolidation Status
-                            </p>
-                            <Select
-                              value={debtDisplay}
-                              onChange={(selected: any) =>
-                                setFieldValue(
-                                  "debt_consolidation_status_id",
-                                  selected ? selected.id : "",
-                                )
-                              }
-                              onBlur={() =>
-                                setFieldTouched(
-                                  "debt_consolidation_status_id",
-                                  true,
-                                )
-                              }
-                              getOptionLabel={(opt: any) => opt.name}
-                              getOptionValue={(opt: any) => String(opt.id)}
-                              options={debtConsolidation}
-                              placeholder="Select Debt Consolidation Status"
-                              isClearable
-                              classNames={{
-                                control: ({ isFocused }: any) =>
-                                  `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                    isFocused
-                                      ? "!border-primary-500"
-                                      : "!border-gray-700"
-                                  }`,
-                              }}
-                              styles={{
-                                menu: (base) => ({
-                                  ...base,
-                                  borderRadius: 4,
-                                  backgroundColor: "#000",
-                                }),
-                                option: (base, { isFocused, isSelected }) => ({
-                                  ...base,
-                                  backgroundColor: isSelected
-                                    ? "var(--primary-600)"
-                                    : isFocused
-                                      ? "#222"
-                                      : "#000",
-                                  color: "#fff",
-                                  cursor: "pointer",
-                                }),
-                                singleValue: (base) => ({
-                                  ...base,
-                                  color: "#fff",
-                                }),
-                                input: (base) => ({ ...base, color: "#fff" }),
-                                placeholder: (base) => ({
-                                  ...base,
-                                  color: "#aaa",
-                                }),
-                              }}
-                            />
-                          </div>
+                          
                         </div>
 
                         {/* Submit Button */}

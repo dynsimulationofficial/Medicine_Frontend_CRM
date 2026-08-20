@@ -33,6 +33,7 @@ import { HiChevronDoubleLeft } from "react-icons/hi";
 import { HiChevronDoubleRight } from "react-icons/hi";
 import AxiosProvider from "../../provider/AxiosProvider";
 //import CustomerViewDetails from "../component/CustomerViewDetails";
+import { statesByCountry } from "../leads/CreateLead";
 import ReactPlayer from "react-player";
 import DesktopHeader from "../component/DesktopHeader";
 import { Tooltip } from "react-tooltip";
@@ -904,21 +905,7 @@ export default function Home() {
     setSelectedDropDownTaskValue(item); // save value in state
     openTaskFlyout(); // your existing function
   };
-  const provinceOptions = [
-    { id: "alberta", name: "Alberta" },
-    { id: "british-columbia", name: "British Columbia" },
-    { id: "manitoba", name: "Manitoba" },
-    { id: "new-brunswick", name: "New Brunswick" },
-    { id: "newfoundland-labrador", name: "Newfoundland and Labrador" },
-    { id: "northwest-territories", name: "Northwest Territories" },
-    { id: "nova-scotia", name: "Nova Scotia" },
-    { id: "nunavut", name: "Nunavut" },
-    { id: "ontario", name: "Ontario" },
-    { id: "prince-edward-island", name: "Prince Edward Island" },
-    { id: "quebec", name: "Quebec" },
-    { id: "saskatchewan", name: "Saskatchewan" },
-    { id: "yukon", name: "Yukon" },
-  ];
+  
   const maxLength = 100; // Set your desired maximum length
 
   // Function to handle Show More/Show Less toggle
@@ -1408,7 +1395,7 @@ export default function Home() {
 
                         <div className=" flex text-white items-center  gap-2 mb-3">
                           <p className="text-sm font-medium leading-none">
-                            Province:
+                            State / Region:
                           </p>
                           <p className=" text-sm font-medium leading-none">
                             {data?.address?.state || "-"}
@@ -1615,33 +1602,29 @@ export default function Home() {
     <ErrorMessage name="city" component="p" className="text-red-500 text-xs mt-1" />
   </div> */}
 
-                                {/* Province (stored in backend as "state") */}
-                                <div>
-                                  <label className="block text-sm font-medium text-white mb-1 ">
-                                    Province
-                                  </label>
-                                  <Select
-                                    // pick by name against Formik's values.state (optional)
-                                    value={
-                                      provinceOptions.find(
-                                        (opt: any) =>
-                                          (opt.name || "").toLowerCase() ===
-                                          (values.state || "").toLowerCase(),
-                                      ) || null
-                                    }
-                                    onChange={(selected: any) =>
-                                      setFieldValue(
-                                        "state",
-                                        selected ? selected.name : "",
-                                      )
-                                    }
-                                    onBlur={() =>
-                                      setFieldTouched("state", true)
-                                    }
-                                    getOptionLabel={(opt: any) => opt.name}
-                                    getOptionValue={(opt: any) => opt.name}
-                                    options={provinceOptions}
-                                    placeholder="Province"
+                                {/* State / Region (stored in backend as "state") */}
+                                  <div>
+                                    <label className="block text-sm font-medium text-white mb-1 ">
+                                      State / Region
+                                    </label>
+                                    <Select
+                                      value={
+                                        (statesByCountry[values.country] || Object.values(statesByCountry).flat()).find(
+                                          (opt: any) =>
+                                            (opt.name || "").toLowerCase() ===
+                                            (values.state || "").toLowerCase(),
+                                        ) || null
+                                      }
+                                      onChange={(selected: any) =>
+                                        setFieldValue(
+                                          "state",
+                                          selected ? selected.name : "",
+                                        )
+                                      }
+                                      getOptionLabel={(opt: any) => opt.name}
+                                      getOptionValue={(opt: any) => opt.name}
+                                      options={statesByCountry[values.country] || Object.values(statesByCountry).flat()}
+                                      placeholder="State / Region"
                                     isClearable
                                     // Keep className minimal; we'll do most via 'styles'
                                     className="mb-2"
@@ -2026,151 +2009,9 @@ export default function Home() {
                                         </td>
                                       </tr>
 
-                                      {/* Debt Consolidation Status -> Dropdown */}
-                                      <tr className="border border-tableBorder  hover:bg-primary-600 transition-colors">
-                                        <td className="text-sm text-text-gray-400 py-4 px-4">
-                                          Debt Consolidation Status
-                                        </td>
-                                        <td className="py-4 px-4">
-                                          <Select
-                                            value={debtConsValue}
-                                            onChange={(selected: any) =>
-                                              setFieldValue(
-                                                "debt_consolidation_status_id",
-                                                selected ? selected.id : "",
-                                              )
-                                            }
-                                            onBlur={() =>
-                                              setFieldTouched(
-                                                "debt_consolidation_status_id",
-                                                true,
-                                              )
-                                            }
-                                            getOptionLabel={(opt: any) =>
-                                              opt.name
-                                            }
-                                            getOptionValue={(opt: any) =>
-                                              String(opt.id)
-                                            }
-                                            options={debtConsolidation}
-                                            placeholder="Select Debt Consolidation Status"
-                                            isClearable
-                                            classNames={{
-                                              control: ({ isFocused }: any) =>
-                                                `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                                  isFocused
-                                                    ? "!border-primary-500"
-                                                    : "!border-gray-700"
-                                                }`,
-                                            }}
-                                            styles={{
-                                              menu: (base) => ({
-                                                ...base,
-                                                borderRadius: 4,
-                                                backgroundColor: "#000",
-                                              }),
-                                              option: (
-                                                base,
-                                                { isFocused, isSelected },
-                                              ) => ({
-                                                ...base,
-                                                backgroundColor: isSelected
-                                                  ? "var(--primary-600)"
-                                                  : isFocused
-                                                    ? "#222"
-                                                    : "#000",
-                                                color: "#fff",
-                                                cursor: "pointer",
-                                              }),
-                                              singleValue: (base) => ({
-                                                ...base,
-                                                color: "#fff",
-                                              }),
-                                              input: (base) => ({
-                                                ...base,
-                                                color: "#fff",
-                                              }),
-                                              placeholder: (base) => ({
-                                                ...base,
-                                                color: "#aaa",
-                                              }),
-                                            }}
-                                          />
-                                        </td>
-                                      </tr>
+                                      
 
-                                      {/* Consolidation Status -> Dropdown */}
-                                      <tr className="border border-tableBorder  hover:bg-primary-600 transition-colors">
-                                        <td className="text-sm text-text-gray-400 py-4 px-4">
-                                          Consolidation Status
-                                        </td>
-                                        <td className="py-4 px-4">
-                                          <Select
-                                            value={consValue}
-                                            onChange={(selected: any) =>
-                                              setFieldValue(
-                                                "consolidated_credit_status_id",
-                                                selected ? selected.id : "",
-                                              )
-                                            }
-                                            onBlur={() =>
-                                              setFieldTouched(
-                                                "consolidated_credit_status_id",
-                                                true,
-                                              )
-                                            }
-                                            getOptionLabel={(opt: any) =>
-                                              opt.name
-                                            }
-                                            getOptionValue={(opt: any) =>
-                                              String(opt.id)
-                                            }
-                                            options={consolidationData}
-                                            placeholder="Select Consolidation Status"
-                                            isClearable
-                                            classNames={{
-                                              control: ({ isFocused }: any) =>
-                                                `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                                  isFocused
-                                                    ? "!border-primary-500"
-                                                    : "!border-gray-700"
-                                                }`,
-                                            }}
-                                            styles={{
-                                              menu: (base) => ({
-                                                ...base,
-                                                borderRadius: 4,
-                                                backgroundColor: "#000",
-                                              }),
-                                              option: (
-                                                base,
-                                                { isFocused, isSelected },
-                                              ) => ({
-                                                ...base,
-                                                backgroundColor: isSelected
-                                                  ? "var(--primary-600)"
-                                                  : isFocused
-                                                    ? "#222"
-                                                    : "#000",
-                                                color: "#fff",
-                                                cursor: "pointer",
-                                              }),
-                                              singleValue: (base) => ({
-                                                ...base,
-                                                color: "#fff",
-                                              }),
-                                              input: (base) => ({
-                                                ...base,
-                                                color: "#fff",
-                                              }),
-                                              placeholder: (base) => ({
-                                                ...base,
-                                                color: "#aaa",
-                                              }),
-                                            }}
-                                          />
-                                        </td>
-                                      </tr>
+                                      
 
                                       {/* WhatsApp -> Input */}
                                       <tr className="border border-tableBorder  hover:bg-primary-600 transition-colors">
