@@ -203,9 +203,13 @@ const CreateLead: React.FC<CreateLeadProps> = ({ closeFlyOut }) => {
     phone: Yup.string()
       .trim()
       .required("Phone number is required")
-      .matches(
-        /^(\+91)?[6-9][0-9]{9}$/,
-        "Enter a valid phone number (with or without +91)"
+      .test(
+        "is-valid-phone",
+        "Enter a valid 10-digit phone number",
+        (val) => {
+          if (!val) return false;
+          return /^(\+91|\+1|\+44)[0-9]{10}$/.test(val);
+        }
       ),
     address_line1: Yup.string().nullable().notRequired(),
     address_line2: Yup.string().nullable().notRequired(),
@@ -286,12 +290,37 @@ const CreateLead: React.FC<CreateLeadProps> = ({ closeFlyOut }) => {
                 {/* Phone */}
                 <div>
                   <p className="text-white mb-2">Phone <span className="text-red-500">*</span></p>
-                  <Field
-                    type="text"
-                    name="phone"
-                    placeholder="+91 9XXXXXXXXX"
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
-                  />
+                  <div className="flex w-full border border-gray-700 rounded-[4px] bg-black overflow-hidden hover:shadow-hoverInputShadow focus-within:border-primary-600">
+                    <select 
+                      className="bg-black text-white text-sm border-r border-gray-700 px-2 py-3 outline-none cursor-pointer"
+                      value={values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91"}
+                      onChange={(e) => {
+                        const currentCode = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
+                        const numberPart = (values.phone || "").replace(currentCode, "");
+                        setFieldValue("phone", numberPart ? e.target.value + numberPart : "");
+                      }}
+                    >
+                      <option value="+91">+91</option>
+                      <option value="+1">+1</option>
+                      <option value="+44">+44</option>
+                    </select>
+                    <input
+                      type="text"
+                      maxLength={10}
+                      className="w-full bg-transparent text-white text-sm px-3 py-3 outline-none placeholder-gray-400"
+                      placeholder="Enter phone number"
+                      value={(() => {
+                        const code = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
+                        return (values.phone || "").substring(code.length);
+                      })()}
+                      onChange={(e) => {
+                        const code = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
+                        const digitsOnly = e.target.value.replace(/\D/g, "");
+                        setFieldValue("phone", digitsOnly ? code + digitsOnly : "");
+                      }}
+                      onBlur={() => setFieldTouched("phone", true)}
+                    />
+                  </div>
                   <ErrorMessage name="phone" component="div" className="text-red-500 text-xs mt-1" />
                 </div>
 
