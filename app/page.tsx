@@ -138,8 +138,8 @@ export default function LoginHome() {
         <Image
           src="/images/crmlogo.png"
           alt="OrizonIcon"
-          width={82}
-          height={52}
+          width={200}
+          height={150}
           className="mx-auto mb-5"
         />
         <p className="font-bold text-lg sm:text-base leading-normal text-center  mb-6">

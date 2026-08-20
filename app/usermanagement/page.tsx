@@ -13,7 +13,8 @@ import Link from "next/link";
 import { useEffect, useState, useContext } from "react";
 import AxiosProvider from "../../provider/AxiosProvider";
 import { AppContext } from "../AppContext";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
 import SidebarUserUpdateForm from "../component/SidebarUserUpdateForm";
 import StorageManager from "../../provider/StorageManager";
@@ -204,15 +205,24 @@ export default function Home() {
 
   const handleSubmit = async (values: EditUser, { setSubmitting }: any) => {
     try {
-      const res = await AxiosProvider.post("/leads/user/edit", values);
+      const payload: any = { ...values };
+      if (!payload.password) {
+        delete payload.password;
+      }
+      
+      const res = await AxiosProvider.post("/leads/user/edit", payload);
       if (res.data?.success || res.status === 200) {
-        toast.success("User updated success");
+        Swal.fire("Success", "User updated success", "success");
         setFlyoutOpen(false);
         setShouldRefetch((prev) => !prev);
       }
     } catch (err: any) {
       console.error(err);
-      toast.error(err.response?.data?.message || "User is not updated");
+      const backendMsg = err.response?.data?.message;
+      const validationErrs = err.response?.data?.errors?.map((e:any)=>e).join(', ');
+      
+      const errorMessage = backendMsg || validationErrs || err.message || "User is not updated";
+      Swal.fire("Error", errorMessage, "error");
     } finally {
       if (setSubmitting) setSubmitting(false);
     }

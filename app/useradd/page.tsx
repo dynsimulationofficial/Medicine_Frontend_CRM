@@ -48,8 +48,8 @@ const validationSchema = Yup.object().shape({
   name: Yup.string().required("Your name is required"),
   mobile_number: Yup.string()
     .matches(
-      /^\+\d{1,4}\d{10}$/,
-      "Enter a valid mobile number with country code",
+      /^\+91\d{10}$/,
+      "Mobile number must be in the format +91xxxxxxxxxx",
     ) // Regex for valid mobile number format
     .required("Mobile number is required"),
   email: Yup.string()

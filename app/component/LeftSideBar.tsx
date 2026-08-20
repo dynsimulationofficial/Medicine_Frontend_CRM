@@ -44,7 +44,7 @@ const LeftSideBar: React.FC = () => {
             {/* Fixed-size icon box to prevent shift */}
             <div className="relative h-6 w-6 shrink-0 ">
               <Image
-                src="/images/crmlogo.png"
+                src="/images/crmLogoSidebar.png"
                 alt="Orizon icon"
                 fill
                 className="object-contain"
