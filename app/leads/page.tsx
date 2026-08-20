@@ -916,7 +916,9 @@ export default function Home() {
           </table>
 
           {/* UNASSIGN PAGINATION */}
-          {unAssignFilterPagination ? (
+          {notAssignData && notAssignData.length > 0 && (
+            <>
+              {unAssignFilterPagination ? (
             <div className="flex justify-center items-center my-10 relative">
               <button
                 onClick={() =>
@@ -960,6 +962,8 @@ export default function Home() {
                 <HiChevronDoubleRight className="w-6 h-auto" />
               </button>
             </div>
+          )}
+            </>
           )}
           {/* END PAGINATION */}
         </>
@@ -1135,8 +1139,10 @@ export default function Home() {
             </tbody>
           </table>
 
-          {/* UNASSIGN PAGINATION */}
-          {assignFilterPagination ? (
+          {/* ASSIGN PAGINATION */}
+          {assignLeadData && assignLeadData.length > 0 && (
+            <>
+              {assignFilterPagination ? (
             <div className="flex justify-center items-center my-10 relative">
               <button
                 onClick={() =>
@@ -1181,6 +1187,8 @@ export default function Home() {
                 <HiChevronDoubleRight className="w-6 h-auto" />
               </button>
             </div>
+          )}
+            </>
           )}
           {/* END PAGINATION */}
         </>
