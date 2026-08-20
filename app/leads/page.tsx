@@ -1,5 +1,5 @@
 "use client";
-import { statesByCountry } from "./CreateLead";
+import { statesByCountry, countryOptions, leadStatusOptions, paymentStatusOptions, deliveryStatusOptions, currencyOptions } from "./CreateLead";
 
 import Image from "next/image";
 import { SetStateAction, useContext, useEffect, useState } from "react";
@@ -2161,18 +2161,24 @@ const stateDisplay = values.state ? allStates.find((o: any) => norm(o.id) === no
                   full_name: editLeadData?.full_name ?? "",
                   email: editLeadData?.email ?? "",
                   phone: editLeadData?.phone ?? "",
-                  whatsapp_number: editLeadData?.whatsapp_number ?? "",
-                  address_line1: editLeadData?.address?.line1 ?? "",
-                  address_line2: editLeadData?.address?.line2 ?? "",
-                  city: editLeadData?.address?.city ?? "",
-                  state: editLeadData?.address?.state ?? "",
-                  postal_code: editLeadData?.address?.postal_code ?? "",
-                  country: editLeadData?.address?.country ?? "",
-                  lead_quality: editLeadData?.lead_quality ?? "",
+                  address_line1: editLeadData?.address?.line1 ?? editLeadData?.address_line1 ?? "",
+                  address_line2: editLeadData?.address?.line2 ?? editLeadData?.address_line2 ?? "",
+                  city: editLeadData?.address?.city ?? editLeadData?.city ?? "",
+                  country: editLeadData?.address?.country ?? editLeadData?.country ?? "India",
+                  state: editLeadData?.address?.state ?? editLeadData?.state ?? "",
+                  postal_code: editLeadData?.address?.postal_code ?? editLeadData?.postal_code ?? "",
                   best_time_to_call: editLeadData?.best_time_to_call ?? "",
-                  lead_source_id: "",
-                  debt_consolidation_status_id: "",
-                  consolidated_credit_status_id: "",
+                  lead_source_id: editLeadData?.lead_source_id || editLeadData?.lead_source?.id || (leadSourceData.find((s) => s.name?.toLowerCase() === (typeof editLeadData?.lead_source === 'string' ? editLeadData?.lead_source?.toLowerCase() : ''))?.id) || "",
+                  whatsapp_number: editLeadData?.whatsapp_number ?? "",
+                  agent_id: editLeadData?.agent?.id || editLeadData?.agent_id || "",
+                  lead_status: editLeadData?.lead_status ?? "New",
+                  payment_status: editLeadData?.payment_status ?? "Pending",
+                  delivery_status: editLeadData?.delivery_status ?? "Pending",
+                  medicine_name: editLeadData?.medicine_name ?? "",
+                  order_amount: editLeadData?.order_amount ?? "",
+                  currency: editLeadData?.currency ?? "USD",
+                  courier_name: editLeadData?.courier_name ?? "",
+                  tracking_number: editLeadData?.tracking_number ?? "",
                 }}
                 validationSchema={LeadSchema}
                 onSubmit={(values, { setSubmitting, resetForm }) => {
@@ -2181,20 +2187,22 @@ const stateDisplay = values.state ? allStates.find((o: any) => norm(o.id) === no
                     full_name: values.full_name,
                     email: values.email,
                     phone: values.phone || undefined,
-                    whatsapp_number: values.whatsapp_number || undefined,
                     address_line1: values.address_line1 || undefined,
-                    address_line2: values.address_line2 || undefined,
-                    city: values.city || undefined,
+                    country: values.country || undefined,
                     state: values.state || undefined,
                     postal_code: values.postal_code || undefined,
-                    country: values.country || undefined,
-                    lead_quality: values.lead_quality || undefined,
                     best_time_to_call: values.best_time_to_call || undefined,
                     lead_source_id: values.lead_source_id || undefined,
-                    debt_consolidation_status_id:
-                      values.debt_consolidation_status_id || undefined,
-                    consolidated_credit_status_id:
-                      values.consolidated_credit_status_id || undefined,
+                    whatsapp_number: values.whatsapp_number || undefined,
+                    agent_id: values.agent_id || undefined,
+                    lead_status: values.lead_status || undefined,
+                    payment_status: values.payment_status || undefined,
+                    delivery_status: values.delivery_status || undefined,
+                    medicine_name: values.medicine_name || undefined,
+                    order_amount: values.order_amount ? Number(values.order_amount) : undefined,
+                    currency: values.currency || undefined,
+                    courier_name: values.courier_name || undefined,
+                    tracking_number: values.tracking_number || undefined,
                   };
 
                   handleUpdateLead(value);
@@ -2208,316 +2216,492 @@ const stateDisplay = values.state ? allStates.find((o: any) => norm(o.id) === no
                   setFieldValue,
                   setFieldTouched,
                   isSubmitting,
-                }) =>
-                  (() => {
-                    const norm = (v: any) => String(v ?? "").toLowerCase();
+                }) => {
+                  const currentStates = statesByCountry[values.country] || Object.values(statesByCountry).flat();
 
-                    // Prefill dropdown displays
-                    const leadSourcePrefill = editLeadData?.lead_source;
-                    const leadSourceDisplay = values.lead_source_id
-                      ? (leadSourceData || []).find(
-                          (o: any) =>
-                            norm(o.id) === norm(values.lead_source_id),
-                        ) || null
-                      : (leadSourceData || []).find(
-                          (o: any) =>
-                            norm(o.id) ===
-                              norm(
-                                (leadSourcePrefill as any)?.id ??
-                                  leadSourcePrefill,
-                              ) ||
-                            norm(o.name) ===
-                              norm(
-                                (leadSourcePrefill as any)?.name ??
-                                  leadSourcePrefill,
-                              ),
-                        ) || null;
-
-                    const debtPrefill = editLeadData?.debt_consolidation_status;
-                    const debtDisplay = values.debt_consolidation_status_id
-                      ? (debtConsolidation || []).find(
-                          (o: any) =>
-                            norm(o.id) ===
-                            norm(values.debt_consolidation_status_id),
-                        ) || null
-                      : (debtConsolidation || []).find(
-                          (o: any) =>
-                            norm(o.id) ===
-                              norm((debtPrefill as any)?.id ?? debtPrefill) ||
-                            norm(o.name) ===
-                              norm((debtPrefill as any)?.name ?? debtPrefill),
-                        ) || null;
-
-                    const creditPrefill =
-                      editLeadData?.consolidated_credit_status;
-                    const creditDisplay = values.consolidated_credit_status_id
-                      ? (consolidationData || []).find(
-                          (o: any) =>
-                            norm(o.id) ===
-                            norm(values.consolidated_credit_status_id),
-                        ) || null
-                      : (consolidationData || []).find(
-                          (o: any) =>
-                            norm(o.id) ===
-                              norm(
-                                (creditPrefill as any)?.id ?? creditPrefill,
-                              ) ||
-                            norm(o.name) ===
-                              norm(
-                                (creditPrefill as any)?.name ?? creditPrefill,
-                              ),
-                        ) || null;
-
-                    return (
-                      <form onSubmit={handleSubmit}>
-                        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          {/* Full Name */}
-                          <div className="w-full">
-                            <p className="text-white text-base leading-6 mb-2">
-                              Full Name
-                            </p>
-                            <Field
-                              type="text"
-                              name="full_name"
-                              placeholder="Alexandre Dumas"
-                              className="w-full border border-[#444] rounded-[4px] py-4 px-4 text-white bg-black placeholder-gray-400"
-                            />
-                          </div>
-
-                          {/* Email */}
-                          <div className="w-full">
-                            <p className="text-white text-base leading-6 mb-2">
-                              Email
-                            </p>
-                            <Field
-                              type="email"
-                              name="email"
-                              placeholder="alexandre@example.com"
-                              className="w-full border border-[#444] rounded-[4px] py-4 px-4 text-white bg-black placeholder-gray-400"
-                            />
-                          </div>
-
-                          {/* Phone */}
-                          <div className="w-full">
-                            <p className="text-white text-base leading-6 mb-2">
-                              Phone
-                            </p>
-                            <Field
-                              type="text"
-                              name="phone"
-                              placeholder="+91 9XXXXXXXXX"
-                              className="w-full border border-[#444] rounded-[4px] py-4 px-4 text-white bg-black placeholder-gray-400"
-                            />
-                          </div>
-
-                          {/* WhatsApp Number */}
-                          <div className="w-full">
-                                                          <p className="text-white text-base leading-6 mb-2">WhatsApp Number</p>
-                              <div className="flex w-full border border-[#444] rounded-[4px] bg-black overflow-hidden hover:shadow-hoverInputShadow focus-within:border-primary-600">
-                                <select 
-                                  className="bg-black text-white text-sm border-r border-[#444] px-2 py-4 outline-none cursor-pointer"
-                                  value={values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91'}
-                                  onChange={(e) => {
-                                    const currentCode = values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91';
-                                    const numberPart = (values.whatsapp_number || '').replace(currentCode, '');
-                                    setFieldValue('whatsapp_number', e.target.value + numberPart);
-                                  }}
-                                >
-                                  <option value="+91">+91</option>
-                                  <option value="+1">+1</option>
-                                  <option value="+44">+44</option>
-                                </select>
-                                <input
-                                  type="text"
-                                  maxLength={10}
-                                  className="w-full bg-transparent text-white text-sm px-3 py-4 outline-none placeholder-gray-400"
-                                  placeholder="Enter whatsapp number"
-                                  value={(() => {
-                                    const code = values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91';
-                                    return (values.whatsapp_number || '').substring(code.length);
-                                  })()}
-                                  onChange={(e) => {
-                                    const code = values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91';
-                                    const digitsOnly = e.target.value.replace(/\D/g, '');
-                                    setFieldValue('whatsapp_number', code + digitsOnly);
-                                  }}
-                                />
-                              </div>
-                              <ErrorMessage name="whatsapp_number" component="div" className="text-red-500 text-xs mt-1" />
-                            </div>
-
-                          {/* Address Line 1 */}
-                          <div className="w-full">
-                            <p className="text-white text-base leading-6 mb-2">
-                              Address Line 1
-                            </p>
-                            <Field
-                              type="text"
-                              name="address_line1"
-                              placeholder="Street, House no."
-                              className="w-full border border-[#444] rounded-[4px] py-4 px-4 text-white bg-black placeholder-gray-400"
-                            />
-                          </div>
-
-                          {/* State / Region (Dropdown) */}
-                          <div className="w-full">
-                            <p className="text-white text-base leading-6 mb-2">
-                              State / Region
-                            </p>
-                            <Select
-                              value={(statesByCountry[values.country] || Object.values(statesByCountry).flat()).find(
-                                (option: any) =>
-                                  option.id === values.state ||
-                                  option.name === values.state,
-                              ) || null}
-                              onChange={(selected: any) =>
-                                setFieldValue(
-                                  "state",
-                                  selected ? selected.id : "",
-                                )
-                              }
-                              onBlur={() => setFieldTouched("state", true)}
-                              getOptionLabel={(opt: any) => opt.name}
-                              getOptionValue={(opt: any) => String(opt.id)}
-                              options={statesByCountry[values.country] || Object.values(statesByCountry).flat()}
-                              placeholder="Select State / Region"
-                              isClearable
-                              classNames={{
-                                control: ({ isFocused }: any) =>
-                                  `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                    isFocused
-                                      ? "!border-primary-500"
-                                      : "!border-gray-700"
-                                  }`,
-                              }}
-                              styles={{
-                                menu: (base) => ({
-                                  ...base,
-                                  borderRadius: 4,
-                                  backgroundColor: "#000",
-                                }),
-                                option: (base, { isFocused, isSelected }) => ({
-                                  ...base,
-                                  backgroundColor: isSelected
-                                    ? "var(--primary-600)"
-                                    : isFocused
-                                      ? "#222"
-                                      : "#000",
-                                  color: "#fff",
-                                  cursor: "pointer",
-                                }),
-                                singleValue: (base) => ({
-                                  ...base,
-                                  color: "#fff",
-                                }),
-                                input: (base) => ({ ...base, color: "#fff" }),
-                                placeholder: (base) => ({
-                                  ...base,
-                                  color: "#aaa",
-                                }),
-                              }}
-                            />
-                          </div>
-
-                          {/* Postal Code */}
-                          <div className="w-full">
-                            <p className="text-white text-base leading-6 mb-2">
-                              Postal Code
-                            </p>
-                            <Field
-                              type="text"
-                              name="postal_code"
-                              placeholder="400071"
-                              className="w-full border border-[#444] rounded-[4px] py-4 px-4 text-white bg-black placeholder-gray-400"
-                            />
-                          </div>
-
-                          {/* Best Time to Call */}
-                          <div className="w-full">
-                            <p className="text-white text-base leading-6 mb-2">
-                              Best Time to Call
-                            </p>
-                            <Field
-                              type="text"
-                              name="best_time_to_call"
-                              placeholder="e.g., 3–5 PM"
-                              className="w-full border border-[#444] rounded-[4px] py-4 px-4 text-white bg-black placeholder-gray-400"
-                            />
-                          </div>
-
-                          {/* Lead Source Dropdown */}
-                          <div className="w-full">
-                            <p className="text-white text-base leading-6 mb-2">
-                              Lead Source
-                            </p>
-                            <Select
-                              value={leadSourceDisplay}
-                              onChange={(selected: any) =>
-                                setFieldValue(
-                                  "lead_source_id",
-                                  selected ? selected.id : "",
-                                )
-                              }
-                              onBlur={() =>
-                                setFieldTouched("lead_source_id", true)
-                              }
-                              getOptionLabel={(opt: any) => opt.name}
-                              getOptionValue={(opt: any) => String(opt.id)}
-                              options={leadSourceData}
-                              placeholder="Select Lead Source"
-                              isClearable
-                              classNames={{
-                                control: ({ isFocused }: any) =>
-                                  `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                    isFocused
-                                      ? "!border-primary-500"
-                                      : "!border-gray-700"
-                                  }`,
-                              }}
-                              styles={{
-                                menu: (base) => ({
-                                  ...base,
-                                  borderRadius: 4,
-                                  backgroundColor: "#000",
-                                }),
-                                option: (base, { isFocused, isSelected }) => ({
-                                  ...base,
-                                  backgroundColor: isSelected
-                                    ? "var(--primary-600)"
-                                    : isFocused
-                                      ? "#222"
-                                      : "#000",
-                                  color: "#fff",
-                                  cursor: "pointer",
-                                }),
-                                singleValue: (base) => ({
-                                  ...base,
-                                  color: "#fff",
-                                }),
-                                input: (base) => ({ ...base, color: "#fff" }),
-                                placeholder: (base) => ({
-                                  ...base,
-                                  color: "#aaa",
-                                }),
-                              }}
-                            />
-                          </div>
-
-                          
+                  return (
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Full Name */}
+                        <div>
+                          <p className="text-white mb-2">Full Name <span className="text-red-500">*</span></p>
+                          <Field
+                            type="text"
+                            name="full_name"
+                            placeholder="Alexandre Dumas"
+                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                          />
+                          <ErrorMessage name="full_name" component="div" className="text-red-500 text-xs mt-1" />
                         </div>
 
-                        {/* Submit Button */}
-                        <button
-                          type="submit"
-                          disabled={isSubmitting}
-                          className="py-[13px] px-[26px] bg-primary-500 rounded-[4px] text-base font-medium leading-6 text-white hover:text-dark cursor-pointer w-full text-center hover:bg-primary-700 hover:text-white"
-                        >
-                          Update Leads
-                        </button>
-                      </form>
-                    );
-                  })()
-                }
+                        {/* Email */}
+                        <div>
+                          <p className="text-white mb-2">Email <span className="text-red-500">*</span></p>
+                          <Field
+                            type="email"
+                            name="email"
+                            placeholder="alexandre@example.com"
+                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                          />
+                          <ErrorMessage name="email" component="div" className="text-red-500 text-xs mt-1" />
+                        </div>
+
+                        {/* Phone */}
+                        <div>
+                          <p className="text-white mb-2">Phone <span className="text-red-500">*</span></p>
+                          <div className="flex w-full border border-gray-700 rounded-[4px] bg-black overflow-hidden hover:shadow-hoverInputShadow focus-within:border-primary-600">
+                            <select 
+                              className="bg-black text-white text-sm border-r border-gray-700 px-2 py-3 outline-none cursor-pointer"
+                              value={values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91"}
+                              onChange={(e) => {
+                                const currentCode = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
+                                const numberPart = (values.phone || "").replace(currentCode, "");
+                                setFieldValue("phone", numberPart ? e.target.value + numberPart : "");
+                              }}
+                            >
+                              <option value="+91">+91</option>
+                              <option value="+1">+1</option>
+                              <option value="+44">+44</option>
+                            </select>
+                            <input
+                              type="text"
+                              maxLength={10}
+                              className="w-full bg-transparent text-white text-sm px-3 py-3 outline-none placeholder-gray-400"
+                              placeholder="Enter phone number"
+                              value={(() => {
+                                const code = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
+                                return (values.phone || "").substring(code.length);
+                              })()}
+                              onChange={(e) => {
+                                const code = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
+                                const digitsOnly = e.target.value.replace(/\D/g, "");
+                                setFieldValue("phone", digitsOnly ? code + digitsOnly : "");
+                              }}
+                              onBlur={() => setFieldTouched("phone", true)}
+                            />
+                          </div>
+                          <ErrorMessage name="phone" component="div" className="text-red-500 text-xs mt-1" />
+                        </div>
+
+                        {/* Address Line 1 */}
+                        <div>
+                          <p className="text-white mb-2">Address Line 1</p>
+                          <Field
+                            type="text"
+                            name="address_line1"
+                            placeholder="Street, House no."
+                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                          />
+                        </div>
+
+                        {/* Address Line 2 */}
+                        <div>
+                          <p className="text-white mb-2">Address Line 2</p>
+                          <Field
+                            type="text"
+                            name="address_line2"
+                            placeholder="Apartment, suite, unit, etc."
+                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                          />
+                        </div>
+
+                        {/* City */}
+                        <div>
+                          <p className="text-white mb-2">City</p>
+                          <Field
+                            type="text"
+                            name="city"
+                            placeholder="City / Town"
+                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                          />
+                        </div>
+
+                        {/* Country */}
+                        <div>
+                          <p className="text-white mb-2">Country</p>
+                          <Select
+                            value={countryOptions.find((opt) => opt.id === values.country) || null}
+                            onChange={(selected: any) => {
+                              const countryId = selected ? selected.id : "";
+                              setFieldValue("country", countryId);
+                              setFieldValue("state", ""); // reset state when country changes
+                              if (countryId === "India") setFieldValue("currency", "INR");
+                              else if (countryId === "USA") setFieldValue("currency", "USD");
+                              else if (countryId === "UK") setFieldValue("currency", "GBP");
+                            }}
+                            onBlur={() => setFieldTouched("country", true)}
+                            getOptionLabel={(opt: any) => opt.name}
+                            getOptionValue={(opt: any) => opt.id}
+                            options={countryOptions}
+                            placeholder="Select Country"
+                            classNames={{
+                              control: ({ isFocused }: any) =>
+                                `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
+                                  isFocused ? "!border-primary-500" : "!border-gray-700"
+                                }`,
+                            }}
+                            styles={{
+                              menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                              option: (base, { isFocused, isSelected }) => ({
+                                ...base,
+                                backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                                color: "#fff",
+                                cursor: "pointer",
+                              }),
+                              singleValue: (base) => ({ ...base, color: "#fff" }),
+                              input: (base) => ({ ...base, color: "#fff" }),
+                              placeholder: (base) => ({ ...base, color: "#aaa" }),
+                            }}
+                          />
+                        </div>
+
+                        {/* State / Region */}
+                        <div>
+                          <p className="text-white mb-2">State / Region</p>
+                          <Select
+                            value={currentStates.find((opt) => opt.id === values.state) || null}
+                            onChange={(selected: any) => setFieldValue("state", selected ? selected.id : "")}
+                            onBlur={() => setFieldTouched("state", true)}
+                            getOptionLabel={(opt: any) => opt.name}
+                            getOptionValue={(opt: any) => opt.id}
+                            options={currentStates}
+                            placeholder="Select State / Region"
+                            isClearable
+                            classNames={{
+                              control: ({ isFocused }: any) =>
+                                `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
+                                  isFocused ? "!border-primary-500" : "!border-gray-700"
+                                }`,
+                            }}
+                            styles={{
+                              menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                              option: (base, { isFocused, isSelected }) => ({
+                                ...base,
+                                backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                                color: "#fff",
+                                cursor: "pointer",
+                              }),
+                              singleValue: (base) => ({ ...base, color: "#fff" }),
+                              input: (base) => ({ ...base, color: "#fff" }),
+                              placeholder: (base) => ({ ...base, color: "#aaa" }),
+                            }}
+                          />
+                        </div>
+
+                        {/* Postal Code */}
+                        <div>
+                          <p className="text-white mb-2">Postal Code</p>
+                          <Field
+                            type="text"
+                            name="postal_code"
+                            placeholder="400071"
+                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                          />
+                        </div>
+
+                        {/* Best Time to Call */}
+                        <div>
+                          <p className="text-white mb-2">Best Time to Call</p>
+                          <Field
+                            type="text"
+                            name="best_time_to_call"
+                            placeholder="e.g., 3–5 PM"
+                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                          />
+                        </div>
+
+                        {/* Lead Source */}
+                        <div>
+                          <p className="text-white mb-2">Lead Source</p>
+                          <Select
+                            value={leadSourceData.find((opt) => opt.id === values.lead_source_id || opt.name?.toLowerCase() === values.lead_source_id?.toLowerCase() || (editLeadData?.lead_source && opt.name?.toLowerCase() === (typeof editLeadData.lead_source === 'string' ? editLeadData.lead_source.toLowerCase() : ''))) || null}
+                            onChange={(selected: any) => setFieldValue("lead_source_id", selected ? selected.id : "")}
+                            onBlur={() => setFieldTouched("lead_source_id", true)}
+                            getOptionLabel={(opt: any) => opt.name}
+                            getOptionValue={(opt: any) => opt.id}
+                            options={leadSourceData}
+                            placeholder="Select Lead Source"
+                            isClearable
+                            classNames={{
+                              control: ({ isFocused }: any) =>
+                                `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
+                                  isFocused ? "!border-primary-500" : "!border-gray-700"
+                                }`,
+                            }}
+                            styles={{
+                              menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                              option: (base, { isFocused, isSelected }) => ({
+                                ...base,
+                                backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                                color: "#fff",
+                                cursor: "pointer",
+                              }),
+                              singleValue: (base) => ({ ...base, color: "#fff" }),
+                              input: (base) => ({ ...base, color: "#fff" }),
+                              placeholder: (base) => ({ ...base, color: "#aaa" }),
+                            }}
+                          />
+                        </div>
+
+                        {/* WhatsApp Number */}
+                        <div>
+                          <p className="text-white mb-2">WhatsApp Number</p>
+                          <div className="flex w-full border border-gray-700 rounded-[4px] bg-black overflow-hidden hover:shadow-hoverInputShadow focus-within:border-primary-600">
+                            <select 
+                              className="bg-black text-white text-sm border-r border-gray-700 px-2 py-3 outline-none cursor-pointer"
+                              value={values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91"}
+                              onChange={(e) => {
+                                const currentCode = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
+                                const numberPart = (values.whatsapp_number || "").replace(currentCode, "");
+                                setFieldValue("whatsapp_number", e.target.value + numberPart);
+                              }}
+                            >
+                              <option value="+91">+91</option>
+                              <option value="+1">+1</option>
+                              <option value="+44">+44</option>
+                            </select>
+                            <input
+                              type="text"
+                              maxLength={10}
+                              className="w-full bg-transparent text-white text-sm px-3 py-3 outline-none placeholder-gray-400"
+                              placeholder="Enter whatsapp number"
+                              value={(() => {
+                                const code = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
+                                return (values.whatsapp_number || "").substring(code.length);
+                              })()}
+                              onChange={(e) => {
+                                const code = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
+                                const digitsOnly = e.target.value.replace(/\D/g, "");
+                                setFieldValue("whatsapp_number", code + digitsOnly);
+                              }}
+                            />
+                          </div>
+                          <ErrorMessage name="whatsapp_number" component="div" className="text-red-500 text-xs mt-1" />
+                        </div>
+
+                        {/* Assign to Agent */}
+                        <div>
+                          <p className="text-white mb-2">Assign to Agent</p>
+                          <Select
+                            value={agentList.find((opt) => opt.id === values.agent_id) || null}
+                            onChange={(selected: any) => setFieldValue("agent_id", selected ? selected.id : "")}
+                            onBlur={() => setFieldTouched("agent_id", true)}
+                            getOptionLabel={(opt: any) => opt.name}
+                            getOptionValue={(opt: any) => opt.id}
+                            options={agentList}
+                            placeholder="Select Agent"
+                            isClearable
+                            classNames={{
+                              control: ({ isFocused }: any) =>
+                                `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
+                                  isFocused ? "!border-primary-500" : "!border-gray-700"
+                                }`,
+                            }}
+                            styles={{
+                              menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                              option: (base, { isFocused, isSelected }) => ({
+                                ...base,
+                                backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                                color: "#fff",
+                                cursor: "pointer",
+                              }),
+                              singleValue: (base) => ({ ...base, color: "#fff" }),
+                              input: (base) => ({ ...base, color: "#fff" }),
+                              placeholder: (base) => ({ ...base, color: "#aaa" }),
+                            }}
+                          />
+                        </div>
+
+                        {/* Lead Status */}
+                        <div>
+                          <p className="text-white mb-2">Lead Status</p>
+                          <Select
+                            value={leadStatusOptions.find((opt) => opt.id === values.lead_status) || null}
+                            onChange={(selected: any) =>
+                              setFieldValue("lead_status", selected ? selected.id : "New")
+                            }
+                            onBlur={() => setFieldTouched("lead_status", true)}
+                            getOptionLabel={(opt: any) => opt.name}
+                            getOptionValue={(opt: any) => opt.id}
+                            options={leadStatusOptions}
+                            placeholder="Select Lead Status"
+                            classNames={{
+                              control: ({ isFocused }: any) =>
+                                `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
+                                  isFocused ? "!border-primary-500" : "!border-gray-700"
+                                }`,
+                            }}
+                            styles={{
+                              menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                              option: (base, { isFocused, isSelected }) => ({
+                                ...base,
+                                backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                                color: "#fff",
+                                cursor: "pointer",
+                              }),
+                              singleValue: (base) => ({ ...base, color: "#fff" }),
+                              input: (base) => ({ ...base, color: "#fff" }),
+                              placeholder: (base) => ({ ...base, color: "#aaa" }),
+                            }}
+                          />
+                        </div>
+
+                        {/* Payment Status */}
+                        <div>
+                          <p className="text-white mb-2">Payment Status</p>
+                          <Select
+                            value={paymentStatusOptions.find((opt) => opt.id === values.payment_status) || null}
+                            onChange={(selected: any) =>
+                              setFieldValue("payment_status", selected ? selected.id : "Pending")
+                            }
+                            onBlur={() => setFieldTouched("payment_status", true)}
+                            getOptionLabel={(opt: any) => opt.name}
+                            getOptionValue={(opt: any) => opt.id}
+                            options={paymentStatusOptions}
+                            placeholder="Select Payment Status"
+                            classNames={{
+                              control: ({ isFocused }: any) =>
+                                `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
+                                  isFocused ? "!border-primary-500" : "!border-gray-700"
+                                }`,
+                            }}
+                            styles={{
+                              menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                              option: (base, { isFocused, isSelected }) => ({
+                                ...base,
+                                backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                                color: "#fff",
+                                cursor: "pointer",
+                              }),
+                              singleValue: (base) => ({ ...base, color: "#fff" }),
+                              input: (base) => ({ ...base, color: "#fff" }),
+                              placeholder: (base) => ({ ...base, color: "#aaa" }),
+                            }}
+                          />
+                        </div>
+
+                        {/* Delivery Status */}
+                        <div>
+                          <p className="text-white mb-2">Delivery Status</p>
+                          <Select
+                            value={deliveryStatusOptions.find((opt) => opt.id === values.delivery_status) || null}
+                            onChange={(selected: any) =>
+                              setFieldValue("delivery_status", selected ? selected.id : "Pending")
+                            }
+                            onBlur={() => setFieldTouched("delivery_status", true)}
+                            getOptionLabel={(opt: any) => opt.name}
+                            getOptionValue={(opt: any) => opt.id}
+                            options={deliveryStatusOptions}
+                            placeholder="Select Delivery Status"
+                            classNames={{
+                              control: ({ isFocused }: any) =>
+                                `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
+                                  isFocused ? "!border-primary-500" : "!border-gray-700"
+                                }`,
+                            }}
+                            styles={{
+                              menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                              option: (base, { isFocused, isSelected }) => ({
+                                ...base,
+                                backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                                color: "#fff",
+                                cursor: "pointer",
+                              }),
+                              singleValue: (base) => ({ ...base, color: "#fff" }),
+                              input: (base) => ({ ...base, color: "#fff" }),
+                              placeholder: (base) => ({ ...base, color: "#aaa" }),
+                            }}
+                          />
+                        </div>
+
+                        {/* Medicine Name */}
+                        <div>
+                          <p className="text-white mb-2">Medicine Name</p>
+                          <Field
+                            type="text"
+                            name="medicine_name"
+                            placeholder="e.g. Paracetamol 500mg"
+                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                          />
+                        </div>
+
+                        {/* Order Amount */}
+                        <div>
+                          <p className="text-white mb-2">Order Amount</p>
+                          <Field
+                            type="number"
+                            name="order_amount"
+                            placeholder="0.00"
+                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                          />
+                        </div>
+
+                        {/* Currency */}
+                        <div>
+                          <p className="text-white mb-2">Currency</p>
+                          <Select
+                            value={currencyOptions.find((opt) => opt.id === values.currency) || null}
+                            onChange={(selected: any) => setFieldValue("currency", selected ? selected.id : "USD")}
+                            onBlur={() => setFieldTouched("currency", true)}
+                            getOptionLabel={(opt: any) => opt.name}
+                            getOptionValue={(opt: any) => opt.id}
+                            options={currencyOptions}
+                            placeholder="Select Currency"
+                            classNames={{
+                              control: ({ isFocused }: any) =>
+                                `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
+                                  isFocused ? "!border-primary-500" : "!border-gray-700"
+                                }`,
+                            }}
+                            styles={{
+                              menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                              option: (base, { isFocused, isSelected }) => ({
+                                ...base,
+                                backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                                color: "#fff",
+                                cursor: "pointer",
+                              }),
+                              singleValue: (base) => ({ ...base, color: "#fff" }),
+                              input: (base) => ({ ...base, color: "#fff" }),
+                              placeholder: (base) => ({ ...base, color: "#aaa" }),
+                            }}
+                          />
+                        </div>
+
+                        {/* Courier Name */}
+                        <div>
+                          <p className="text-white mb-2">Courier Name</p>
+                          <Field
+                            type="text"
+                            name="courier_name"
+                            placeholder="e.g. DHL / FedEx / SpeedPost"
+                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                          />
+                        </div>
+
+                        {/* Tracking Number */}
+                        <div>
+                          <p className="text-white mb-2">Tracking Number</p>
+                          <Field
+                            type="text"
+                            name="tracking_number"
+                            placeholder="e.g. DHL123456789"
+                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Submit Button */}
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full py-3 bg-primary-600 rounded-[4px] text-white text-base font-medium hover:bg-primary-700"
+                      >
+                        {isSubmitting ? "Updating..." : "Update Leads"}
+                      </button>
+                    </form>
+                  );
+                }}
               </Formik>
             </div>
           )}

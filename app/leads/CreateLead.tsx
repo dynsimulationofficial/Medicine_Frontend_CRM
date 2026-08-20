@@ -126,7 +126,7 @@ export const statesByCountry: Record<string, { id: string; name: string }[]> = {
   ],
 };
 
-const leadStatusOptions = [
+export const leadStatusOptions = [
   { id: "New", name: "New" },
   { id: "In Progress", name: "In Progress" },
   { id: "Follow-up", name: "Follow-up" },
@@ -134,21 +134,21 @@ const leadStatusOptions = [
   { id: "Lost", name: "Lost" },
 ];
 
-const paymentStatusOptions = [
+export const paymentStatusOptions = [
   { id: "Pending", name: "Pending" },
   { id: "Paid", name: "Paid" },
   { id: "Failed", name: "Failed" },
   { id: "Refunded", name: "Refunded" },
 ];
 
-const deliveryStatusOptions = [
+export const deliveryStatusOptions = [
   { id: "Pending", name: "Pending" },
   { id: "Dispatched", name: "Dispatched" },
   { id: "Delivered", name: "Delivered" },
   { id: "Failed", name: "Failed" },
 ];
 
-const currencyOptions = [
+export const currencyOptions = [
   { id: "USD", name: "USD ($)" },
   { id: "INR", name: "INR (₹)" },
   { id: "GBP", name: "GBP (£)" },
@@ -331,6 +331,28 @@ const CreateLead: React.FC<CreateLeadProps> = ({ closeFlyOut }) => {
                     type="text"
                     name="address_line1"
                     placeholder="Street, House no."
+                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                  />
+                </div>
+
+                {/* Address Line 2 */}
+                <div>
+                  <p className="text-white mb-2">Address Line 2</p>
+                  <Field
+                    type="text"
+                    name="address_line2"
+                    placeholder="Apartment, suite, unit, etc."
+                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                  />
+                </div>
+
+                {/* City */}
+                <div>
+                  <p className="text-white mb-2">City</p>
+                  <Field
+                    type="text"
+                    name="city"
+                    placeholder="City / Town"
                     className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
                   />
                 </div>
