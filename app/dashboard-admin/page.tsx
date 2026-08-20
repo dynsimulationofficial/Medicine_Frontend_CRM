@@ -42,26 +42,22 @@ export default function AdminDashboardPage() {
   const fetchAdminStats = async () => {
     setIsLoading(true);
     try {
-      // Fetch Agents Overview / Stats
       const statsRes = await AxiosProvider.get("/agents/stats");
       if (statsRes.data?.data) {
         setAgentStats(Array.isArray(statsRes.data.data) ? statsRes.data.data : []);
       }
 
-      // Fetch Total Leads Count
       const leadsRes = await AxiosProvider.get(`/leads?page=${page}&limit=10`);
       if (leadsRes.data?.pagination) {
         setTotalLeads(leadsRes.data.pagination.total || 0);
         setTotalPages(leadsRes.data.pagination.totalPages || 1);
       }
 
-      // Fetch Unassigned Leads Count
       const unassignedRes = await AxiosProvider.get("/leads/unassigned?page=1&limit=10");
       if (unassignedRes.data?.pagination) {
         setUnassignedLeads(unassignedRes.data.pagination.total || 0);
       }
 
-      // Fetch Assigned Leads Count
       const assignedRes = await AxiosProvider.get("/leads/assigned?page=1&limit=10");
       if (assignedRes.data?.pagination) {
         setAssignedLeads(assignedRes.data.pagination.total || 0);

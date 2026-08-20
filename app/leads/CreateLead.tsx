@@ -157,8 +157,6 @@ const currencyOptions = [
 const CreateLead: React.FC<CreateLeadProps> = ({ closeFlyOut }) => {
   const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
   const [agentList, setAgentList] = useState<any[]>([]);
-  const [debtConsolidation, setDebtConsolidation] = useState<any[]>([]);
-  const [consolidationData, setConsolidationData] = useState<any[]>([]);
 
   useEffect(() => {
     const leadSource = async () => {
@@ -184,30 +182,6 @@ const CreateLead: React.FC<CreateLeadProps> = ({ closeFlyOut }) => {
       }
     };
     fetchAgent();
-  }, []);
-
-  useEffect(() => {
-    const consolidationStatus = async () => {
-      try {
-        const response = await AxiosProvider.get("/getconsolidation");
-        setConsolidationData(response.data.data.data);
-      } catch (error: any) {
-        console.log(error);
-      }
-    };
-    consolidationStatus();
-  }, []);
-
-  useEffect(() => {
-    const debtConsolidationStatus = async () => {
-      try {
-        const response = await AxiosProvider.get("/leaddebtstatuses");
-        setDebtConsolidation(response.data.data.data);
-      } catch (error: any) {
-        console.log(error);
-      }
-    };
-    debtConsolidationStatus();
   }, []);
 
   const handleCreateLead = async (payload: any) => {
@@ -268,7 +242,7 @@ const CreateLead: React.FC<CreateLeadProps> = ({ closeFlyOut }) => {
           delivery_status: "Pending",
           medicine_name: "",
           order_amount: "",
-          currency: "USD",
+          currency: "INR",
           courier_name: "",
           tracking_number: "",
         }}
@@ -341,6 +315,9 @@ const CreateLead: React.FC<CreateLeadProps> = ({ closeFlyOut }) => {
                       const countryId = selected ? selected.id : "";
                       setFieldValue("country", countryId);
                       setFieldValue("state", ""); // reset state when country changes
+                      if (countryId === "India") setFieldValue("currency", "INR");
+                      else if (countryId === "USA") setFieldValue("currency", "USD");
+                      else if (countryId === "UK") setFieldValue("currency", "GBP");
                     }}
                     onBlur={() => setFieldTouched("country", true)}
                     getOptionLabel={(opt: any) => opt.name}
