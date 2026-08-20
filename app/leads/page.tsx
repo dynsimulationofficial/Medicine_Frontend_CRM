@@ -1253,16 +1253,7 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* Export Button */}
-                <div
-                  className=" flex justify-center  gap-2 py-3 px-6 rounded-[12px] border border-[#E7E7E7] cursor-pointer bg-primary-600 items-center hover:bg-primary-700 active:bg-primary-700 group"
-                  onClick={() => exportLeadsFlyout()}
-                >
-                  <HiOutlineDownload className=" w-5 h-5 text-white group-hover:text-white" />
-                  <p className=" text-white text-base font-medium group-hover:text-white">
-                    Export Leads
-                  </p>
-                </div>
+                
 
                 <div
                   className=" flex justify-center  gap-2 py-3 px-6 rounded-[12px] border border-[#E7E7E7] cursor-pointer bg-primary-600 items-center hover:bg-primary-700 active:bg-primary-700 group"
