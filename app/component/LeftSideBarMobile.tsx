@@ -33,7 +33,7 @@ const LeftSideBarMobile: React.FC = () => {
       {/* Logo */}
       <Link href="/dashboard" className="flex gap-2 mb-8 px-3 py-2">
         <Image
-          src="/images/crmlogo.jpg"
+          src="/images/crmlogo.png"
           alt="Orizon Logo"
           width={0}
           height={0}
@@ -85,14 +85,19 @@ const LeftSideBarMobile: React.FC = () => {
       </nav>
 
       {/* Logout */}
-      <div className="flex gap-2 items-center px-3 mt-6 cursor-pointer" onClick={handleLogout}>
+      <div
+        className="flex gap-2 items-center px-3 mt-6 cursor-pointer"
+        onClick={handleLogout}
+      >
         <Image
           src="/images/logoutIcon.svg"
           alt="logout Icon"
           width={24}
           height={24}
         />
-        <button className="text-base font-semibold text-[#EB5757]">Logout</button>
+        <button className="text-base font-semibold text-[#EB5757]">
+          Logout
+        </button>
       </div>
     </div>
   );

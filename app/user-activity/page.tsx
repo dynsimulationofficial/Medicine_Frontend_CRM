@@ -29,8 +29,8 @@ import DesktopHeader from "../component/DesktopHeader";
 import { Tooltip } from "react-tooltip";
 import { FaEllipsisVertical } from "react-icons/fa6";
 import { useAuthRedirect } from "../component/hooks/useAuthRedirect";
-import { Formik, Field, Form, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
+import { Formik, Field, Form, ErrorMessage } from "formik";
+import * as Yup from "yup";
 import { FaRegIdCard, FaUserEdit, FaUserTag } from "react-icons/fa";
 import { MdDateRange, MdViewModule } from "react-icons/md";
 
@@ -147,7 +147,7 @@ export default function Home() {
       setIsLoading(true);
       try {
         const response = await AxiosProvider.get(
-          `/user-activity?page=${page}&pageSize=${pageSize}`
+          `/user-activity?page=${page}&pageSize=${pageSize}`,
         );
 
         const result = response.data.data.data;
@@ -200,7 +200,7 @@ export default function Home() {
         // Send the filterData (first object) and filterPage for pagination
         const response = await AxiosProvider.post(
           `/user-activity/filter?page=${filterPage}`,
-          filterData[0] // Send the first object from filterData
+          filterData[0], // Send the first object from filterData
         );
 
         console.log("Response Data:", response);
@@ -229,7 +229,7 @@ export default function Home() {
     try {
       const response = await AxiosProvider.post(
         `/user-activity/filter?page=${filterPage}`,
-        values
+        values,
       );
 
       console.log("Response Dataaaaaaaaaaaaaaaaaaaaaaa:", response);
@@ -250,7 +250,7 @@ export default function Home() {
     return (
       <div className="h-screen flex flex-col gap-5 justify-center items-center">
         <Image
-          src="/images/crmlogo.jpg"
+          src="/images/crmlogo.png"
           alt="Table image"
           width={500}
           height={500}
@@ -265,7 +265,7 @@ export default function Home() {
     return (
       <div className="h-screen flex flex-col gap-5 justify-center items-center bg-white">
         <Image
-          src="/images/crmlogo.jpg"
+          src="/images/crmlogo.png"
           alt="Loading"
           width={150}
           height={150}
@@ -613,13 +613,13 @@ export default function Home() {
                                 {...field}
                                 value={
                                   userOptions.find(
-                                    (option) => option.value === values.uuId
+                                    (option) => option.value === values.uuId,
                                   ) || null
                                 }
                                 onChange={(selectedOption: any) => {
                                   setFieldValue(
                                     "uuId",
-                                    selectedOption ? selectedOption.value : ""
+                                    selectedOption ? selectedOption.value : "",
                                   );
                                   setFilterData((prev) => [
                                     {
@@ -649,14 +649,14 @@ export default function Home() {
                                   }),
                                   option: (
                                     base,
-                                    { isFocused, isSelected }
+                                    { isFocused, isSelected },
                                   ) => ({
                                     ...base,
                                     backgroundColor: isSelected
                                       ? "var(--primary-600)"
                                       : isFocused
-                                      ? "#222"
-                                      : "#000",
+                                        ? "#222"
+                                        : "#000",
                                     color: "#fff",
                                     cursor: "pointer",
                                   }),
@@ -693,13 +693,13 @@ export default function Home() {
                                 {...field}
                                 value={
                                   moduleOptions.find(
-                                    (option) => option.value === values.module
+                                    (option) => option.value === values.module,
                                   ) || null
                                 }
                                 onChange={(selectedOption: any) => {
                                   setFieldValue(
                                     "module",
-                                    selectedOption ? selectedOption.value : ""
+                                    selectedOption ? selectedOption.value : "",
                                   );
                                   setFilterData((prev) => [
                                     {
@@ -729,14 +729,14 @@ export default function Home() {
                                   }),
                                   option: (
                                     base,
-                                    { isFocused, isSelected }
+                                    { isFocused, isSelected },
                                   ) => ({
                                     ...base,
                                     backgroundColor: isSelected
                                       ? "var(--primary-600)"
                                       : isFocused
-                                      ? "#222"
-                                      : "#000",
+                                        ? "#222"
+                                        : "#000",
                                     color: "#fff",
                                     cursor: "pointer",
                                   }),
@@ -770,13 +770,13 @@ export default function Home() {
                                 {...field}
                                 value={
                                   typeOptions.find(
-                                    (option) => option.value === values.type
+                                    (option) => option.value === values.type,
                                   ) || null
                                 }
                                 onChange={(selectedOption: any) => {
                                   setFieldValue(
                                     "type",
-                                    selectedOption ? selectedOption.value : ""
+                                    selectedOption ? selectedOption.value : "",
                                   );
                                   setFilterData((prev) => [
                                     {
@@ -806,14 +806,14 @@ export default function Home() {
                                   }),
                                   option: (
                                     base,
-                                    { isFocused, isSelected }
+                                    { isFocused, isSelected },
                                   ) => ({
                                     ...base,
                                     backgroundColor: isSelected
                                       ? "var(--primary-600)"
                                       : isFocused
-                                      ? "#222"
-                                      : "#000",
+                                        ? "#222"
+                                        : "#000",
                                     color: "#fff",
                                     cursor: "pointer",
                                   }),

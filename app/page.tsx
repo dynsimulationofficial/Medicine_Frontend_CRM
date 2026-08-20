@@ -27,8 +27,7 @@ export default function LoginHome() {
 
   const router = useRouter();
   const storage = new StorageManager();
-  const aaaaa = storage.getAccessToken()
-
+  const aaaaa = storage.getAccessToken();
 
   const axiosProvider = new AxiosProvider();
   //const { setAccessToken } = useContext(AppContext);
@@ -80,7 +79,7 @@ export default function LoginHome() {
   // const value = localStorage.getItem("accessToken");
   // value === null ?
   // console.log("OOOOOOOOOOOOOOO", value);
-    useEffect(() => {
+  useEffect(() => {
     const token = storage.getAccessToken(); // Get token from localStorage via StorageManager
 
     // If token exists and is not expired, redirect to dashboard
@@ -137,7 +136,7 @@ export default function LoginHome() {
       </div> */}
       <div className="absolute top-0 bottom-0 left-0 right-0 mx-auto my-auto w-[90%] max-w-[500px] h-[587px] shadow-loginBoxShadow  px-6 sm:px-12 py-10 sm:py-16 rounded-lg mainContainerBg">
         <Image
-          src="/images/crmlogo.jpg"
+          src="/images/crmlogo.png"
           alt="OrizonIcon"
           width={82}
           height={52}
@@ -155,9 +154,7 @@ export default function LoginHome() {
             <Form className="w-full">
               <div className="w-full">
                 {/* Email Field */}
-                <p className=" text-base leading-normal mb-2">
-                  Email
-                </p>
+                <p className=" text-base leading-normal mb-2">Email</p>
                 <div className="relative">
                   <Field
                     type="text"
@@ -174,9 +171,7 @@ export default function LoginHome() {
                 </div>
 
                 {/* Password Field */}
-                <p className=" text-base leading-normal mb-2">
-                  Password
-                </p>
+                <p className=" text-base leading-normal mb-2">Password</p>
                 <div className="relative">
                   <Field
                     type={showPassword ? "text" : "password"}

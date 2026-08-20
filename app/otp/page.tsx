@@ -22,7 +22,7 @@ export default function OtpHome() {
   const [loading, setLoading] = useState<boolean>(false);
   const [qrCode, setQrCode] = useState<string | undefined>();
   const [secretKey, setSecretKey] = useState<string | null>(
-    storage.getDecryptedUserSecretKey()
+    storage.getDecryptedUserSecretKey(),
   );
   const [userId, setuserId] = useState<string | undefined>(storage.getUserId());
   const [otp, setOtp] = useState<string>("");
@@ -55,7 +55,9 @@ export default function OtpHome() {
       await storage.saveAccessToken(res.data.data.token);
       await storage.saveUserId(res.data.data.system_user_id);
       if (res.data.data?.role_name || res.data.data?.role) {
-        await storage.saveUserRole(res.data.data.role_name || res.data.data.role);
+        await storage.saveUserRole(
+          res.data.data.role_name || res.data.data.role,
+        );
       }
       const userRole = storage.getUserRole();
       toast.success("Login Successful");
@@ -112,7 +114,7 @@ export default function OtpHome() {
           } catch (err) {
             console.error(
               "Error fetching FCM token or registering FCM token",
-              err
+              err,
             );
           }
         }
@@ -126,7 +128,7 @@ export default function OtpHome() {
     <>
       <div className="absolute top-0 bottom-0 left-0 right-0 mx-auto my-auto w-[90%] max-w-[500px] h-[587px] shadow-loginBoxShadow  px-6 sm:px-12 py-10 sm:py-16 rounded-lg mainContainerBg">
         <Image
-          src="/images/crmlogo.jpg"
+          src="/images/crmlogo.png"
           alt="OrizonIcon"
           width={82}
           height={52}
@@ -171,7 +173,7 @@ export default function OtpHome() {
                         onChange?.(e as any);
                         if (e.currentTarget.value.length === 1) {
                           const next = document.querySelector<HTMLInputElement>(
-                            `input[data-otp-index="${index + 1}"]`
+                            `input[data-otp-index="${index + 1}"]`,
                           );
                           next?.focus();
                         }
@@ -180,7 +182,7 @@ export default function OtpHome() {
                         (onKeyDown as any)?.(e);
                         if (e.key === "Backspace" && !e.currentTarget.value) {
                           const prev = document.querySelector<HTMLInputElement>(
-                            `input[data-otp-index="${index - 1}"]`
+                            `input[data-otp-index="${index - 1}"]`,
                           );
                           prev?.focus();
                         }

@@ -49,7 +49,7 @@ const validationSchema = Yup.object().shape({
   mobile_number: Yup.string()
     .matches(
       /^\+\d{1,4}\d{10}$/,
-      "Enter a valid mobile number with country code"
+      "Enter a valid mobile number with country code",
     ) // Regex for valid mobile number format
     .required("Mobile number is required"),
   email: Yup.string()
@@ -70,7 +70,7 @@ export default function Home() {
 
   const handleSubmit = async (
     values: FormValues,
-    { resetForm }: FormikHelpers<FormValues>
+    { resetForm }: FormikHelpers<FormValues>,
   ) => {
     console.log("admin values", values);
 
@@ -215,13 +215,13 @@ export default function Home() {
                         options={roleOptions}
                         value={
                           roleOptions.find(
-                            (option) => option.value === values.roleLevel
+                            (option) => option.value === values.roleLevel,
                           ) || null
                         }
                         onChange={(selectedOption) =>
                           setFieldValue(
                             "roleLevel",
-                            selectedOption ? selectedOption.value : ""
+                            selectedOption ? selectedOption.value : "",
                           )
                         }
                         onBlur={() =>
@@ -253,13 +253,13 @@ export default function Home() {
                             backgroundColor: isSelected
                               ? "var(--primary-600)" // selected option bg
                               : isFocused
-                              ? "var(--primary-100)" // hovered option bg
-                              : "#000", // default bg
+                                ? "var(--primary-100)" // hovered option bg
+                                : "#000", // default bg
                             color: isSelected
                               ? "#fff" // selected text
                               : isFocused
-                              ? "#000" // hovered text
-                              : "#fff", // default text
+                                ? "#000" // hovered text
+                                : "#fff", // default text
                             cursor: "pointer",
                           }),
                         }}
@@ -295,7 +295,7 @@ export default function Home() {
     return (
       <div className="h-screen flex flex-col gap-5 justify-center items-center bg-white">
         <Image
-          src="/images/crmlogo.jpg"
+          src="/images/crmlogo.png"
           alt="Loading"
           width={150}
           height={150}

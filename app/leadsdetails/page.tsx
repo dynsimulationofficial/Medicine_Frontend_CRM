@@ -69,12 +69,13 @@ import {
 } from "date-fns";
 import { compressIfImage } from "../component/imageCompression";
 import Swal from "sweetalert2";
-import { toZonedTime as utcToZonedTime, fromZonedTime as zonedTimeToUtc } from "date-fns-tz";
+import {
+  toZonedTime as utcToZonedTime,
+  fromZonedTime as zonedTimeToUtc,
+} from "date-fns-tz";
 import { BiSkipNextCircle } from "react-icons/bi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { useRouter } from "next/navigation";
-
-
 
 interface Lead {
   id: string;
@@ -114,7 +115,7 @@ interface Lead {
 
   created_at: string; // ISO string
   updated_at: string; // ISO string
-  note:string;
+  note: string;
 }
 interface LeadActivity {
   id: string;
@@ -196,7 +197,7 @@ export interface LeadDocument {
   updated_at_ca: string;
   created_date_ca: string;
   updated_date_ca: string;
-  is_edited:  boolean;
+  is_edited: boolean;
 }
 export interface ActivityHistory {
   id: string;
@@ -262,12 +263,12 @@ const DISPO_AUTOFILL = new Set([
   "No Answer",
 ]);
 const storage = new StorageManager();
-  // -----------get user role and name id-------------
-  const loggedInUserName = storage.getUserName();
-  const loggedInUserRole = storage.getUserRole();
-  const loggedInUserId = storage.getUserId();
+// -----------get user role and name id-------------
+const loggedInUserName = storage.getUserName();
+const loggedInUserRole = storage.getUserRole();
+const loggedInUserId = storage.getUserId();
 
-  // -----------END get user role and name id-------------
+// -----------END get user role and name id-------------
 
 export default function Home() {
   const router = useRouter();
@@ -288,11 +289,11 @@ export default function Home() {
   const [imageKey, setImageKey] = useState(Date.now());
   const [editInfo, setEditInfo] = useState<boolean>(true);
   const [secretKey, setSecretKey] = useState<string | null>(
-    storage.getDecryptedUserSecretKey()
+    storage.getDecryptedUserSecretKey(),
   );
   const searchParams = useSearchParams();
   const [leadId, setLeadId] = useState<string | undefined>(
-    searchParams.get("id") ?? undefined
+    searchParams.get("id") ?? undefined,
   );
 
   // console.log("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL", leadId);
@@ -332,7 +333,7 @@ export default function Home() {
   const [agent, setAgent] = useState<Agent[]>([]);
   console.log("AGWNTTTTTTTTTTTTTTT", agent);
   const [consolidationData, setConsolidationData] = useState<Consolidation[]>(
-    []
+    [],
   );
   const [debtConsolidation, setDebtConsolidation] = useState<
     DebtConsolidation[]
@@ -410,13 +411,13 @@ export default function Home() {
     return res.data;
   }
 
-const INITIAL_VALUES = {
-  lead_id: leadId,
-  conversation: "",
-  occurred_at: "",
-  disposition_id: "",
-  agent_id: loggedInUserRole === "Agent" ? loggedInUserId : "",
-};
+  const INITIAL_VALUES = {
+    lead_id: leadId,
+    conversation: "",
+    occurred_at: "",
+    disposition_id: "",
+    agent_id: loggedInUserRole === "Agent" ? loggedInUserId : "",
+  };
 
   const formInitialValues = activityHistoryData
     ? {
@@ -503,13 +504,13 @@ const INITIAL_VALUES = {
         `/leads/activities/list?page=${page}&pageSize=${pageSize}`,
         {
           lead_id: leadId,
-        }
+        },
       );
 
       //console.log("Lead Activity wwwwwwwwwwwwwwwwww", res.data.data.activities);
       console.log(
         "Lead Activity pagination",
-        res.data.data.pagination.totalPages
+        res.data.data.pagination.totalPages,
       );
       setFetchLeadaActivityData(res.data.data.activities);
       setTotalPages(res.data.data.pagination.totalPages);
@@ -557,8 +558,6 @@ const INITIAL_VALUES = {
   useEffect(() => {
     fetchDisposition();
   }, []);
-
-
 
   useEffect(() => {
     const fetchAgent = async () => {
@@ -745,7 +744,7 @@ const INITIAL_VALUES = {
 
     const form = e.currentTarget;
     const fileInput = form.elements.namedItem(
-      "file"
+      "file",
     ) as HTMLInputElement | null;
     const file = fileInput?.files?.[0] ?? null;
 
@@ -1137,7 +1136,7 @@ const INITIAL_VALUES = {
     return (
       <div className="h-screen flex flex-col gap-5 justify-center items-center bg-white">
         <Image
-          src="/images/crmlogo.jpg"
+          src="/images/crmlogo.png"
           alt="Loading"
           width={150}
           height={150}
@@ -1214,7 +1213,7 @@ const INITIAL_VALUES = {
       hour,
       minute,
       0,
-      0
+      0,
     );
 
   // Daily bounds (Canada local)
@@ -1472,7 +1471,7 @@ const INITIAL_VALUES = {
                               //return;
                               await AxiosProvider.post(
                                 "/leads/update",
-                                payload
+                                payload,
                               );
                               toast.success("Lead updated successfully");
                               setIsEditFirstLead(true);
@@ -1627,13 +1626,13 @@ const INITIAL_VALUES = {
                                       provinceOptions.find(
                                         (opt: any) =>
                                           (opt.name || "").toLowerCase() ===
-                                          (values.state || "").toLowerCase()
+                                          (values.state || "").toLowerCase(),
                                       ) || null
                                     }
                                     onChange={(selected: any) =>
                                       setFieldValue(
                                         "state",
-                                        selected ? selected.name : ""
+                                        selected ? selected.name : "",
                                       )
                                     }
                                     onBlur={() =>
@@ -1702,14 +1701,14 @@ const INITIAL_VALUES = {
                                       }),
                                       option: (
                                         base,
-                                        { isFocused, isSelected }
+                                        { isFocused, isSelected },
                                       ) => ({
                                         ...base,
                                         backgroundColor: isSelected
                                           ? "var(--primary-500)"
                                           : isFocused
-                                          ? "var(--primary-100)"
-                                          : "#fff",
+                                            ? "var(--primary-100)"
+                                            : "#fff",
                                         color: isSelected ? "#fff" : "#333",
                                         cursor: "pointer",
                                       }),
@@ -1858,14 +1857,14 @@ const INITIAL_VALUES = {
                                 data?.debt_consolidation_status_id ??
                                 getIdFromName(
                                   debtConsolidation,
-                                  data?.debt_consolidation_status
+                                  data?.debt_consolidation_status,
                                 ) ??
                                 "",
                               consolidated_credit_status_id:
                                 data?.consolidated_credit_status_id ??
                                 getIdFromName(
                                   consolidationData,
-                                  data?.consolidated_credit_status
+                                  data?.consolidated_credit_status,
                                 ) ??
                                 "",
                               best_time_to_call: data?.best_time_to_call ?? "",
@@ -1884,7 +1883,7 @@ const INITIAL_VALUES = {
                               try {
                                 await AxiosProvider.post(
                                   "/leads/update",
-                                  values
+                                  values,
                                 );
                                 toast.success("Lead is Updated");
                                 setHitApi(!hitApi);
@@ -1902,23 +1901,23 @@ const INITIAL_VALUES = {
                             }) => {
                               const findById = (
                                 list: any[],
-                                id: string | number
+                                id: string | number,
                               ) =>
                                 list?.find(
-                                  (o: any) => String(o.id) === String(id)
+                                  (o: any) => String(o.id) === String(id),
                                 ) || null;
 
                               const agentValue = findById(
                                 agent,
-                                values.agent_id
+                                values.agent_id,
                               );
                               const debtConsValue = findById(
                                 debtConsolidation,
-                                values.debt_consolidation_status_id
+                                values.debt_consolidation_status_id,
                               );
                               const consValue = findById(
                                 consolidationData,
-                                values.consolidated_credit_status_id
+                                values.consolidated_credit_status_id,
                               );
 
                               return (
@@ -1948,7 +1947,7 @@ const INITIAL_VALUES = {
                                             onChange={(selected: any) =>
                                               setFieldValue(
                                                 "agent_id",
-                                                selected ? selected.id : ""
+                                                selected ? selected.id : "",
                                               )
                                             }
                                             onBlur={() =>
@@ -1979,14 +1978,14 @@ const INITIAL_VALUES = {
                                               }),
                                               option: (
                                                 base,
-                                                { isFocused, isSelected }
+                                                { isFocused, isSelected },
                                               ) => ({
                                                 ...base,
                                                 backgroundColor: isSelected
                                                   ? "var(--primary-600)"
                                                   : isFocused
-                                                  ? "#222"
-                                                  : "#000",
+                                                    ? "#222"
+                                                    : "#000",
                                                 color: "#fff",
                                                 cursor: "pointer",
                                               }),
@@ -2038,13 +2037,13 @@ const INITIAL_VALUES = {
                                             onChange={(selected: any) =>
                                               setFieldValue(
                                                 "debt_consolidation_status_id",
-                                                selected ? selected.id : ""
+                                                selected ? selected.id : "",
                                               )
                                             }
                                             onBlur={() =>
                                               setFieldTouched(
                                                 "debt_consolidation_status_id",
-                                                true
+                                                true,
                                               )
                                             }
                                             getOptionLabel={(opt: any) =>
@@ -2072,14 +2071,14 @@ const INITIAL_VALUES = {
                                               }),
                                               option: (
                                                 base,
-                                                { isFocused, isSelected }
+                                                { isFocused, isSelected },
                                               ) => ({
                                                 ...base,
                                                 backgroundColor: isSelected
                                                   ? "var(--primary-600)"
                                                   : isFocused
-                                                  ? "#222"
-                                                  : "#000",
+                                                    ? "#222"
+                                                    : "#000",
                                                 color: "#fff",
                                                 cursor: "pointer",
                                               }),
@@ -2111,13 +2110,13 @@ const INITIAL_VALUES = {
                                             onChange={(selected: any) =>
                                               setFieldValue(
                                                 "consolidated_credit_status_id",
-                                                selected ? selected.id : ""
+                                                selected ? selected.id : "",
                                               )
                                             }
                                             onBlur={() =>
                                               setFieldTouched(
                                                 "consolidated_credit_status_id",
-                                                true
+                                                true,
                                               )
                                             }
                                             getOptionLabel={(opt: any) =>
@@ -2145,14 +2144,14 @@ const INITIAL_VALUES = {
                                               }),
                                               option: (
                                                 base,
-                                                { isFocused, isSelected }
+                                                { isFocused, isSelected },
                                               ) => ({
                                                 ...base,
                                                 backgroundColor: isSelected
                                                   ? "var(--primary-600)"
                                                   : isFocused
-                                                  ? "#222"
-                                                  : "#000",
+                                                    ? "#222"
+                                                    : "#000",
                                                 color: "#fff",
                                                 cursor: "pointer",
                                               }),
@@ -2201,7 +2200,7 @@ const INITIAL_VALUES = {
                                       type="button"
                                       onClick={() =>
                                         setIsLeadPropertyEdit(
-                                          !isleadPropertyEdit
+                                          !isleadPropertyEdit,
                                         )
                                       }
                                       className="px-4 py-2 rounded-[4px] border border-primary-500 text-white text-sm font-medium bg-black"
@@ -2323,7 +2322,7 @@ const INITIAL_VALUES = {
                       <Select
                         value={
                           (disposition || []).find(
-                            (opt: any) => opt.id === values.disposition_id
+                            (opt: any) => opt.id === values.disposition_id,
                           ) || null
                         }
                         onChange={(selectedOption: any) => {
@@ -2336,7 +2335,7 @@ const INITIAL_VALUES = {
                             "conversation",
                             selectedOption && DISPO_AUTOFILL.has(name)
                               ? name
-                              : ""
+                              : "",
                           );
                         }}
                         onBlur={() => setFieldTouched("disposition_id", true)}
@@ -2364,8 +2363,8 @@ const INITIAL_VALUES = {
                             backgroundColor: isSelected
                               ? "var(--primary-500)"
                               : isFocused
-                              ? "#222"
-                              : "#000",
+                                ? "#222"
+                                : "#000",
                             color: "#fff",
                             cursor: "pointer",
                           }),
@@ -2383,77 +2382,79 @@ const INITIAL_VALUES = {
 
                     {/* Agent */}
                     {/* Agent */}
-                  {/* Agent */}
-<div className="w-full relative">
-  <p className="text-white font-medium text-base leading-6 mb-2">
-    Agent
-    {loggedInUserRole === "Agent" && (
-      <span className="text-xs text-gray-400 ml-2">(Auto-selected)</span>
-    )}
-  </p>
+                    {/* Agent */}
+                    <div className="w-full relative">
+                      <p className="text-white font-medium text-base leading-6 mb-2">
+                        Agent
+                        {loggedInUserRole === "Agent" && (
+                          <span className="text-xs text-gray-400 ml-2">
+                            (Auto-selected)
+                          </span>
+                        )}
+                      </p>
 
-  {loggedInUserRole === "Agent" ? (
-    // 🔥 Agent ke liye display only field
-    <div className="w-full border border-gray-700 rounded-[4px] text-sm leading-4 font-medium py-3 px-4 bg-black text-white opacity-70">
-      {loggedInUserName} (You)
-    </div>
-  ) : (
-    // 🔥 Admin ke liye normal dropdown
-    <Select
-      value={
-        (agent || []).find(
-          (opt: any) => opt.id === values.agent_id
-        ) || null
-      }
-      onChange={(selectedOption: any) =>
-        setFieldValue(
-          "agent_id",
-          selectedOption ? selectedOption.id : ""
-        )
-      }
-      onBlur={() => setFieldTouched("agent_id", true)}
-      getOptionLabel={(opt: any) => opt.name}
-      getOptionValue={(opt: any) => opt.id}
-      options={agent}
-      placeholder="Select Agent"
-      isClearable
-      classNames={{
-        control: ({ isFocused }: any) =>
-          `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-            isFocused
-              ? "!border-primary-500"
-              : "!border-gray-700"
-          }`,
-      }}
-      styles={{
-        menu: (base) => ({
-          ...base,
-          borderRadius: 4,
-          backgroundColor: "#000",
-        }),
-        option: (base, { isFocused, isSelected }) => ({
-          ...base,
-          backgroundColor: isSelected
-            ? "var(--primary-500)"
-            : isFocused
-            ? "#222"
-            : "#000",
-          color: "#fff",
-          cursor: "pointer",
-        }),
-        singleValue: (base) => ({ ...base, color: "#fff" }),
-        input: (base) => ({ ...base, color: "#fff" }),
-        placeholder: (base) => ({ ...base, color: "#aaa" }),
-      }}
-    />
-  )}
+                      {loggedInUserRole === "Agent" ? (
+                        // 🔥 Agent ke liye display only field
+                        <div className="w-full border border-gray-700 rounded-[4px] text-sm leading-4 font-medium py-3 px-4 bg-black text-white opacity-70">
+                          {loggedInUserName} (You)
+                        </div>
+                      ) : (
+                        // 🔥 Admin ke liye normal dropdown
+                        <Select
+                          value={
+                            (agent || []).find(
+                              (opt: any) => opt.id === values.agent_id,
+                            ) || null
+                          }
+                          onChange={(selectedOption: any) =>
+                            setFieldValue(
+                              "agent_id",
+                              selectedOption ? selectedOption.id : "",
+                            )
+                          }
+                          onBlur={() => setFieldTouched("agent_id", true)}
+                          getOptionLabel={(opt: any) => opt.name}
+                          getOptionValue={(opt: any) => opt.id}
+                          options={agent}
+                          placeholder="Select Agent"
+                          isClearable
+                          classNames={{
+                            control: ({ isFocused }: any) =>
+                              `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
+                                isFocused
+                                  ? "!border-primary-500"
+                                  : "!border-gray-700"
+                              }`,
+                          }}
+                          styles={{
+                            menu: (base) => ({
+                              ...base,
+                              borderRadius: 4,
+                              backgroundColor: "#000",
+                            }),
+                            option: (base, { isFocused, isSelected }) => ({
+                              ...base,
+                              backgroundColor: isSelected
+                                ? "var(--primary-500)"
+                                : isFocused
+                                  ? "#222"
+                                  : "#000",
+                              color: "#fff",
+                              cursor: "pointer",
+                            }),
+                            singleValue: (base) => ({ ...base, color: "#fff" }),
+                            input: (base) => ({ ...base, color: "#fff" }),
+                            placeholder: (base) => ({ ...base, color: "#aaa" }),
+                          }}
+                        />
+                      )}
 
-  {touched.agent_id && errors.agent_id && (
-    <p className="text-red-500 absolute top-[85px] text-xs">
-      {String(errors.agent_id)}
-    </p>
-  )}
-</div>
+                      {touched.agent_id && errors.agent_id && (
+                        <p className="text-red-500 absolute top-[85px] text-xs">
+                          {String(errors.agent_id)}
+                        </p>
+                      )}
+                    </div>
 
                     {/* Conversation */}
                     <div className="w-full relative mt-4 col-span-2">
@@ -2655,7 +2656,7 @@ const INITIAL_VALUES = {
                             if (utcStart)
                               setFieldValue(
                                 "end_at",
-                                addMinutes(utcStart, DURATION_MINUTES)
+                                addMinutes(utcStart, DURATION_MINUTES),
                               );
                           }}
                           onBlur={() => setFieldTouched("start_at", true)}
@@ -2920,7 +2921,7 @@ const INITIAL_VALUES = {
                         value={
                           (disposition || []).find(
                             (opt: any) =>
-                              String(opt.id) === String(values.disposition_id)
+                              String(opt.id) === String(values.disposition_id),
                           ) || null
                         }
                         onChange={(selectedOption: any) => {
@@ -2938,7 +2939,7 @@ const INITIAL_VALUES = {
                             "conversation",
                             selectedOption && DISPO_AUTOFILL.has(name)
                               ? name
-                              : ""
+                              : "",
                           );
                         }}
                         onBlur={() => setFieldTouched("disposition_id", true)}
@@ -2966,8 +2967,8 @@ const INITIAL_VALUES = {
                             backgroundColor: isSelected
                               ? "var(--primary-500)"
                               : isFocused
-                              ? "#222"
-                              : "#000",
+                                ? "#222"
+                                : "#000",
                             color: "#fff",
                             cursor: "pointer",
                           }),
@@ -2991,13 +2992,13 @@ const INITIAL_VALUES = {
                         value={
                           (agent || []).find(
                             (opt: any) =>
-                              String(opt.id) === String(values.agent_id)
+                              String(opt.id) === String(values.agent_id),
                           ) || null
                         }
                         onChange={(selectedOption: any) =>
                           setFieldValue(
                             "agent_id",
-                            selectedOption ? String(selectedOption.id) : ""
+                            selectedOption ? String(selectedOption.id) : "",
                           )
                         }
                         onBlur={() => setFieldTouched("agent_id", true)}
@@ -3026,8 +3027,8 @@ const INITIAL_VALUES = {
                             backgroundColor: isSelected
                               ? "var(--primary-500)"
                               : isFocused
-                              ? "#222"
-                              : "#000",
+                                ? "#222"
+                                : "#000",
                             color: "#fff",
                             cursor:
                               userRole === "Admin" ? "pointer" : "not-allowed",
@@ -3122,7 +3123,7 @@ const INITIAL_VALUES = {
                   try {
                     const res = await AxiosProvider.post(
                       "/lead/activity/filter",
-                      values
+                      values,
                     );
                     setFetchLeadaActivityData(res.data.data.activities);
                     setFlyoutFilterOpen(false);
@@ -3224,13 +3225,13 @@ const INITIAL_VALUES = {
                         <Select
                           value={
                             (disposition || []).find(
-                              (opt: Option) => opt.id === values.disposition_id
+                              (opt: Option) => opt.id === values.disposition_id,
                             ) || null
                           }
                           onChange={(selected: Option | null) =>
                             setFieldValue(
                               "disposition_id",
-                              selected ? selected.id : ""
+                              selected ? selected.id : "",
                             )
                           }
                           onBlur={() => setFieldTouched("disposition_id", true)}
@@ -3258,8 +3259,8 @@ const INITIAL_VALUES = {
                               backgroundColor: isSelected
                                 ? "var(--primary-500)"
                                 : isFocused
-                                ? "#222"
-                                : "#000",
+                                  ? "#222"
+                                  : "#000",
                               color: "#fff",
                               cursor: "pointer",
                             }),
@@ -3276,13 +3277,13 @@ const INITIAL_VALUES = {
                         <Select
                           value={
                             (agent || []).find(
-                              (opt: Option) => opt.id === values.agent_id
+                              (opt: Option) => opt.id === values.agent_id,
                             ) || null
                           }
                           onChange={(selected: Option | null) =>
                             setFieldValue(
                               "agent_id",
-                              selected ? selected.id : ""
+                              selected ? selected.id : "",
                             )
                           }
                           onBlur={() => setFieldTouched("agent_id", true)}
@@ -3310,8 +3311,8 @@ const INITIAL_VALUES = {
                               backgroundColor: isSelected
                                 ? "var(--primary-500)"
                                 : isFocused
-                                ? "#222"
-                                : "#000",
+                                  ? "#222"
+                                  : "#000",
                               color: "#fff",
                               cursor: "pointer",
                             }),
@@ -3403,18 +3404,18 @@ const INITIAL_VALUES = {
                 // send only non-empty fields
                 const payload = Object.fromEntries(
                   Object.entries(values).filter(
-                    ([_, v]) => v !== "" && v != null
-                  )
+                    ([_, v]) => v !== "" && v != null,
+                  ),
                 );
 
                 try {
                   const res = await AxiosProvider.post(
                     "/leads/tasks/filter",
-                    payload
+                    payload,
                   );
                   console.log(
                     "DDDDDDDDDDDDDDDDDDD1111111111111111",
-                    res.data.data.task
+                    res.data.data.task,
                   );
                   setFilteredTasKData(res.data.data.task);
                 } catch (err) {
@@ -3470,13 +3471,13 @@ const INITIAL_VALUES = {
                         <Select
                           value={
                             (agent || []).find(
-                              (opt: any) => opt.id === values.assigned_agent_id
+                              (opt: any) => opt.id === values.assigned_agent_id,
                             ) || null
                           }
                           onChange={(selected: Option | null) =>
                             setFieldValue(
                               "assigned_agent_id",
-                              selected ? selected.id : ""
+                              selected ? selected.id : "",
                             )
                           }
                           onBlur={() =>
@@ -3507,8 +3508,8 @@ const INITIAL_VALUES = {
                               backgroundColor: isSelected
                                 ? "var(--primary-500)"
                                 : isFocused
-                                ? "var(--primary-100)"
-                                : "#fff",
+                                  ? "var(--primary-100)"
+                                  : "#fff",
                               color: isSelected ? "#fff" : "#333",
                               cursor: "pointer",
                             }),
@@ -3756,7 +3757,7 @@ const INITIAL_VALUES = {
                   try {
                     const res = await AxiosProvider.post(
                       "/leads/documents/filter",
-                      values
+                      values,
                     );
                     // console.log(
                     //   "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
@@ -4042,8 +4043,8 @@ const INITIAL_VALUES = {
                     (taskEditObject?.end_at
                       ? new Date(taskEditObject.end_at)
                       : taskEditObject?.start_at
-                      ? addMinutes(new Date(taskEditObject.start_at), 15)
-                      : defaultEnd) || defaultEnd,
+                        ? addMinutes(new Date(taskEditObject.start_at), 15)
+                        : defaultEnd) || defaultEnd,
 
                   // ------ create-only (ignored in edit UI) ------
                   owner: data?.agent?.id || "",
@@ -4237,7 +4238,7 @@ const INITIAL_VALUES = {
                                   if (utcStart)
                                     setFieldValue(
                                       "end_at",
-                                      addMinutes(utcStart, 30)
+                                      addMinutes(utcStart, 30),
                                     );
                                 }}
                                 onBlur={() => setFieldTouched("start_at", true)}
@@ -4253,7 +4254,7 @@ const INITIAL_VALUES = {
                                   const todayCA = nowCA().toDateString();
                                   const selectedCA = values.start_at
                                     ? toPickerLocal(
-                                        values.start_at
+                                        values.start_at,
                                       )!.toDateString()
                                     : null;
                                   if (todayCA === date.toDateString())
@@ -4280,7 +4281,7 @@ const INITIAL_VALUES = {
                                     20,
                                     30,
                                     0,
-                                    0
+                                    0,
                                   ); // 8:30 PM (latest start)
 
                                   // Default earliest = 10:00
@@ -4297,7 +4298,7 @@ const INITIAL_VALUES = {
                                     next.setSeconds(0, 0);
                                     const mins = next.getMinutes();
                                     next.setMinutes(
-                                      mins + ((15 - (mins % 15)) % 15)
+                                      mins + ((15 - (mins % 15)) % 15),
                                     ); // round up to 15
                                     if (next > wLastStart) return false; // no slots left today
                                     earliest = next < wStart ? wStart : next;
@@ -4391,11 +4392,9 @@ const INITIAL_VALUES = {
             </div>
           </>
         )}
-
       </div>
 
       {/* FITLER FLYOUT END */}
     </>
   );
 }
-

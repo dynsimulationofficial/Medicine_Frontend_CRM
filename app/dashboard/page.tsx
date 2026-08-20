@@ -25,13 +25,15 @@ export default function DashboardGatewayPage() {
   return (
     <div className="h-screen flex flex-col justify-center items-center bg-black text-white">
       <Image
-        src="/images/crmlogo.jpg"
+        src="/images/crmlogo.png"
         alt="Loading"
         width={140}
         height={140}
         className="animate-pulse rounded-full mb-4"
       />
-      <p className="text-gray-400 text-sm animate-pulse">Redirecting to your Dashboard...</p>
+      <p className="text-gray-400 text-sm animate-pulse">
+        Redirecting to your Dashboard...
+      </p>
     </div>
   );
 }

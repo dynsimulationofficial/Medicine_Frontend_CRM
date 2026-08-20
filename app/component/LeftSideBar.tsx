@@ -44,7 +44,7 @@ const LeftSideBar: React.FC = () => {
             {/* Fixed-size icon box to prevent shift */}
             <div className="relative h-6 w-6 shrink-0 ">
               <Image
-                src="/images/crmlogo.jpg"
+                src="/images/crmlogo.png"
                 alt="Orizon icon"
                 fill
                 className="object-contain"
@@ -60,10 +60,14 @@ const LeftSideBar: React.FC = () => {
         </Link>
 
         {/* MENU WITH ICONS */}
-        <Link href={userRole === "Admin" ? "/dashboard-admin" : "/dashboard-agent"}>
+        <Link
+          href={userRole === "Admin" ? "/dashboard-admin" : "/dashboard-agent"}
+        >
           <div
             className={`mb-4 flex items-center gap-4 group px-3 py-2 rounded-[4px] relative cursor-pointer text-base leading-normal font-medium text-white hover:bg-primary-600 active:bg-primary-700   ${
-              pathname === "/dashboard" || pathname === "/dashboard-admin" || pathname === "/dashboard-agent"
+              pathname === "/dashboard" ||
+              pathname === "/dashboard-admin" ||
+              pathname === "/dashboard-agent"
                 ? "bg-primary-600 text-white  hover:!text-white"
                 : ""
             }`}
