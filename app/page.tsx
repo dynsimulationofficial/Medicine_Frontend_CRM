@@ -60,14 +60,18 @@ export default function LoginHome() {
       storage.saveUserEmail(values.email);
       // const activityLogger = new UserActivityLogger();
       //  await activityLogger.userLogin();
-      toast.success("OTP Send on mail");
-      console.log("AAAAAAAAAAAAAAAAAAAA", res.data.data);
+      const successMsg = res?.data?.msg || res?.data?.message || "OTP sent to your email successfully";
+      toast.success(successMsg);
       storage.saveUserName(res.data.data.name);
       storage.saveUserId(res.data.data.system_user_id);
       router.push("/otp");
-    } catch (error) {
-      console.log(error);
-      toast.error("Username or password is incorrect. Please try again.");
+    } catch (error: any) {
+      console.error("Login request OTP error:", error);
+      const errorMsg =
+        error?.response?.data?.msg ||
+        error?.response?.data?.message ||
+        "Invalid email or password. Please try again.";
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

@@ -118,7 +118,7 @@ export default function AdminDashboardPage() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div>
               <h1 className="text-2xl font-bold text-white">
-                Admin Dashboard 👑
+                Admin Dashboard
               </h1>
               <p className="text-sm text-gray-400">
                 System Overview & Agent Team Management

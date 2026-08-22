@@ -2172,11 +2172,6 @@ const stateDisplay = values.state ? allStates.find((o: any) => norm(o.id) === no
                   whatsapp_number: editLeadData?.whatsapp_number ?? "",
                   agent_id: editLeadData?.agent?.id || editLeadData?.agent_id || "",
                   lead_status: editLeadData?.lead_status ?? "New",
-                  payment_status: editLeadData?.payment_status ?? "Pending",
-                  delivery_status: editLeadData?.delivery_status ?? "Pending",
-                  currency: editLeadData?.currency ?? "USD",
-                  courier_name: editLeadData?.courier_name ?? "",
-                  tracking_number: editLeadData?.tracking_number ?? "",
                 }}
                 validationSchema={LeadSchema}
                 onSubmit={(values, { setSubmitting, resetForm }) => {
@@ -2194,11 +2189,6 @@ const stateDisplay = values.state ? allStates.find((o: any) => norm(o.id) === no
                     whatsapp_number: values.whatsapp_number || undefined,
                     agent_id: values.agent_id || undefined,
                     lead_status: values.lead_status || undefined,
-                    payment_status: values.payment_status || undefined,
-                    delivery_status: values.delivery_status || undefined,
-                    currency: values.currency || undefined,
-                    courier_name: values.courier_name || undefined,
-                    tracking_number: values.tracking_number || undefined,
                   };
 
                   handleUpdateLead(value);
@@ -2542,127 +2532,6 @@ const stateDisplay = values.state ? allStates.find((o: any) => norm(o.id) === no
                           />
                         </div>
 
-                        {/* Payment Status */}
-                        <div>
-                          <p className="text-white mb-2">Payment Status</p>
-                          <Select
-                            value={paymentStatusOptions.find((opt) => opt.id === values.payment_status) || null}
-                            onChange={(selected: any) =>
-                              setFieldValue("payment_status", selected ? selected.id : "Pending")
-                            }
-                            onBlur={() => setFieldTouched("payment_status", true)}
-                            getOptionLabel={(opt: any) => opt.name}
-                            getOptionValue={(opt: any) => opt.id}
-                            options={paymentStatusOptions}
-                            placeholder="Select Payment Status"
-                            classNames={{
-                              control: ({ isFocused }: any) =>
-                                `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                  isFocused ? "!border-primary-500" : "!border-gray-700"
-                                }`,
-                            }}
-                            styles={{
-                              menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                              option: (base, { isFocused, isSelected }) => ({
-                                ...base,
-                                backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                                color: "#fff",
-                                cursor: "pointer",
-                              }),
-                              singleValue: (base) => ({ ...base, color: "#fff" }),
-                              input: (base) => ({ ...base, color: "#fff" }),
-                              placeholder: (base) => ({ ...base, color: "#aaa" }),
-                            }}
-                          />
-                        </div>
-
-                        {/* Delivery Status */}
-                        <div>
-                          <p className="text-white mb-2">Delivery Status</p>
-                          <Select
-                            value={deliveryStatusOptions.find((opt) => opt.id === values.delivery_status) || null}
-                            onChange={(selected: any) =>
-                              setFieldValue("delivery_status", selected ? selected.id : "Pending")
-                            }
-                            onBlur={() => setFieldTouched("delivery_status", true)}
-                            getOptionLabel={(opt: any) => opt.name}
-                            getOptionValue={(opt: any) => opt.id}
-                            options={deliveryStatusOptions}
-                            placeholder="Select Delivery Status"
-                            classNames={{
-                              control: ({ isFocused }: any) =>
-                                `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                  isFocused ? "!border-primary-500" : "!border-gray-700"
-                                }`,
-                            }}
-                            styles={{
-                              menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                              option: (base, { isFocused, isSelected }) => ({
-                                ...base,
-                                backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                                color: "#fff",
-                                cursor: "pointer",
-                              }),
-                              singleValue: (base) => ({ ...base, color: "#fff" }),
-                              input: (base) => ({ ...base, color: "#fff" }),
-                              placeholder: (base) => ({ ...base, color: "#aaa" }),
-                            }}
-                          />
-                        </div>
-
-                        {/* Currency */}
-                        <div>
-                          <p className="text-white mb-2">Currency</p>
-                          <Select
-                            value={currencyOptions.find((opt) => opt.id === values.currency) || null}
-                            onChange={(selected: any) => setFieldValue("currency", selected ? selected.id : "USD")}
-                            onBlur={() => setFieldTouched("currency", true)}
-                            getOptionLabel={(opt: any) => opt.name}
-                            getOptionValue={(opt: any) => opt.id}
-                            options={currencyOptions}
-                            placeholder="Select Currency"
-                            classNames={{
-                              control: ({ isFocused }: any) =>
-                                `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                  isFocused ? "!border-primary-500" : "!border-gray-700"
-                                }`,
-                            }}
-                            styles={{
-                              menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                              option: (base, { isFocused, isSelected }) => ({
-                                ...base,
-                                backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                                color: "#fff",
-                                cursor: "pointer",
-                              }),
-                              singleValue: (base) => ({ ...base, color: "#fff" }),
-                              input: (base) => ({ ...base, color: "#fff" }),
-                              placeholder: (base) => ({ ...base, color: "#aaa" }),
-                            }}
-                          />
-                        </div>
-
-                        {/* Courier Name */}
-                        <div>
-                          <p className="text-white mb-2">Courier Name</p>
-                          <Field
-                            type="text"
-                            name="courier_name"
-                            placeholder="e.g. DHL / FedEx / SpeedPost"
-                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
-                          />
-                        </div>
-
-                        {/* Tracking Number */}
-                        <div>
-                          <p className="text-white mb-2">Tracking Number</p>
-                          <Field
-                            type="text"
-                            name="tracking_number"
-                            placeholder="e.g. DHL123456789"
-                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
-                          />
-                        </div>
                       </div>
 
                       {/* Submit Button */}

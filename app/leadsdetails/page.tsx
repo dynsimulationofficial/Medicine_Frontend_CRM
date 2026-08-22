@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import Image from "next/image";
 import Tabs from "../component/Tabs";
 import { CiSettings } from "react-icons/ci";
@@ -17,6 +18,9 @@ import "react-toastify/dist/ReactToastify.css";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import {
+  FaPills,
+  FaEye,
+  FaCalendarAlt,
   FaCity,
   FaNotesMedical,
   FaRegEye,
@@ -100,10 +104,26 @@ export default function Home() {
     useState<boolean>(false);
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isModalOpenVideo, setIsModalOpenVideo] = useState<boolean>(false);
   const [faceImage, setFaceImage] = useState<string | null>(null);
   const [hitApi, setHitApi] = useState<boolean>(true);
-  //console.log('BBBBBBBBBBBBB',isModalOpenVideo)
+  const [isOrderFlyout, setIsOrderFlyout] = useState<boolean>(false);
+  const [ordersList, setOrdersList] = useState<any[]>([]);
+  const [allOrdersGrandTotal, setAllOrdersGrandTotal] = useState<number>(0);
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+  const [editingOrderNumber, setEditingOrderNumber] = useState<string | null>(null);
+  const [orderStatus, setOrderStatus] = useState<string>("Pending");
+  const [paymentStatus, setOrderPaymentStatus] = useState<string>("Pending");
+  const [paymentMode, setPaymentMode] = useState<string>("COD");
+  const [orderNotes, setOrderNotes] = useState<string>("");
+  const [courierName, setCourierName] = useState<string>("");
+  const [trackingNumber, setTrackingNumber] = useState<string>("");
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [isViewOrderFlyout, setIsViewOrderFlyout] = useState<boolean>(false);
+  const [selectedViewingOrder, setSelectedViewingOrder] = useState<any>(null);
+  const [orderItems, setOrderItems] = useState<Array<{ id?: string; medicine_name: string; unit: string; quantity: number | string; rate: number | string }>>([
+    { medicine_name: "", unit: "Strip", quantity: 1, rate: "" },
+  ]);
+  const [isSavingOrder, setIsSavingOrder] = useState<boolean>(false);
   const [modalImage, setModalImage] = useState<string>("");
   //const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -456,6 +476,56 @@ export default function Home() {
     fetchLeadSource();
   }, []);
 
+  const handleQuickUpdateOrderStatus = async (
+    orderId: string,
+    newStatus: string,
+    newPaymentStatus?: string,
+    newPaymentMode?: string
+  ) => {
+    if (!leadId || !orderId) return;
+    try {
+      const res = await AxiosProvider.post("/leads/orders/update-status", {
+        id: orderId,
+        lead_id: leadId,
+        order_status: newStatus,
+        payment_status: newPaymentStatus,
+        payment_mode: newPaymentMode,
+      });
+      toast.success(res?.data?.msg || "Order status updated");
+      fetchLeadOrders();
+      if (selectedViewingOrder && selectedViewingOrder.id === orderId) {
+        setSelectedViewingOrder((prev: any) => ({
+          ...prev,
+          order_status: newStatus,
+          payment_status: newPaymentStatus || prev.payment_status,
+          payment_mode: newPaymentMode || prev.payment_mode,
+        }));
+      }
+    } catch (err: any) {
+      console.error("update status error:", err);
+      toast.error(err?.response?.data?.msg || "Failed to update order status");
+    }
+  };
+
+  const fetchLeadOrders = async () => {
+    if (!leadId) return;
+    try {
+      const res = await AxiosProvider.post("/leads/orders/list", { lead_id: leadId });
+      if (res?.data?.data) {
+        setOrdersList(res.data.data.orders || []);
+        setAllOrdersGrandTotal(res.data.data.all_orders_grand_total || 0);
+      }
+    } catch (err) {
+      console.error("fetchLeadOrders error:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (leadId) {
+      fetchLeadOrders();
+    }
+  }, [leadId, hitApi]);
+
   // END FETCH AGENT AND LEAD SOURCE
 
   const openActivityFlyout = () => {
@@ -466,6 +536,149 @@ export default function Home() {
     setFlyoutFilterOpen(true);
     setTask(true);
   };
+  const openViewOrderFlyout = (order: any) => {
+    setSelectedViewingOrder(order);
+    setFlyoutFilterOpen(true);
+    setIsViewOrderFlyout(true);
+  };
+
+  const openCreateOrderFlyout = () => {
+    setEditingOrderId(null);
+    setEditingOrderNumber(null);
+    setOrderStatus("Pending");
+    setOrderPaymentStatus("Pending");
+    setPaymentMode("COD");
+    setOrderNotes("");
+    setCourierName("");
+    setTrackingNumber("");
+    setOrderItems([{ medicine_name: "", unit: "Strip", quantity: 1, rate: "" }]);
+    setFlyoutFilterOpen(true);
+    setIsOrderFlyout(true);
+  };
+  const openOrderFlyout = openCreateOrderFlyout;
+
+  const openEditOrderFlyout = (order: any) => {
+    setEditingOrderId(order.id);
+    setEditingOrderNumber(order.order_number);
+    setOrderStatus(order.order_status || "Pending");
+    setOrderPaymentStatus(order.payment_status || "Pending");
+    setPaymentMode(order.payment_mode || "COD");
+    setOrderNotes(order.order_notes || "");
+    setCourierName(order.courier_name || "");
+    setTrackingNumber(order.tracking_number || "");
+    if (order.items && order.items.length > 0) {
+      setOrderItems(
+        order.items.map((it: any) => ({
+          id: it.id,
+          medicine_name: it.medicine_name,
+          unit: it.unit || "Strip",
+          quantity: it.quantity,
+          rate: it.rate,
+        }))
+      );
+    } else {
+      setOrderItems([{ medicine_name: "", unit: "Strip", quantity: 1, rate: "" }]);
+    }
+    setFlyoutFilterOpen(true);
+    setIsOrderFlyout(true);
+  };
+
+  const handleAddOrderItemRow = () => {
+    setOrderItems((prev) => [...prev, { medicine_name: "", unit: "Strip", quantity: 1, rate: "" }]);
+  };
+
+  const handleRemoveOrderItemRow = (index: number) => {
+    if (orderItems.length === 1) {
+      setOrderItems([{ medicine_name: "", unit: "Strip", quantity: 1, rate: "" }]);
+      return;
+    }
+    setOrderItems((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  const handleOrderItemChange = (index: number, field: string, value: any) => {
+    setOrderItems((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const handleSaveOrderMedicines = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!leadId) return;
+
+    const validItems = orderItems.filter((i) => i.medicine_name && i.medicine_name.trim() !== "");
+    if (validItems.length === 0) {
+      toast.error("Please add at least one medicine item with a name");
+      return;
+    }
+
+    setIsSavingOrder(true);
+    try {
+      const payload = {
+        id: editingOrderId || undefined,
+        lead_id: leadId,
+        order_status: orderStatus,
+        payment_status: paymentStatus,
+        payment_mode: paymentMode,
+        order_notes: orderNotes || null,
+        courier_name: courierName || null,
+        tracking_number: trackingNumber || null,
+        items: validItems.map((i) => ({
+          id: i.id || undefined,
+          medicine_name: i.medicine_name.trim(),
+          unit: i.unit || "Strip",
+          quantity: Number(i.quantity) || 1,
+          rate: Number(i.rate) || 0,
+        })),
+      };
+      const res = await AxiosProvider.post("/leads/orders/save", payload);
+      toast.success(res?.data?.msg || "Order saved successfully");
+      setHitApi((prev) => !prev);
+      closeFlyOut();
+      fetchLeadOrders();
+    } catch (err: any) {
+      console.error("Save order error:", err);
+      toast.error(err?.response?.data?.msg || "Failed to save order");
+    } finally {
+      setIsSavingOrder(false);
+    }
+  };
+
+  const deleteLeadOrder = async (order: any) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: `Do you really want to delete order ${order.order_number}?`,
+      icon: "warning",
+      background: "#181818",
+      color: "#ffffff",
+      iconColor: "#eab308",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#374151",
+      customClass: {
+        popup: "border border-gray-700 rounded-2xl shadow-2xl",
+      },
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await AxiosProvider.post("/leads/orders/delete", {
+            id: order.id,
+            lead_id: leadId,
+          });
+          toast.success(`Order ${order.order_number} deleted successfully`);
+          setHitApi((prev) => !prev);
+          fetchLeadOrders();
+        } catch (err) {
+          console.error("Delete order error:", err);
+          toast.error("Failed to delete order");
+        }
+      }
+    });
+  };
+
   const openDocumentFlyout = () => {
     setFlyoutFilterOpen(true);
     setDocument(true);
@@ -502,6 +715,9 @@ export default function Home() {
   const closeFlyOut = () => {
     setActivity(false);
     setTask(false);
+    setIsOrderFlyout(false);
+    setIsViewOrderFlyout(false);
+    setSelectedViewingOrder(null);
     setFlyoutFilterOpen(false);
     setDocument(false);
     setUpdateActivityHistory(false);
@@ -982,6 +1198,162 @@ export default function Home() {
         </>
       ),
     },
+    {
+      label: "Order",
+      content: (
+        <>
+          <div className="container mx-auto p-4">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <p className="text-lg font-bold text-white">Customer Orders</p>
+                <p className="text-xs text-gray-400">All orders placed by this customer</p>
+              </div>
+            </div>
+
+            {ordersList && ordersList.length > 0 ? (
+              <div className="space-y-4">
+                <div className="w-full overflow-x-auto border border-gray-700 rounded-lg">
+                  <table className="w-full text-left text-sm text-gray-200">
+                    <thead className="bg-[#181818] text-gray-400 uppercase text-xs border-b border-gray-700">
+                      <tr>
+                        <th className="py-3 px-4 w-12 text-center">#</th>
+                        <th className="py-3 px-4">Order Number</th>
+                        <th className="py-3 px-4">Date</th>
+                        <th className="py-3 px-4 text-center">Items</th>
+                        <th className="py-3 px-4 text-right">Grand Total</th>
+                        <th className="py-3 px-4 text-center">Order Status</th>
+                        <th className="py-3 px-4 text-center">Payment</th>
+                        <th className="py-3 px-4 text-center w-36">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800">
+                      {ordersList.map((ord: any, idx: number) => {
+                        const isExpanded = expandedOrderId === ord.id;
+                        return (
+                          <React.Fragment key={ord.id || idx}>
+                            <tr className="odd:bg-[#1E1E1E] even:bg-[#141414] hover:bg-gray-800/60 transition-colors">
+                              <td className="py-3 px-4 text-center text-gray-400 font-medium">{idx + 1}</td>
+                              <td className="py-3 px-4 font-bold text-primary-400">
+                                {ord.order_number}
+                              </td>
+                              <td className="py-3 px-4 text-xs text-gray-300">
+                                {new Date(ord.created_at).toLocaleDateString()} {new Date(ord.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </td>
+                              <td className="py-3 px-4 text-center font-medium text-white">
+                                <span className="px-2 py-0.5 rounded bg-gray-700 text-xs font-semibold text-white">
+                                  {ord.total_items} Items
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 text-right font-extrabold text-white text-base">
+                                ₹{Number(ord.grand_total).toFixed(2)}
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <select
+                                  value={ord.order_status || "Pending"}
+                                  onChange={(e) =>
+                                    handleQuickUpdateOrderStatus(
+                                      ord.id,
+                                      e.target.value,
+                                      ord.payment_status,
+                                      ord.payment_mode
+                                    )
+                                  }
+                                  className={`px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer bg-black focus:outline-none ${
+                                    ord.order_status === "Delivered"
+                                      ? "text-green-300 border-green-700/60"
+                                      : ord.order_status === "Shipped"
+                                      ? "text-blue-300 border-blue-700/60"
+                                      : ord.order_status === "Confirmed"
+                                      ? "text-purple-300 border-purple-700/60"
+                                      : ord.order_status === "Cancelled"
+                                      ? "text-red-300 border-red-700/60"
+                                      : "text-yellow-300 border-yellow-700/60"
+                                  }`}
+                                >
+                                  <option value="Pending">Pending</option>
+                                  <option value="Confirmed">Confirmed</option>
+                                  <option value="Shipped">Shipped</option>
+                                  <option value="Delivered">Delivered</option>
+                                  <option value="Cancelled">Cancelled</option>
+                                </select>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <span className={`px-2 py-0.5 rounded text-xs ${
+                                  ord.payment_status === "Paid"
+                                    ? "bg-green-950 text-green-400 border border-green-800"
+                                    : "bg-gray-800 text-gray-300"
+                                }`}>
+                                  {ord.payment_mode || "COD"} · {ord.payment_status || "Pending"}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <div className="flex items-center justify-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => openViewOrderFlyout(ord)}
+                                    className="p-1.5 rounded text-primary-400 hover:bg-primary-950/60 hover:text-white transition-colors cursor-pointer"
+                                    title="View order details in flyout"
+                                  >
+                                    <FaEye className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => openEditOrderFlyout(ord)}
+                                    className="p-1.5 rounded text-gray-300 hover:text-white hover:bg-gray-700 transition-colors cursor-pointer"
+                                    title="Edit Order"
+                                  >
+                                    <MdEdit className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => deleteLeadOrder(ord)}
+                                    className="p-1.5 rounded text-red-400 hover:text-white hover:bg-red-600 transition-colors cursor-pointer"
+                                    title="Delete Order"
+                                  >
+                                    <RiDeleteBin6Line className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          </React.Fragment>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot className="bg-[#111111] border-t-2 border-primary-600">
+                      <tr>
+                        <td colSpan={3} className="py-4 px-4 font-bold text-white text-sm whitespace-nowrap">
+                          Total Orders: {ordersList.length}
+                        </td>
+                        <td colSpan={3} className="py-4 px-4 text-right font-bold text-gray-300 text-sm whitespace-nowrap">
+                          All Orders Grand Total:
+                        </td>
+                        <td colSpan={2} className="py-4 px-4 text-left font-black text-primary-400 text-xl whitespace-nowrap">
+                          ₹{Number(allOrdersGrandTotal || 0).toFixed(2)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <div className="py-12 border border-dashed border-gray-700 rounded-lg text-center bg-[#151515]">
+                <FaPills className="w-10 h-10 text-gray-500 mx-auto mb-3" />
+                <p className="text-base text-gray-300 font-medium mb-1">No orders placed yet</p>
+                <p className="text-xs text-gray-500 mb-4">Click below to generate the first order for this lead.</p>
+                <button
+                  type="button"
+                  onClick={() => openCreateOrderFlyout()}
+                  className="bg-primary-600 hover:bg-primary-700 py-2.5 px-6 rounded-[4px] text-sm font-semibold text-white inline-flex items-center gap-2 cursor-pointer transition-colors"
+                >
+                  <FaPills className="w-4 h-4" />
+                  + Create First Order
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      ),
+    },
   ];
   if (checking) {
     return (
@@ -1194,6 +1566,17 @@ export default function Home() {
                       <FaTasks className="w-5 h-5 text-white group-hover:text-white" />
                       <p className="text-white text-base font-medium group-hover:text-white">
                         Document
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex justify-center items-center gap-4">
+                    <div
+                      className="flex gap-2 py-3 px-6 rounded-[4px] border border-[#E7E7E7] cursor-pointer bg-primary-600 items-center hover:bg-primary-700 active:bg-primary-800 group min-w-32"
+                      onClick={() => openOrderFlyout()}
+                    >
+                      <FaPills className="w-5 h-5 text-white group-hover:text-white" />
+                      <p className="text-white text-base font-medium group-hover:text-white">
+                        + Add Order
                       </p>
                     </div>
                   </div>
@@ -1573,10 +1956,6 @@ export default function Home() {
                               { label: "Lead Source", value: data?.lead_source },
                               { label: "Best time to call", value: data?.best_time_to_call },
                               { label: "WhatsApp Number", value: data?.whatsapp_number },
-                              { label: "Payment Status", value: data?.payment_status || "Pending" },
-                              { label: "Delivery Status", value: data?.delivery_status || "Pending" },
-                              { label: "Courier Name", value: data?.courier_name },
-                              { label: "Tracking Number", value: data?.tracking_number },
                               ...(userRole === "Admin"
                                 ? [{ label: "Lead Age", value: data?.lead_age_label || (data?.lead_age_days ? `${data?.lead_age_days} Days` : "-") }]
                                 : []),
@@ -1600,7 +1979,7 @@ export default function Home() {
                       // LEAD PROPERTIES EDIT FORM
                       <div className="w-full border border-gray-700 rounded overflow-hidden mb-6 bg-[#181818] p-4">
                         <p className="text-base font-semibold text-white mb-4 border-b border-gray-700 pb-2">
-                          Edit Lead & Order Properties
+                          Edit Lead Properties
                         </p>
                         <Formik
                           enableReinitialize
@@ -1611,11 +1990,6 @@ export default function Home() {
                             lead_source_id: data?.lead_source_id || data?.lead_source?.id || (leadSourceData.find((s) => s.name?.toLowerCase() === (typeof data?.lead_source === 'string' ? data?.lead_source?.toLowerCase() : ''))?.id) || "",
                             best_time_to_call: data?.best_time_to_call ?? "",
                             whatsapp_number: data?.whatsapp_number ?? "",
-                            currency: data?.currency ?? "USD",
-                            payment_status: data?.payment_status ?? "Pending",
-                            delivery_status: data?.delivery_status ?? "Pending",
-                            courier_name: data?.courier_name ?? "",
-                            tracking_number: data?.tracking_number ?? "",
                           }}
                           validationSchema={Yup.object({
                             agent_id: Yup.string().nullable(),
@@ -1623,11 +1997,6 @@ export default function Home() {
                             lead_source_id: Yup.string().nullable(),
                             best_time_to_call: Yup.string().trim().nullable(),
                             whatsapp_number: Yup.string().trim().nullable(),
-                            currency: Yup.string().nullable(),
-                            payment_status: Yup.string().nullable(),
-                            delivery_status: Yup.string().nullable(),
-                            courier_name: Yup.string().trim().nullable(),
-                            tracking_number: Yup.string().trim().nullable(),
                           })}
                           onSubmit={async (values, { setSubmitting }) => {
                             try {
@@ -1638,11 +2007,6 @@ export default function Home() {
                                 lead_source_id: values.lead_source_id || undefined,
                                 best_time_to_call: values.best_time_to_call || undefined,
                                 whatsapp_number: values.whatsapp_number || undefined,
-                                currency: values.currency || undefined,
-                                payment_status: values.payment_status || undefined,
-                                delivery_status: values.delivery_status || undefined,
-                                courier_name: values.courier_name || undefined,
-                                tracking_number: values.tracking_number || undefined,
                               };
                               await AxiosProvider.post("/leads/update", payload);
                               toast.success("Lead properties updated successfully");
@@ -1794,113 +2158,6 @@ export default function Home() {
                                 </div>
                               </div>
 
-                              {/* Currency */}
-                              <div>
-                                <label className="block text-xs font-medium text-gray-300 mb-1">Currency</label>
-                                  <Select
-                                    value={currencyOptions.find((opt) => opt.id === values.currency) || null}
-                                    onChange={(selected: any) => setFieldValue("currency", selected ? selected.id : "USD")}
-                                    onBlur={() => setFieldTouched("currency", true)}
-                                    getOptionLabel={(opt: any) => opt.name}
-                                    getOptionValue={(opt: any) => opt.id}
-                                    options={currencyOptions}
-                                    placeholder="Select"
-                                    classNames={{
-                                      control: () => "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
-                                    }}
-                                    styles={{
-                                      menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                                      option: (base, { isFocused, isSelected }) => ({
-                                        ...base,
-                                        backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                                        color: "#fff",
-                                      }),
-                                      singleValue: (base) => ({ ...base, color: "#fff" }),
-                                      input: (base) => ({ ...base, color: "#fff" }),
-                                      placeholder: (base) => ({ ...base, color: "#888" }),
-                                    }}
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Payment Status */}
-                              <div>
-                                <label className="block text-xs font-medium text-gray-300 mb-1">Payment Status</label>
-                                <Select
-                                  value={paymentStatusOptions.find((opt) => opt.id === values.payment_status) || null}
-                                  onChange={(selected: any) => setFieldValue("payment_status", selected ? selected.id : "Pending")}
-                                  onBlur={() => setFieldTouched("payment_status", true)}
-                                  getOptionLabel={(opt: any) => opt.name}
-                                  getOptionValue={(opt: any) => opt.id}
-                                  options={paymentStatusOptions}
-                                  placeholder="Select Payment Status"
-                                  classNames={{
-                                    control: () => "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
-                                  }}
-                                  styles={{
-                                    menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                                    option: (base, { isFocused, isSelected }) => ({
-                                      ...base,
-                                      backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                                      color: "#fff",
-                                    }),
-                                    singleValue: (base) => ({ ...base, color: "#fff" }),
-                                    input: (base) => ({ ...base, color: "#fff" }),
-                                    placeholder: (base) => ({ ...base, color: "#888" }),
-                                  }}
-                                />
-                              </div>
-
-                              {/* Delivery Status */}
-                              <div>
-                                <label className="block text-xs font-medium text-gray-300 mb-1">Delivery Status</label>
-                                <Select
-                                  value={deliveryStatusOptions.find((opt) => opt.id === values.delivery_status) || null}
-                                  onChange={(selected: any) => setFieldValue("delivery_status", selected ? selected.id : "Pending")}
-                                  onBlur={() => setFieldTouched("delivery_status", true)}
-                                  getOptionLabel={(opt: any) => opt.name}
-                                  getOptionValue={(opt: any) => opt.id}
-                                  options={deliveryStatusOptions}
-                                  placeholder="Select Delivery Status"
-                                  classNames={{
-                                    control: () => "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
-                                  }}
-                                  styles={{
-                                    menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                                    option: (base, { isFocused, isSelected }) => ({
-                                      ...base,
-                                      backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                                      color: "#fff",
-                                    }),
-                                    singleValue: (base) => ({ ...base, color: "#fff" }),
-                                    input: (base) => ({ ...base, color: "#fff" }),
-                                    placeholder: (base) => ({ ...base, color: "#888" }),
-                                  }}
-                                />
-                              </div>
-
-                              {/* Courier Name */}
-                              <div>
-                                <label className="block text-xs font-medium text-gray-300 mb-1">Courier Name</label>
-                                <Field
-                                  name="courier_name"
-                                  type="text"
-                                  className="w-full border border-gray-700 rounded-[4px] text-white bg-black text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
-                                  placeholder="e.g. DHL / FedEx / SpeedPost"
-                                />
-                              </div>
-
-                              {/* Tracking Number */}
-                              <div>
-                                <label className="block text-xs font-medium text-gray-300 mb-1">Tracking Number</label>
-                                <Field
-                                  name="tracking_number"
-                                  type="text"
-                                  className="w-full border border-gray-700 rounded-[4px] text-white bg-black text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
-                                  placeholder="e.g. DHL123456789"
-                                />
-                              </div>
-
                               {/* Actions */}
                               <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-700">
                                 <button
@@ -1978,7 +2235,7 @@ export default function Home() {
         ></div>
       )}
 
-      <div className={`filterflyout ${isFlyoutFilterOpen ? "filteropen" : ""}`}>
+      <div className={`filterflyout ${isFlyoutFilterOpen ? "filteropen" : ""} ${isOrderFlyout || isViewOrderFlyout ? "!w-[96%] md:!w-[1000px] lg:!w-[1060px]" : ""}`}>
         {activity && (
           <div className="w-full min-h-auto  text-white p-4">
             {/* Flyout Header */}
@@ -4032,6 +4289,446 @@ export default function Home() {
               </Formik>
             </div>
           </>
+        )}
+
+        {isOrderFlyout && (
+          <div className="w-full min-h-auto text-white p-4">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <p className="text-primary-500 text-[24px] font-bold leading-8 flex items-center gap-2">
+                  <FaPills /> {editingOrderId ? `Edit Order ${editingOrderNumber}` : "Create New Customer Order"}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Add medicine items, select status and payment mode. Totals are calculated automatically.
+                </p>
+              </div>
+              <IoCloseOutline
+                onClick={() => closeFlyOut()}
+                className="h-8 w-8 border border-gray-700 text-white rounded cursor-pointer hover:bg-gray-800 transition-colors"
+              />
+            </div>
+            <div className="w-full border-b border-gray-700 mb-6"></div>
+
+            <form onSubmit={handleSaveOrderMedicines} className="space-y-4">
+              {/* Individual Order Status & Payment Setup */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3.5 bg-[#141414] border border-gray-700 rounded-lg">
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">
+                    Order Status <span className="text-primary-400">*</span>
+                  </label>
+                  <select
+                    value={orderStatus}
+                    onChange={(e) => setOrderStatus(e.target.value)}
+                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Shipped">Shipped</option>
+                    <option value="Delivered">Delivered</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">Payment Status</label>
+                  <select
+                    value={paymentStatus}
+                    onChange={(e) => setOrderPaymentStatus(e.target.value)}
+                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Partial">Partial</option>
+                    <option value="COD">COD</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">Payment Mode</label>
+                  <select
+                    value={paymentMode}
+                    onChange={(e) => setPaymentMode(e.target.value)}
+                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
+                  >
+                    <option value="COD">Cash On Delivery (COD)</option>
+                    <option value="UPI">UPI / GPay / PhonePe</option>
+                    <option value="Card">Debit / Credit Card</option>
+                    <option value="NetBanking">Net Banking</option>
+                    <option value="Cash">Cash</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Rows List */}
+              <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
+                {orderItems.map((item, index) => {
+                  const qtyNum = Number(item.quantity) || 0;
+                  const rateNum = Number(item.rate) || 0;
+                  const rowTotal = (qtyNum * rateNum).toFixed(2);
+
+                  return (
+                    <div
+                      key={index}
+                      className="p-3.5 bg-[#141414] border border-gray-700 rounded-lg space-y-3 relative group"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold text-primary-400 bg-primary-950/60 px-2 py-0.5 rounded border border-primary-800/40">
+                          Medicine #{index + 1}
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-gray-400">
+                            Item Total: <span className="text-sm font-bold text-primary-400">₹{rowTotal}</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveOrderItemRow(index)}
+                            className="text-red-400 hover:text-red-200 p-1 hover:bg-red-950/50 rounded transition-colors cursor-pointer"
+                            title="Remove this item"
+                          >
+                            <RiDeleteBin6Line className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5">
+                        {/* Medicine Name */}
+                        <div className="md:col-span-4">
+                          <label className="block text-xs font-medium text-gray-300 mb-1">
+                            Medicine Name <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Paracetamol 650mg"
+                            value={item.medicine_name}
+                            onChange={(e) => handleOrderItemChange(index, "medicine_name", e.target.value)}
+                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
+                          />
+                        </div>
+
+                        {/* Unit */}
+                        <div className="md:col-span-2">
+                          <label className="block text-xs font-medium text-gray-300 mb-1">Unit</label>
+                          <select
+                            value={item.unit}
+                            onChange={(e) => handleOrderItemChange(index, "unit", e.target.value)}
+                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
+                          >
+                            <option value="Strip">Strip</option>
+                            <option value="Bottle">Bottle</option>
+                            <option value="Box">Box</option>
+                            <option value="Tablet">Tablet</option>
+                            <option value="Syrup">Syrup</option>
+                            <option value="Capsule">Capsule</option>
+                            <option value="Tube">Tube</option>
+                            <option value="Injection">Injection</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+
+                        {/* Quantity */}
+                        <div className="md:col-span-2">
+                          <label className="block text-xs font-medium text-gray-300 mb-1">Qty</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => handleOrderItemChange(index, "quantity", e.target.value)}
+                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
+                          />
+                        </div>
+
+                        {/* Rate */}
+                        <div className="md:col-span-2">
+                          <label className="block text-xs font-medium text-gray-300 mb-1">Rate (₹)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                            value={item.rate}
+                            onChange={(e) => handleOrderItemChange(index, "rate", e.target.value)}
+                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
+                          />
+                        </div>
+
+                        {/* Total (Read-only) */}
+                        <div className="md:col-span-2">
+                          <label className="block text-xs font-medium text-gray-300 mb-1">Total (₹)</label>
+                          <input
+                            type="text"
+                            readOnly
+                            value={`₹${rowTotal}`}
+                            className="w-full border border-gray-700 rounded-[4px] bg-[#1a1a1a] text-primary-400 font-bold text-sm px-3 py-2 cursor-not-allowed outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Add More Row Button */}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={handleAddOrderItemRow}
+                  className="w-full py-2.5 border-2 border-dashed border-primary-600/60 hover:border-primary-500 text-primary-400 hover:text-white hover:bg-primary-950/30 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <FaPills className="w-4 h-4" />
+                  + Add Another Medicine
+                </button>
+              </div>
+
+              {/* Courier & Tracking Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3.5 bg-[#141414] border border-gray-700 rounded-lg">
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">Courier Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. DHL / FedEx / SpeedPost / BlueDart"
+                    value={courierName}
+                    onChange={(e) => setCourierName(e.target.value)}
+                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">Tracking Number</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. DHL123456789"
+                    value={trackingNumber}
+                    onChange={(e) => setTrackingNumber(e.target.value)}
+                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
+                  />
+                </div>
+              </div>
+
+              {/* Order Notes */}
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">Order Notes (Optional)</label>
+                <textarea
+                  rows={2}
+                  placeholder="e.g. Call before delivery, urgent order"
+                  value={orderNotes}
+                  onChange={(e) => setOrderNotes(e.target.value)}
+                  className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-3 py-2 focus:outline-none focus:border-primary-500 resize-none"
+                />
+              </div>
+
+              {/* Grand Total Summary Box */}
+              {(() => {
+                const totalOrderAmount = orderItems.reduce((acc, curr) => {
+                  const q = Number(curr.quantity) || 0;
+                  const r = Number(curr.rate) || 0;
+                  return acc + q * r;
+                }, 0);
+
+                return (
+                  <div className="p-4 bg-[#111111] border-2 border-primary-600/80 rounded-xl flex justify-between items-center mt-4">
+                    <div>
+                      <p className="text-xs text-gray-400">Total Items in this Order</p>
+                      <p className="text-lg font-bold text-white">
+                        {orderItems.filter((i) => i.medicine_name.trim() !== "").length} Items
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-400">Total Order Amount</p>
+                      <p className="text-2xl font-black text-primary-400">
+                        ₹{totalOrderAmount.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Submit Button */}
+              <div className="pt-3">
+                <button
+                  type="submit"
+                  disabled={isSavingOrder}
+                  className="w-full py-3.5 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 disabled:opacity-50 text-white font-bold rounded-[4px] text-base transition-colors cursor-pointer shadow-lg"
+                >
+                  {isSavingOrder ? "Saving Order..." : editingOrderId ? "Update Order" : "Generate & Save Order"}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+{isViewOrderFlyout && selectedViewingOrder && (
+          <div className="w-full min-h-auto text-white p-4 space-y-5">
+            {/* Header */}
+            <div className="flex justify-between items-center pb-3 border-b border-gray-700">
+              <div>
+                <p className="text-primary-500 text-[24px] font-bold leading-8 flex items-center gap-2">
+                  <FaPills /> Order Details - {selectedViewingOrder.order_number}
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Placed on {new Date(selectedViewingOrder.created_at).toLocaleDateString()} at{" "}
+                  {new Date(selectedViewingOrder.created_at).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </div>
+              <IoCloseOutline
+                onClick={() => closeFlyOut()}
+                className="h-8 w-8 border border-gray-700 text-white rounded cursor-pointer hover:bg-gray-800 transition-colors"
+              />
+            </div>
+
+            {/* Quick Badges & Instant Status Update */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="p-3 bg-[#151515] border border-gray-700 rounded-lg">
+                <p className="text-xs text-gray-400">Order Number</p>
+                <p className="text-sm font-bold text-primary-400 mt-1">{selectedViewingOrder.order_number}</p>
+              </div>
+              <div className="p-3 bg-[#151515] border border-gray-700 rounded-lg">
+                <p className="text-xs text-gray-400">Total Items</p>
+                <p className="text-sm font-bold text-white mt-1">{selectedViewingOrder.total_items} Items</p>
+              </div>
+              <div className="p-3 bg-[#151515] border border-gray-700 rounded-lg">
+                <p className="text-xs text-gray-400 mb-1">Update Status</p>
+                <select
+                  value={selectedViewingOrder.order_status || "Pending"}
+                  onChange={(e) =>
+                    handleQuickUpdateOrderStatus(
+                      selectedViewingOrder.id,
+                      e.target.value,
+                      selectedViewingOrder.payment_status,
+                      selectedViewingOrder.payment_mode
+                    )
+                  }
+                  className="w-full text-xs py-1 px-2 rounded bg-black border border-gray-700 text-yellow-300 font-semibold focus:outline-none focus:border-primary-500 cursor-pointer"
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Confirmed">Confirmed</option>
+                  <option value="Shipped">Shipped</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+              <div className="p-3 bg-[#151515] border border-gray-700 rounded-lg">
+                <p className="text-xs text-gray-400 mb-1">Update Payment</p>
+                <select
+                  value={selectedViewingOrder.payment_status || "Pending"}
+                  onChange={(e) =>
+                    handleQuickUpdateOrderStatus(
+                      selectedViewingOrder.id,
+                      selectedViewingOrder.order_status,
+                      e.target.value,
+                      selectedViewingOrder.payment_mode
+                    )
+                  }
+                  className="w-full text-xs py-1 px-2 rounded bg-black border border-gray-700 text-green-300 font-semibold focus:outline-none focus:border-primary-500 cursor-pointer"
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Paid">Paid</option>
+                  <option value="Partial">Partial</option>
+                  <option value="COD">COD</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Medicines List Table */}
+            <div>
+              <p className="text-sm font-bold text-gray-200 mb-2">Ordered Medicines Breakdown</p>
+              <div className="w-full overflow-x-auto border border-gray-700 rounded-lg">
+                <table className="w-full text-left text-sm text-gray-200">
+                  <thead className="bg-[#181818] text-gray-400 uppercase text-xs border-b border-gray-700">
+                    <tr>
+                      <th className="py-2.5 px-4 w-12 text-center">#</th>
+                      <th className="py-2.5 px-4">Medicine Name</th>
+                      <th className="py-2.5 px-4 w-28">Unit</th>
+                      <th className="py-2.5 px-4 w-24 text-center">Qty</th>
+                      <th className="py-2.5 px-4 w-32 text-right">Unit Rate</th>
+                      <th className="py-2.5 px-4 w-36 text-right">Item Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800">
+                    {selectedViewingOrder.items && selectedViewingOrder.items.length > 0 ? (
+                      selectedViewingOrder.items.map((it: any, itIdx: number) => (
+                        <tr key={it.id || itIdx} className="odd:bg-[#1E1E1E] even:bg-[#141414]">
+                          <td className="py-3 px-4 text-center text-gray-400 font-medium">{itIdx + 1}</td>
+                          <td className="py-3 px-4 font-semibold text-white">{it.medicine_name}</td>
+                          <td className="py-3 px-4 text-gray-300">
+                            <span className="px-2 py-0.5 rounded bg-gray-700 text-xs text-gray-200">
+                              {it.unit || "Strip"}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-center font-bold text-white">{it.quantity}</td>
+                          <td className="py-3 px-4 text-right text-gray-300">₹{Number(it.rate).toFixed(2)}</td>
+                          <td className="py-3 px-4 text-right font-bold text-primary-400">
+                            ₹{Number(it.total_price).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="py-4 text-center text-gray-500 italic">
+                          No medicines listed in this order.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                  <tfoot className="bg-[#111111] border-t-2 border-primary-600">
+                    <tr>
+                      <td colSpan={3} className="py-3.5 px-4 font-bold text-white text-base">
+                        Total Items: {selectedViewingOrder.items?.length || 0}
+                      </td>
+                      <td colSpan={2} className="py-3.5 px-4 text-right font-bold text-gray-300 text-base">
+                        Total Order Amount:
+                      </td>
+                      <td className="py-3.5 px-4 text-right font-black text-primary-400 text-lg">
+                        ₹{Number(selectedViewingOrder.grand_total).toFixed(2)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            {/* Shipping & Tracking Information */}
+            {(selectedViewingOrder.courier_name || selectedViewingOrder.tracking_number) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3.5 bg-[#141414] border border-gray-700 rounded-lg">
+                <div>
+                  <p className="text-xs text-gray-400">Courier Partner</p>
+                  <p className="text-sm font-bold text-white mt-0.5">
+                    {selectedViewingOrder.courier_name || "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Tracking Number</p>
+                  <p className="text-sm font-bold text-primary-400 mt-0.5 font-mono">
+                    {selectedViewingOrder.tracking_number || "-"}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Order Notes */}
+            {selectedViewingOrder.order_notes && (
+              <div className="p-3.5 bg-[#141414] border border-gray-700 rounded-lg">
+                <p className="text-xs font-semibold text-gray-400 mb-1">Order Notes</p>
+                <p className="text-sm text-gray-200 whitespace-pre-wrap">{selectedViewingOrder.order_notes}</p>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="pt-2 flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  const ord = selectedViewingOrder;
+                  closeFlyOut();
+                  openEditOrderFlyout(ord);
+                }}
+                className="w-full py-3 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white font-bold rounded-[4px] text-sm transition-colors cursor-pointer shadow-lg flex items-center justify-center gap-2"
+              >
+                <MdEdit className="w-4 h-4" />
+                Edit This Order
+              </button>
+            </div>
+          </div>
         )}
       </div>
 

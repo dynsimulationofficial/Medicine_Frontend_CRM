@@ -60,7 +60,8 @@ export default function OtpHome() {
         );
       }
       const userRole = storage.getUserRole();
-      toast.success("Login Successful");
+      const successMsg = res?.data?.msg || res?.data?.message || "Login Successful";
+      toast.success(successMsg);
       if (userRole === "Admin") {
         router.push("/dashboard-admin");
       } else {
@@ -69,9 +70,13 @@ export default function OtpHome() {
       setIsLogged(true);
       const activityLogger = new UserActivityLogger();
       // await activityLogger.userLogin();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Network error:", error);
-      toast.error("Invalid Code. Please try again.");
+      const errorMsg =
+        error?.response?.data?.msg ||
+        error?.response?.data?.message ||
+        "Invalid Code. Please try again.";
+      toast.error(errorMsg);
       setOtp("");
       requestAnimationFrame(() => firstInputRef.current?.focus()); // 👈 add this
     } finally {
