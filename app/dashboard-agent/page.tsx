@@ -245,9 +245,6 @@ export default function AgentDashboardPage() {
                         <p className="font-semibold text-white">
                           {lead.full_name}
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {lead.medicine_name || "No medicine specified"}
-                        </p>
                       </td>
                       <td className="p-4">
                         <div className="flex flex-col text-xs space-y-1">

@@ -1573,11 +1573,6 @@ export default function Home() {
                               { label: "Lead Source", value: data?.lead_source },
                               { label: "Best time to call", value: data?.best_time_to_call },
                               { label: "WhatsApp Number", value: data?.whatsapp_number },
-                              { label: "Medicine Name", value: data?.medicine_name },
-                              { 
-                                label: "Order Amount", 
-                                value: data?.order_amount ? `${data?.currency || 'USD'} ${data?.order_amount}` : "-" 
-                              },
                               { label: "Payment Status", value: data?.payment_status || "Pending" },
                               { label: "Delivery Status", value: data?.delivery_status || "Pending" },
                               { label: "Courier Name", value: data?.courier_name },
@@ -1616,8 +1611,6 @@ export default function Home() {
                             lead_source_id: data?.lead_source_id || data?.lead_source?.id || (leadSourceData.find((s) => s.name?.toLowerCase() === (typeof data?.lead_source === 'string' ? data?.lead_source?.toLowerCase() : ''))?.id) || "",
                             best_time_to_call: data?.best_time_to_call ?? "",
                             whatsapp_number: data?.whatsapp_number ?? "",
-                            medicine_name: data?.medicine_name ?? "",
-                            order_amount: data?.order_amount ?? "",
                             currency: data?.currency ?? "USD",
                             payment_status: data?.payment_status ?? "Pending",
                             delivery_status: data?.delivery_status ?? "Pending",
@@ -1630,8 +1623,6 @@ export default function Home() {
                             lead_source_id: Yup.string().nullable(),
                             best_time_to_call: Yup.string().trim().nullable(),
                             whatsapp_number: Yup.string().trim().nullable(),
-                            medicine_name: Yup.string().trim().nullable(),
-                            order_amount: Yup.number().typeError("Order amount must be a number").nullable(),
                             currency: Yup.string().nullable(),
                             payment_status: Yup.string().nullable(),
                             delivery_status: Yup.string().nullable(),
@@ -1647,8 +1638,6 @@ export default function Home() {
                                 lead_source_id: values.lead_source_id || undefined,
                                 best_time_to_call: values.best_time_to_call || undefined,
                                 whatsapp_number: values.whatsapp_number || undefined,
-                                medicine_name: values.medicine_name || undefined,
-                                order_amount: values.order_amount !== "" && values.order_amount !== null ? Number(values.order_amount) : undefined,
                                 currency: values.currency || undefined,
                                 payment_status: values.payment_status || undefined,
                                 delivery_status: values.delivery_status || undefined,
@@ -1805,30 +1794,9 @@ export default function Home() {
                                 </div>
                               </div>
 
-                              {/* Medicine Name */}
+                              {/* Currency */}
                               <div>
-                                <label className="block text-xs font-medium text-gray-300 mb-1">Medicine Name</label>
-                                <Field
-                                  name="medicine_name"
-                                  type="text"
-                                  className="w-full border border-gray-700 rounded-[4px] text-white bg-black text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
-                                  placeholder="e.g. Paracetamol 500mg"
-                                />
-                              </div>
-
-                              {/* Order Amount & Currency */}
-                              <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <label className="block text-xs font-medium text-gray-300 mb-1">Order Amount</label>
-                                  <Field
-                                    name="order_amount"
-                                    type="number"
-                                    className="w-full border border-gray-700 rounded-[4px] text-white bg-black text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
-                                    placeholder="0.00"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-xs font-medium text-gray-300 mb-1">Currency</label>
+                                <label className="block text-xs font-medium text-gray-300 mb-1">Currency</label>
                                   <Select
                                     value={currencyOptions.find((opt) => opt.id === values.currency) || null}
                                     onChange={(selected: any) => setFieldValue("currency", selected ? selected.id : "USD")}
