@@ -1513,6 +1513,21 @@ export default function Home() {
               </div>
               <div className="w-full border-b border-gray-700 mb-4"></div>
 
+              {/* Download Sample Template Banner */}
+              <div className="mb-4 p-3.5 bg-[#141414] border border-gray-700 rounded-lg flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-white">Need sample format?</p>
+                  <p className="text-[11px] text-gray-400">Download ready-to-use template with required columns</p>
+                </div>
+                <a
+                  href="/samples/lead_bulk_upload_sample.xlsx"
+                  download="lead_bulk_upload_sample.xlsx"
+                  className="px-3 py-1.5 bg-primary-950/70 hover:bg-primary-900 border border-primary-700 text-primary-400 text-xs font-bold rounded flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  Download .XLSX
+                </a>
+              </div>
+
               {/* FORM */}
               <form onSubmit={handleUploadFile}>
                 <div className="w-full">
