@@ -242,8 +242,6 @@ const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
           lead_status: "New",
           payment_status: "Pending",
           delivery_status: "Pending",
-          medicine_name: "",
-          order_amount: "",
           currency: "INR",
           courier_name: "",
           tracking_number: "",
@@ -650,28 +648,6 @@ const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
                       input: (base) => ({ ...base, color: "#fff" }),
                       placeholder: (base) => ({ ...base, color: "#aaa" }),
                     }}
-                  />
-                </div>
-
-                {/* Medicine Name */}
-                <div>
-                  <p className="text-white mb-2">Medicine Name</p>
-                  <Field
-                    type="text"
-                    name="medicine_name"
-                    placeholder="e.g. Paracetamol 500mg"
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
-                  />
-                </div>
-
-                {/* Order Amount */}
-                <div>
-                  <p className="text-white mb-2">Order Amount</p>
-                  <Field
-                    type="number"
-                    name="order_amount"
-                    placeholder="0.00"
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
                   />
                 </div>
 

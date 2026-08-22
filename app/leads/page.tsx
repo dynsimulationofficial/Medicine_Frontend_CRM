@@ -2174,8 +2174,6 @@ const stateDisplay = values.state ? allStates.find((o: any) => norm(o.id) === no
                   lead_status: editLeadData?.lead_status ?? "New",
                   payment_status: editLeadData?.payment_status ?? "Pending",
                   delivery_status: editLeadData?.delivery_status ?? "Pending",
-                  medicine_name: editLeadData?.medicine_name ?? "",
-                  order_amount: editLeadData?.order_amount ?? "",
                   currency: editLeadData?.currency ?? "USD",
                   courier_name: editLeadData?.courier_name ?? "",
                   tracking_number: editLeadData?.tracking_number ?? "",
@@ -2198,8 +2196,6 @@ const stateDisplay = values.state ? allStates.find((o: any) => norm(o.id) === no
                     lead_status: values.lead_status || undefined,
                     payment_status: values.payment_status || undefined,
                     delivery_status: values.delivery_status || undefined,
-                    medicine_name: values.medicine_name || undefined,
-                    order_amount: values.order_amount ? Number(values.order_amount) : undefined,
                     currency: values.currency || undefined,
                     courier_name: values.courier_name || undefined,
                     tracking_number: values.tracking_number || undefined,
@@ -2611,28 +2607,6 @@ const stateDisplay = values.state ? allStates.find((o: any) => norm(o.id) === no
                               input: (base) => ({ ...base, color: "#fff" }),
                               placeholder: (base) => ({ ...base, color: "#aaa" }),
                             }}
-                          />
-                        </div>
-
-                        {/* Medicine Name */}
-                        <div>
-                          <p className="text-white mb-2">Medicine Name</p>
-                          <Field
-                            type="text"
-                            name="medicine_name"
-                            placeholder="e.g. Paracetamol 500mg"
-                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
-                          />
-                        </div>
-
-                        {/* Order Amount */}
-                        <div>
-                          <p className="text-white mb-2">Order Amount</p>
-                          <Field
-                            type="number"
-                            name="order_amount"
-                            placeholder="0.00"
-                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
                           />
                         </div>
 
