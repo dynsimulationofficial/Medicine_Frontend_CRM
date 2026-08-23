@@ -4,7 +4,7 @@ import Image from "next/image";
 import { IoMdSettings } from "react-icons/io";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { RiFileAddLine, RiHistoryLine } from "react-icons/ri";
+import { RiFileAddLine, RiHistoryLine, RiBarChartBoxLine } from "react-icons/ri";
 import { FaUserEdit } from "react-icons/fa";
 import { MdOutlineDashboard, MdOutlinePeopleOutline } from "react-icons/md";
 import StorageManager from "../../provider/StorageManager";
@@ -72,6 +72,12 @@ const LeftSideBarMobile: React.FC = () => {
               href="/user-activity"
               label="User Activity"
               icon={<RiHistoryLine />}
+              pathname={pathname}
+            />
+            <SidebarItem
+              href="/reports"
+              label="Reports & KPIs"
+              icon={<RiBarChartBoxLine />}
               pathname={pathname}
             />
             <SidebarItem

@@ -5,7 +5,7 @@ import { IoMdLogOut, IoMdSettings } from "react-icons/io";
 import { usePathname } from "next/navigation";
 import AxiosProvider from "../../provider/AxiosProvider";
 import { useState } from "react";
-import { RiFileAddLine, RiHistoryLine } from "react-icons/ri";
+import { RiFileAddLine, RiHistoryLine, RiBarChartBoxLine } from "react-icons/ri";
 import { FaUserEdit } from "react-icons/fa";
 import { MdOutlineDashboard, MdOutlinePeopleOutline } from "react-icons/md";
 import { storage } from "firebase-admin";
@@ -138,6 +138,25 @@ const LeftSideBar: React.FC = () => {
             </div>
           </Link>
         )}
+        {userRole === "Admin" && (
+          <Link href="/reports">
+            <div
+              className={`mb-4 flex items-center gap-4 group px-3 py-2 rounded-[4px] relative cursor-pointer text-base leading-normal font-medium text-white hover:bg-primary-600 active:bg-primary-700   ${
+                pathname === "/reports"
+                  ? "bg-primary-600 text-white  hover:!text-white"
+                  : ""
+              }`}
+            >
+              <div className="h-6 w-6 shrink-0 grid place-items-center">
+                <RiBarChartBoxLine className="h-5 w-5" />
+              </div>
+              {isExpanded && (
+                <p className="whitespace-nowrap leading-none">Reports & KPIs</p>
+              )}
+            </div>
+          </Link>
+        )}
+
         {userRole === "Admin" && (
           <Link href="/setting">
             <div
