@@ -260,10 +260,11 @@ export default function Home() {
       .nullable()
       .test(
         "is-wa",
-        "Enter a valid WhatsApp number (with or without +91)",
+        "Enter a valid WhatsApp number",
         (val) => {
           if (!val) return true; // optional
-          return IN_PHONE_RX.test(val);
+          const clean = (val || "").replace(/\s+|[-()]/g, "");
+          return INTL_PHONE_RX.test(clean);
         },
       ),
   });
