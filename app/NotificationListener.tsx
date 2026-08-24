@@ -3,50 +3,69 @@
 import { useEffect } from "react";
 import { onMessage } from "firebase/messaging";
 import { toast } from "react-toastify";
-import { useRouter } from "next/navigation";
 import { messaging } from "./firebase-config";
 
-// The base URL should be configured using environment variables.
-const APP_BASE_URL =
-  process.env.NEXT_PUBLIC_APP_BASE_URL || "https://crm.adamnsolomon.com";
-
 const NotificationListener = () => {
-  const router = useRouter();
-
   useEffect(() => {
-    // Check if the code is running in a browser before adding the listener
     if (typeof window !== "undefined" && messaging) {
       // Handle foreground messages
       const unsubscribe = onMessage(messaging, (payload) => {
         console.log("📩 Notification received (foreground):", payload);
 
         const { notification, data } = payload;
-        const title = notification?.title || "Notification";
+        const title = notification?.title || "New Notification";
         const body = notification?.body || "Click to view details.";
         const leadId = data?.lead_id || data?.sample_lead_id || null;
+        const targetUrl = leadId ? `/leadsdetails?id=${encodeURIComponent(leadId)}` : null;
 
-        const notificationUrl = leadId
-          ? `${APP_BASE_URL}/leadsdetails?id=${encodeURIComponent(leadId)}`
-          : null;
-
-        // Use a toast notification for a better user experience
-        toast.info(body, {
-          autoClose: 5000,
-          onClick: () => {
-            // Use Next.js router for a smoother client-side navigation
-            if (notificationUrl) {
-              router.push(notificationUrl);
+        // 1. Trigger Windows / Desktop OS Notification Popup (Side banner)
+        if ("Notification" in window && Notification.permission === "granted") {
+          try {
+            if ("serviceWorker" in navigator) {
+              navigator.serviceWorker.ready.then((registration) => {
+                registration.showNotification(title, {
+                  body: body,
+                  icon: "/images/crmlogo.png",
+                  badge: "/images/crmlogo.png",
+                  data: { url: targetUrl || "/" },
+                });
+              });
+            } else {
+              const notif = new Notification(title, {
+                body: body,
+                icon: "/images/crmlogo.png",
+              });
+              notif.onclick = () => {
+                if (targetUrl) window.open(targetUrl, "_blank");
+              };
             }
-          },
-          closeOnClick: true,
-          pauseOnHover: true,
-        });
+          } catch (e) {
+            console.error("Desktop notification popup error:", e);
+          }
+        }
+
+        // 2. Also show In-App Toast
+        toast.info(
+          <div>
+            <p className="font-bold text-sm">{title}</p>
+            <p className="text-xs text-gray-200 mt-0.5">{body}</p>
+          </div>,
+          {
+            autoClose: 6000,
+            onClick: () => {
+              if (targetUrl) {
+                window.open(targetUrl, "_blank");
+              }
+            },
+            closeOnClick: true,
+            pauseOnHover: true,
+          }
+        );
       });
 
-      // Return the unsubscribe function for cleanup
       return () => unsubscribe();
     }
-  }, [router]);
+  }, []);
 
   return null;
 };
