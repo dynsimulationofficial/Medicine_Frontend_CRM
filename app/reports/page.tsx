@@ -357,62 +357,62 @@ export default function ReportsPage() {
           {/* KPI Summary Metric Cards (6 Cards Grid) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
             {/* 1. Total Leads */}
-            <div className="bg-gradient-to-br from-[#1c2331] to-[#121822] border border-blue-900/40 p-4 rounded-2xl relative overflow-hidden shadow-lg">
+            <div className="bg-[#1e1e1e] border border-gray-800 p-5 rounded-xl">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-blue-400">Total Leads</span>
-                <div className="p-2 bg-blue-950/80 rounded-xl border border-blue-800/60">
-                  <FiUsers className="w-4 h-4 text-blue-400" />
+                <span className="text-xs font-semibold text-gray-400">Total Leads</span>
+                <div className="p-2 bg-gray-800/80 rounded-lg text-gray-300">
+                  <FiUsers className="w-4 h-4" />
                 </div>
               </div>
-              <h3 className="text-2xl md:text-3xl font-black text-white mt-2">
+              <h3 className="text-2xl font-bold text-white mt-3">
                 {summary.total_leads || 0}
               </h3>
               <p className="text-[11px] text-gray-400 mt-1">
-                Assigned: <span className="text-blue-300 font-semibold">{summary.assigned_leads || 0}</span> | Unassigned: <span className="text-yellow-400 font-semibold">{summary.unassigned_leads || 0}</span>
+                Assigned: <span className="text-gray-200 font-medium">{summary.assigned_leads || 0}</span> | Unassigned: <span className="text-gray-200 font-medium">{summary.unassigned_leads || 0}</span>
               </p>
             </div>
 
             {/* 2. Lead Conversion Rate */}
-            <div className="bg-gradient-to-br from-[#1c2e27] to-[#121c17] border border-green-900/40 p-4 rounded-2xl relative overflow-hidden shadow-lg">
+            <div className="bg-[#1e1e1e] border border-gray-800 p-5 rounded-xl">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-green-400">Conversion Rate</span>
-                <div className="p-2 bg-green-950/80 rounded-xl border border-green-800/60">
-                  <FiTrendingUp className="w-4 h-4 text-green-400" />
+                <span className="text-xs font-semibold text-gray-400">Conversion Rate</span>
+                <div className="p-2 bg-gray-800/80 rounded-lg text-gray-300">
+                  <FiTrendingUp className="w-4 h-4" />
                 </div>
               </div>
-              <h3 className="text-2xl md:text-3xl font-black text-green-300 mt-2">
+              <h3 className="text-2xl font-bold text-white mt-3">
                 {summary.conversion_rate || 0}%
               </h3>
               <p className="text-[11px] text-gray-400 mt-1">
-                Converted: <span className="text-green-400 font-bold">{summary.converted_leads || 0} Leads</span>
+                Converted: <span className="text-gray-200 font-medium">{summary.converted_leads || 0} Leads</span>
               </p>
             </div>
 
             {/* 3. Total Orders */}
-            <div className="bg-gradient-to-br from-[#281d33] to-[#171120] border border-purple-900/40 p-4 rounded-2xl relative overflow-hidden shadow-lg">
+            <div className="bg-[#1e1e1e] border border-gray-800 p-5 rounded-xl">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-purple-400">Total Orders</span>
-                <div className="p-2 bg-purple-950/80 rounded-xl border border-purple-800/60">
-                  <FiShoppingBag className="w-4 h-4 text-purple-400" />
+                <span className="text-xs font-semibold text-gray-400">Total Orders</span>
+                <div className="p-2 bg-gray-800/80 rounded-lg text-gray-300">
+                  <FiShoppingBag className="w-4 h-4" />
                 </div>
               </div>
-              <h3 className="text-2xl md:text-3xl font-black text-white mt-2">
+              <h3 className="text-2xl font-bold text-white mt-3">
                 {summary.total_orders || 0}
               </h3>
               <p className="text-[11px] text-gray-400 mt-1">
-                Active: <span className="text-purple-300 font-semibold">{(summary.total_orders || 0) - (summary.cancelled_orders || 0)}</span> | Cancelled: <span className="text-red-400 font-semibold">{summary.cancelled_orders || 0}</span>
+                Active: <span className="text-gray-200 font-medium">{(summary.total_orders || 0) - (summary.cancelled_orders || 0)}</span> | Cancelled: <span className="text-red-400 font-medium">{summary.cancelled_orders || 0}</span>
               </p>
             </div>
 
             {/* 4. Total Sales Revenue */}
-            <div className="bg-gradient-to-br from-[#2b2413] to-[#1a150a] border border-yellow-900/40 p-4 rounded-2xl relative overflow-hidden shadow-lg">
+            <div className="bg-[#1e1e1e] border border-gray-800 p-5 rounded-xl">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-yellow-400">Total Revenue</span>
-                <div className="p-2 bg-yellow-950/80 rounded-xl border border-yellow-800/60">
-                  <FiDollarSign className="w-4 h-4 text-yellow-400" />
+                <span className="text-xs font-semibold text-gray-400">Total Revenue</span>
+                <div className="p-2 bg-gray-800/80 rounded-lg text-gray-300">
+                  <FiDollarSign className="w-4 h-4" />
                 </div>
               </div>
-              <h3 className="text-2xl md:text-3xl font-black text-yellow-300 mt-2 truncate">
+              <h3 className="text-2xl font-bold text-white mt-3 truncate">
                 ₹{Number(summary.total_revenue || 0).toLocaleString("en-IN")}
               </h3>
               <p className="text-[11px] text-gray-400 mt-1">
@@ -421,30 +421,30 @@ export default function ReportsPage() {
             </div>
 
             {/* 5. Delivered Orders */}
-            <div className="bg-gradient-to-br from-[#172b2a] to-[#0c1817] border border-teal-900/40 p-4 rounded-2xl relative overflow-hidden shadow-lg">
+            <div className="bg-[#1e1e1e] border border-gray-800 p-5 rounded-xl">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-teal-400">Delivered Orders</span>
-                <div className="p-2 bg-teal-950/80 rounded-xl border border-teal-800/60">
-                  <FiCheckCircle className="w-4 h-4 text-teal-400" />
+                <span className="text-xs font-semibold text-gray-400">Delivered Orders</span>
+                <div className="p-2 bg-gray-800/80 rounded-lg text-gray-300">
+                  <FiCheckCircle className="w-4 h-4" />
                 </div>
               </div>
-              <h3 className="text-2xl md:text-3xl font-black text-teal-300 mt-2">
+              <h3 className="text-2xl font-bold text-white mt-3">
                 {summary.delivered_orders || 0}
               </h3>
               <p className="text-[11px] text-gray-400 mt-1">
-                Success Rate: <span className="text-teal-400 font-bold">{summary.delivery_success_rate || 0}%</span>
+                Success Rate: <span className="text-gray-200 font-medium">{summary.delivery_success_rate || 0}%</span>
               </p>
             </div>
 
             {/* 6. Avg Order Value */}
-            <div className="bg-gradient-to-br from-[#2a1a23] to-[#190f14] border border-pink-900/40 p-4 rounded-2xl relative overflow-hidden shadow-lg">
+            <div className="bg-[#1e1e1e] border border-gray-800 p-5 rounded-xl">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-pink-400">Avg Order Value</span>
-                <div className="p-2 bg-pink-950/80 rounded-xl border border-pink-800/60">
-                  <FaBoxes className="w-4 h-4 text-pink-400" />
+                <span className="text-xs font-semibold text-gray-400">Avg Order Value</span>
+                <div className="p-2 bg-gray-800/80 rounded-lg text-gray-300">
+                  <FaBoxes className="w-4 h-4" />
                 </div>
               </div>
-              <h3 className="text-2xl md:text-3xl font-black text-pink-300 mt-2 truncate">
+              <h3 className="text-2xl font-bold text-white mt-3 truncate">
                 ₹{Number(summary.avg_order_value || 0).toLocaleString("en-IN")}
               </h3>
               <p className="text-[11px] text-gray-400 mt-1">
@@ -453,10 +453,10 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          {/* Visual Breakdowns Section (2 Columns Grid) */}
+          {/* Visual Breakdowns Section (3 Columns Grid) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             {/* 1. Order Status Breakdown */}
-            <div className="bg-[#151515] border border-gray-800 rounded-2xl p-5 shadow-lg">
+            <div className="bg-[#1e1e1e] border border-gray-800 rounded-xl p-5 shadow-sm">
               <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                 <FaTruck className="text-primary-400" /> Order Status Distribution
               </h3>
@@ -493,19 +493,19 @@ export default function ReportsPage() {
             </div>
 
             {/* 2. Payment Modes Breakdown */}
-            <div className="bg-[#151515] border border-gray-800 rounded-2xl p-5 shadow-lg">
+            <div className="bg-[#1e1e1e] border border-gray-800 rounded-xl p-5 shadow-sm">
               <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                 <FiDollarSign className="text-yellow-400" /> Payment Modes
               </h3>
               {paymentBreakdown.length > 0 ? (
                 <div className="space-y-4">
                   {paymentBreakdown.map((p: any, idx: number) => (
-                    <div key={idx} className="p-3 bg-[#1e1e1e] border border-gray-800 rounded-xl flex items-center justify-between">
+                    <div key={idx} className="p-3 bg-[#262626] border border-gray-700/60 rounded-lg flex items-center justify-between">
                       <div>
                         <p className="text-xs font-bold text-white">{p.payment_mode}</p>
                         <p className="text-[11px] text-gray-400">{p.count} Orders ({p.percentage}%)</p>
                       </div>
-                      <p className="text-sm font-black text-yellow-400">
+                      <p className="text-sm font-bold text-yellow-400">
                         ₹{Number(p.total_amount).toLocaleString("en-IN")}
                       </p>
                     </div>
@@ -517,7 +517,7 @@ export default function ReportsPage() {
             </div>
 
             {/* 3. Top Lead Sources */}
-            <div className="bg-[#151515] border border-gray-800 rounded-2xl p-5 shadow-lg">
+            <div className="bg-[#1e1e1e] border border-gray-800 rounded-xl p-5 shadow-sm">
               <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                 <FiUsers className="text-blue-400" /> Lead Sources Performance
               </h3>
@@ -543,11 +543,11 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          {/* Agent Performance Leaderboard Table */}
-          <div className="mb-8 bg-[#151515] border border-gray-800 rounded-2xl p-5 shadow-lg">
+          {/* Agent Performance Table */}
+          <div className="mb-8 bg-[#1e1e1e] border border-gray-800 rounded-xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <FiAward className="text-yellow-400 w-5 h-5" /> Agent Sales & Conversion Leaderboard
+                <FiTrendingUp className="text-primary-400 w-5 h-5" /> Agent Performance & Sales Overview
               </h3>
               <span className="text-xs text-gray-400">Ranked by Total Revenue Generated</span>
             </div>
@@ -568,27 +568,11 @@ export default function ReportsPage() {
                 <tbody className="divide-y divide-gray-800/80">
                   {leaderboard.length > 0 ? (
                     leaderboard.map((ag: any) => {
-                      const rankBadge =
-                        ag.rank === 1
-                          ? "🥇 1st"
-                          : ag.rank === 2
-                          ? "🥈 2nd"
-                          : ag.rank === 3
-                          ? "🥉 3rd"
-                          : `#${ag.rank}`;
                       return (
                         <tr key={ag.agent_id} className="hover:bg-[#1a1a1a] transition">
                           <td className="py-3.5 px-4 font-bold text-white">
-                            <span className={`px-2.5 py-1 rounded-md text-xs font-extrabold ${
-                              ag.rank === 1
-                                ? "bg-yellow-950 text-yellow-400 border border-yellow-700"
-                                : ag.rank === 2
-                                ? "bg-gray-800 text-gray-300 border border-gray-600"
-                                : ag.rank === 3
-                                ? "bg-amber-950 text-amber-500 border border-amber-800"
-                                : "text-gray-400"
-                            }`}>
-                              {rankBadge}
+                            <span className="inline-flex items-center justify-center min-w-[28px] h-6 px-2 rounded bg-[#202020] border border-gray-700 text-xs font-semibold text-gray-200">
+                              #{ag.rank}
                             </span>
                           </td>
                           <td className="py-3.5 px-4">
@@ -628,9 +612,9 @@ export default function ReportsPage() {
           </div>
 
           {/* Recent Orders in Period Table */}
-          <div className="bg-[#151515] border border-gray-800 rounded-2xl p-5 shadow-lg">
+          <div className="bg-[#1e1e1e] border border-gray-800 rounded-xl p-5 shadow-sm">
             <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-              <FaClock className="text-blue-400 w-4 h-4" /> Recent Customer Orders in Period
+              <FaClock className="text-primary-400 w-4 h-4" /> Recent Customer Orders in Period
             </h3>
 
             <div className="overflow-x-auto">

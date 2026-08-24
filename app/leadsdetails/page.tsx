@@ -1590,7 +1590,7 @@ export default function Home() {
                       <div className="w-full rounded bg-primary-600 px-4 py-6 mb-6">
                         <div className="flex justify-between text-white mb-5 capitalize">
                           <div className="flex gap-2 items-center">
-                            <FaStar className="text-yellow-400" />
+                            <FaStar className="text-white text-base" />
                             <div>
                               <p className="text-base font-medium leading-none">
                                 {data?.full_name || "-"}
