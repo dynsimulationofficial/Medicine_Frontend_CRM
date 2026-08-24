@@ -354,8 +354,8 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          {/* KPI Summary Metric Cards (6 Cards Grid) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+          {/* KPI Summary Metric Cards (4 Essential Cards Grid) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {/* 1. Total Leads */}
             <div className="bg-[#1e1e1e] border border-gray-800 p-5 rounded-xl">
               <div className="flex items-center justify-between">
@@ -372,23 +372,7 @@ export default function ReportsPage() {
               </p>
             </div>
 
-            {/* 2. Lead Conversion Rate */}
-            <div className="bg-[#1e1e1e] border border-gray-800 p-5 rounded-xl">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-400">Conversion Rate</span>
-                <div className="p-2 bg-gray-800/80 rounded-lg text-gray-300">
-                  <FiTrendingUp className="w-4 h-4" />
-                </div>
-              </div>
-              <h3 className="text-2xl font-bold text-white mt-3">
-                {summary.conversion_rate || 0}%
-              </h3>
-              <p className="text-[11px] text-gray-400 mt-1">
-                Converted: <span className="text-gray-200 font-medium">{summary.converted_leads || 0} Leads</span>
-              </p>
-            </div>
-
-            {/* 3. Total Orders */}
+            {/* 2. Total Orders */}
             <div className="bg-[#1e1e1e] border border-gray-800 p-5 rounded-xl">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-gray-400">Total Orders</span>
@@ -404,7 +388,7 @@ export default function ReportsPage() {
               </p>
             </div>
 
-            {/* 4. Total Sales Revenue (Multi-Currency Direct Display) */}
+            {/* 3. Total Sales Revenue (Multi-Currency Direct Display) */}
             <div className="bg-[#1e1e1e] border border-gray-800 p-5 rounded-xl">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-gray-400">Total Sales Revenue</span>
@@ -433,11 +417,11 @@ export default function ReportsPage() {
                 </div>
               </div>
               <p className="text-[10px] text-gray-500 mt-2 border-t border-gray-800/80 pt-1.5">
-                All 3 countries revenue
+                Gross revenue across 3 countries
               </p>
             </div>
 
-            {/* 5. Delivered Orders */}
+            {/* 4. Delivered Orders */}
             <div className="bg-[#1e1e1e] border border-gray-800 p-5 rounded-xl">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-gray-400">Delivered Orders</span>
@@ -449,114 +433,8 @@ export default function ReportsPage() {
                 {summary.delivered_orders || 0}
               </h3>
               <p className="text-[11px] text-gray-400 mt-1">
-                Success Rate: <span className="text-gray-200 font-medium">{summary.delivery_success_rate || 0}%</span>
+                Success Rate: <span className="text-green-400 font-medium">{summary.delivery_success_rate || 0}%</span>
               </p>
-            </div>
-
-            {/* 6. Avg Order Value */}
-            <div className="bg-[#1e1e1e] border border-gray-800 p-5 rounded-xl">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-400">Avg Order Value</span>
-                <div className="p-2 bg-gray-800/80 rounded-lg text-gray-300">
-                  <FaBoxes className="w-4 h-4" />
-                </div>
-              </div>
-              <h3 className="text-2xl font-bold text-white mt-3 truncate">
-                ₹{Number(summary.avg_order_value || 0).toLocaleString("en-IN")}
-              </h3>
-              <p className="text-[11px] text-gray-400 mt-1">
-                Revenue per order
-              </p>
-            </div>
-          </div>
-
-          {/* Visual Breakdowns Section (3 Columns Grid) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            {/* 1. Order Status Breakdown */}
-            <div className="bg-[#1e1e1e] border border-gray-800 rounded-xl p-5 shadow-sm">
-              <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                <FaTruck className="text-primary-400" /> Order Status Distribution
-              </h3>
-              {statusBreakdown.length > 0 ? (
-                <div className="space-y-4">
-                  {statusBreakdown.map((s: any, idx: number) => {
-                    const colorMap: Record<string, string> = {
-                      Delivered: "bg-green-500",
-                      Shipped: "bg-blue-500",
-                      Confirmed: "bg-purple-500",
-                      Pending: "bg-yellow-500",
-                      Cancelled: "bg-red-500",
-                    };
-                    const barColor = colorMap[s.status] || "bg-primary-500";
-                    return (
-                      <div key={idx}>
-                        <div className="flex justify-between text-xs font-semibold mb-1">
-                          <span className="text-gray-300">{s.status} ({s.count})</span>
-                          <span className="text-gray-400">₹{Number(s.total_amount).toLocaleString("en-IN")} ({s.percentage}%)</span>
-                        </div>
-                        <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
-                          <div
-                            className={`${barColor} h-full rounded-full transition-all duration-500`}
-                            style={{ width: `${s.percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-xs text-gray-500 text-center py-6">No orders in this period</p>
-              )}
-            </div>
-
-            {/* 2. Payment Modes Breakdown */}
-            <div className="bg-[#1e1e1e] border border-gray-800 rounded-xl p-5 shadow-sm">
-              <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                <FiDollarSign className="text-yellow-400" /> Payment Modes
-              </h3>
-              {paymentBreakdown.length > 0 ? (
-                <div className="space-y-4">
-                  {paymentBreakdown.map((p: any, idx: number) => (
-                    <div key={idx} className="p-3 bg-[#262626] border border-gray-700/60 rounded-lg flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-bold text-white">{p.payment_mode}</p>
-                        <p className="text-[11px] text-gray-400">{p.count} Orders ({p.percentage}%)</p>
-                      </div>
-                      <p className="text-sm font-bold text-yellow-400">
-                        ₹{Number(p.total_amount).toLocaleString("en-IN")}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-gray-500 text-center py-6">No payment data available</p>
-              )}
-            </div>
-
-            {/* 3. Top Lead Sources */}
-            <div className="bg-[#1e1e1e] border border-gray-800 rounded-xl p-5 shadow-sm">
-              <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                <FiUsers className="text-blue-400" /> Lead Sources Performance
-              </h3>
-              {sourceBreakdown.length > 0 ? (
-                <div className="space-y-3">
-                  {sourceBreakdown.slice(0, 5).map((src: any, idx: number) => (
-                    <div key={idx} className="flex items-center justify-between py-1.5 border-b border-gray-800/60 last:border-none text-xs">
-                      <div>
-                        <p className="font-semibold text-gray-200">{src.source_name}</p>
-                        <p className="text-[10px] text-gray-500">{src.leads_count} Leads Generated</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="px-2 py-0.5 rounded bg-green-950 text-green-400 border border-green-800 text-[11px] font-bold">
-                          {src.conversion_rate}% Conv.
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-gray-500 text-center py-6">No lead source data available</p>
-              )}
             </div>
           </div>
 
