@@ -356,7 +356,11 @@ export default function AgentDashboardPage() {
                                 {lead.order_count} Order{lead.order_count === 1 ? "" : "s"}
                               </span>
                               <p className="text-[11px] font-semibold text-yellow-400 mt-1 font-mono">
-                                {lead.currency === "USD" ? "$" : lead.currency === "GBP" ? "£" : "₹"}
+                                {lead.currency === "GBP" || lead.country === "UK" || (lead.phone && lead.phone.startsWith("+44"))
+                                  ? "£"
+                                  : lead.currency === "USD" || lead.country === "USA" || (lead.phone && lead.phone.startsWith("+1"))
+                                  ? "$"
+                                  : "₹"}
                                 {Number(lead.total_order_amount || 0).toLocaleString("en-IN")}
                               </p>
                             </div>

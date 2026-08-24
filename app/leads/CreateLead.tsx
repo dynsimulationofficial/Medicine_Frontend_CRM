@@ -287,18 +287,29 @@ const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
                       className="bg-black text-white text-sm border-r border-gray-700 px-2 py-3 outline-none cursor-pointer"
                       value={values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91"}
                       onChange={(e) => {
+                        const newPrefix = e.target.value;
                         const currentCode = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
                         const numberPart = (values.phone || "").replace(currentCode, "");
-                        setFieldValue("phone", numberPart ? e.target.value + numberPart : "");
+                        setFieldValue("phone", numberPart ? newPrefix + numberPart : newPrefix);
+                        if (newPrefix === "+44") {
+                          setFieldValue("country", "UK");
+                          setFieldValue("currency", "GBP");
+                        } else if (newPrefix === "+1") {
+                          setFieldValue("country", "USA");
+                          setFieldValue("currency", "USD");
+                        } else {
+                          setFieldValue("country", "India");
+                          setFieldValue("currency", "INR");
+                        }
                       }}
                     >
-                      <option value="+91">+91</option>
-                      <option value="+1">+1</option>
-                      <option value="+44">+44</option>
+                      <option value="+91">+91 (India)</option>
+                      <option value="+44">+44 (UK)</option>
+                      <option value="+1">+1 (USA)</option>
                     </select>
                     <input
                       type="text"
-                      maxLength={10}
+                      maxLength={15}
                       className="w-full bg-transparent text-white text-sm px-3 py-3 outline-none placeholder-gray-400"
                       placeholder="Enter phone number"
                       value={(() => {
@@ -309,6 +320,16 @@ const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
                         const code = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
                         const digitsOnly = e.target.value.replace(/\D/g, "");
                         setFieldValue("phone", digitsOnly ? code + digitsOnly : "");
+                        if (code === "+44") {
+                          setFieldValue("country", "UK");
+                          setFieldValue("currency", "GBP");
+                        } else if (code === "+1") {
+                          setFieldValue("country", "USA");
+                          setFieldValue("currency", "USD");
+                        } else {
+                          setFieldValue("country", "India");
+                          setFieldValue("currency", "INR");
+                        }
                       }}
                       onBlur={() => setFieldTouched("phone", true)}
                     />

@@ -147,12 +147,13 @@ export default function Home() {
   const [isTotpPopupOpen, setIsTotpPopupOpen] = useState<boolean>(false);
   const [data, setData] = useState<any>(null);
 
-  // Dynamic currency symbol based on lead's country / currency (USA -> $, UK -> £, India -> ₹)
-  const leadCurrencySymbol = data?.currency === "USD" || data?.country === "USA"
-    ? "$"
-    : data?.currency === "GBP" || data?.country === "UK"
-    ? "£"
-    : "₹";
+  // Dynamic currency symbol based on lead's country / currency (UK -> £, USA -> $, India -> ₹)
+  const leadCurrencySymbol =
+    data?.currency === "GBP" || data?.country === "UK" || (data?.phone && data?.phone.startsWith("+44"))
+      ? "£"
+      : data?.currency === "USD" || data?.country === "USA" || (data?.phone && data?.phone.startsWith("+1"))
+      ? "$"
+      : "₹";
 
   // 2️⃣ run useEffect when id changes in URL
   useEffect(() => {
@@ -1280,7 +1281,7 @@ export default function Home() {
                                 </span>
                               </td>
                               <td className="py-3 px-4 text-right font-extrabold text-white text-base">
-                                {leadCurrencySymbol}{Number(ord.grand_total).toFixed(2)}
+                                {Number(ord.grand_total).toFixed(2)}
                               </td>
                               <td className="py-3 px-4 text-center">
                                 <select
@@ -1363,7 +1364,7 @@ export default function Home() {
                           All Orders Grand Total:
                         </td>
                         <td colSpan={2} className="py-4 px-4 text-left font-black text-primary-400 text-xl whitespace-nowrap">
-                          {leadCurrencySymbol}{Number(allOrdersGrandTotal || 0).toFixed(2)}
+                          {Number(allOrdersGrandTotal || 0).toFixed(2)}
                         </td>
                       </tr>
                     </tfoot>
@@ -4414,7 +4415,7 @@ export default function Home() {
                         </span>
                         <div className="flex items-center gap-3">
                           <span className="text-xs text-gray-400">
-                            Item Total: <span className="text-sm font-bold text-primary-400">{leadCurrencySymbol}{rowTotal}</span>
+                            Item Total: <span className="text-sm font-bold text-primary-400">{rowTotal}</span>
                           </span>
                           <button
                             type="button"
@@ -4521,7 +4522,7 @@ export default function Home() {
 
                         {/* Rate */}
                         <div className="md:col-span-2">
-                          <label className="block text-xs font-medium text-gray-300 mb-1">Rate ({leadCurrencySymbol})</label>
+                          <label className="block text-xs font-medium text-gray-300 mb-1">Rate</label>
                           <input
                             type="number"
                             min="0"
@@ -4535,11 +4536,11 @@ export default function Home() {
 
                         {/* Total (Read-only) */}
                         <div className="md:col-span-2">
-                          <label className="block text-xs font-medium text-gray-300 mb-1">Total ({leadCurrencySymbol})</label>
+                          <label className="block text-xs font-medium text-gray-300 mb-1">Total</label>
                           <input
                             type="text"
                             readOnly
-                            value={`${leadCurrencySymbol}${rowTotal}`}
+                            value={rowTotal}
                             className="w-full border border-gray-700 rounded-[4px] bg-[#1a1a1a] text-primary-400 font-bold text-sm px-3 py-2 cursor-not-allowed outline-none"
                           />
                         </div>
@@ -4616,7 +4617,7 @@ export default function Home() {
                     <div className="text-right">
                       <p className="text-xs text-gray-400">Total Order Amount</p>
                       <p className="text-2xl font-black text-primary-400">
-                        {leadCurrencySymbol}{totalOrderAmount.toFixed(2)}
+                        {totalOrderAmount.toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -4738,9 +4739,9 @@ export default function Home() {
                             </span>
                           </td>
                           <td className="py-3 px-4 text-center font-bold text-white">{it.quantity}</td>
-                          <td className="py-3 px-4 text-right text-gray-300">{leadCurrencySymbol}{Number(it.rate).toFixed(2)}</td>
+                          <td className="py-3 px-4 text-right text-gray-300">{Number(it.rate).toFixed(2)}</td>
                           <td className="py-3 px-4 text-right font-bold text-primary-400">
-                            {leadCurrencySymbol}{Number(it.total_price).toFixed(2)}
+                            {Number(it.total_price).toFixed(2)}
                           </td>
                         </tr>
                       ))
@@ -4761,7 +4762,7 @@ export default function Home() {
                         Total Order Amount:
                       </td>
                       <td className="py-3.5 px-4 text-right font-black text-primary-400 text-lg">
-                        {leadCurrencySymbol}{Number(selectedViewingOrder.grand_total).toFixed(2)}
+                        {Number(selectedViewingOrder.grand_total).toFixed(2)}
                       </td>
                     </tr>
                   </tfoot>

@@ -565,7 +565,13 @@ export default function ReportsPage() {
                           {ord.total_items}
                         </td>
                         <td className="py-3 px-4 text-right font-bold text-white font-mono">
-                          {ord.currency === "USD" ? "$" : ord.currency === "GBP" ? "£" : "₹"}
+                          {(() => {
+                            const p = (ord.customer_phone || "").replace(/\s+/g, "");
+                            const c = (ord.customer_country || "").toLowerCase();
+                            if (p.startsWith("+44") || p.startsWith("44") || c.includes("uk") || c.includes("united kingdom")) return "£";
+                            if (p.startsWith("+1") || (p.startsWith("1") && p.length >= 11) || c.includes("usa") || c.includes("united states")) return "$";
+                            return "₹";
+                          })()}
                           {Number(ord.grand_total).toFixed(2)}
                         </td>
                         <td className="py-3 px-4 text-center">
