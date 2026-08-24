@@ -242,9 +242,14 @@ export default function AgentDashboardPage() {
                       className="border-b border-gray-800 bg-[#151515] hover:bg-[#1f1f1f]"
                     >
                       <td className="p-4 font-medium text-white">
-                        <p className="font-semibold text-white">
+                        <a
+                          href={`/leadsdetails?id=${lead.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-white hover:text-primary-400 transition cursor-pointer"
+                        >
                           {lead.full_name}
-                        </p>
+                        </a>
                       </td>
                       <td className="p-4">
                         <div className="flex flex-col text-xs space-y-1">
@@ -274,14 +279,14 @@ export default function AgentDashboardPage() {
                         </span>
                       </td>
                       <td className="p-4 text-center">
-                        <button
-                          onClick={() =>
-                            router.push(`/leadsdetails?id=${lead.id}`)
-                          }
-                          className="px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded text-xs font-medium"
+                        <a
+                          href={`/leadsdetails?id=${lead.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded text-xs font-medium cursor-pointer"
                         >
                           View Details
-                        </button>
+                        </a>
                       </td>
                     </tr>
                   ))
