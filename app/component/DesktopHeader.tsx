@@ -107,9 +107,10 @@ const DesktopHeader = () => {
 
           <div
             className="relative inline-block hover:cursor-pointer"
-            // onMouseEnter={() => setIsHovered(true)} // Show list on hover
-            // onMouseLeave={() => setIsHovered(false)} // Hide list when not hovered
-            onClick={() => setIsLeftSideBar(true)}
+            onClick={() => {
+              setIsLeftSideBar(true);
+              fetchNotification();
+            }}
           >
             {/* Bell icon */}
             <div className="w-[50px] h-[50px] bg-primary-600 hover:bg-primary-700 rounded-full flex justify-center items-center">
@@ -218,15 +219,25 @@ const DesktopHeader = () => {
           <div className="w-full border-b border-gray-700 mb-4"></div>
 
           {/* ✅ Notification list starts here */}
-          <ul className=" overflow-y-auto divide-y divide-gray-700">
+          <ul className="overflow-y-auto divide-y divide-gray-800">
             {notificationData.length > 0 ? (
               notificationData.map((notification, index) => (
                 <li
                   key={index}
-                  onClick={() => navigateLeadDetails(notification.lead_id)}
-                  className="px-3 py-3 text-sm hover:cursor-pointer hover:bg-primary-800"
+                  onClick={() => notification.lead_id && navigateLeadDetails(notification.lead_id)}
+                  className="px-3 py-3 text-sm hover:cursor-pointer hover:bg-gray-800/60 rounded transition"
                 >
-                  {notification.body}
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-semibold text-primary-400 text-xs">
+                      {notification.title || "Notification"}
+                    </span>
+                    <span className="text-[10px] text-gray-500">
+                      {notification.created_at ? new Date(notification.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                    </span>
+                  </div>
+                  <p className="text-gray-200 text-xs leading-relaxed">
+                    {notification.body}
+                  </p>
                 </li>
               ))
             ) : (
