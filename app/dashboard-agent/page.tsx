@@ -123,9 +123,18 @@ export default function AgentDashboardPage() {
     );
   }
 
-  // Multi-Order Metrics Calculation
+  // Multi-Order Metrics Calculation (3 Currencies: INR, USD, GBP)
   const totalOrdersCount = assignedLeads.reduce((acc, l) => acc + (Number(l.order_count) || 0), 0);
-  const totalSalesRevenue = assignedLeads.reduce((acc, l) => acc + (Number(l.total_order_amount) || 0), 0);
+  const revenueINR = assignedLeads
+    .filter((l) => !l.currency || l.currency === "INR")
+    .reduce((acc, l) => acc + (Number(l.total_order_amount) || 0), 0);
+  const revenueUSD = assignedLeads
+    .filter((l) => l.currency === "USD")
+    .reduce((acc, l) => acc + (Number(l.total_order_amount) || 0), 0);
+  const revenueGBP = assignedLeads
+    .filter((l) => l.currency === "GBP")
+    .reduce((acc, l) => acc + (Number(l.total_order_amount) || 0), 0);
+
   const convertedLeadsCount = assignedLeads.filter(
     (l) =>
       (Number(l.order_count) || 0) > 0 ||
@@ -194,16 +203,33 @@ export default function AgentDashboardPage() {
               </span>
             </div>
 
-            {/* 4. Total Sales Revenue */}
+            {/* 4. Total Sales Revenue (Multi-Currency Direct Display) */}
             <div className="bg-[#1e1e1e] p-4 rounded-xl border border-yellow-900/40 bg-yellow-950/10">
               <p className="text-xs text-yellow-400 font-medium uppercase">
                 Sales Revenue
               </p>
-              <h3 className="text-2xl md:text-3xl font-bold text-yellow-300 mt-2 truncate">
-                ₹{Number(totalSalesRevenue).toLocaleString("en-IN")}
-              </h3>
-              <span className="text-[11px] text-yellow-400 mt-1 inline-block">
-                Total Revenue
+              <div className="mt-2 space-y-1">
+                <div className="flex justify-between items-baseline text-xs">
+                  <span className="text-gray-400 font-medium">🇮🇳 INR:</span>
+                  <span className="font-bold text-yellow-300 font-mono">
+                    ₹{Number(revenueINR).toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <div className="flex justify-between items-baseline text-xs">
+                  <span className="text-gray-400 font-medium">🇺🇸 USD:</span>
+                  <span className="font-bold text-yellow-300 font-mono">
+                    ${Number(revenueUSD).toLocaleString("en-US")}
+                  </span>
+                </div>
+                <div className="flex justify-between items-baseline text-xs">
+                  <span className="text-gray-400 font-medium">🇬🇧 GBP:</span>
+                  <span className="font-bold text-yellow-300 font-mono">
+                    £{Number(revenueGBP).toLocaleString("en-GB")}
+                  </span>
+                </div>
+              </div>
+              <span className="text-[10px] text-yellow-400 mt-1.5 inline-block border-t border-yellow-800/30 pt-0.5">
+                Revenue across 3 countries
               </span>
             </div>
 
@@ -329,8 +355,9 @@ export default function AgentDashboardPage() {
                               <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-purple-950 text-purple-300 border border-purple-800">
                                 {lead.order_count} Order{lead.order_count === 1 ? "" : "s"}
                               </span>
-                              <p className="text-[11px] font-semibold text-yellow-400 mt-1">
-                                ₹{Number(lead.total_order_amount || 0).toLocaleString("en-IN")}
+                              <p className="text-[11px] font-semibold text-yellow-400 mt-1 font-mono">
+                                {lead.currency === "USD" ? "$" : lead.currency === "GBP" ? "£" : "₹"}
+                                {Number(lead.total_order_amount || 0).toLocaleString("en-IN")}
                               </p>
                             </div>
                           ) : (

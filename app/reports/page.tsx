@@ -404,19 +404,36 @@ export default function ReportsPage() {
               </p>
             </div>
 
-            {/* 4. Total Sales Revenue */}
+            {/* 4. Total Sales Revenue (Multi-Currency Direct Display) */}
             <div className="bg-[#1e1e1e] border border-gray-800 p-5 rounded-xl">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-400">Total Revenue</span>
+                <span className="text-xs font-semibold text-gray-400">Total Sales Revenue</span>
                 <div className="p-2 bg-gray-800/80 rounded-lg text-gray-300">
                   <FiDollarSign className="w-4 h-4" />
                 </div>
               </div>
-              <h3 className="text-2xl font-bold text-white mt-3 truncate">
-                ₹{Number(summary.total_revenue || 0).toLocaleString("en-IN")}
-              </h3>
-              <p className="text-[11px] text-gray-400 mt-1">
-                Net gross sales generated
+              <div className="mt-3 space-y-1.5">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-xs text-gray-400 font-medium">🇮🇳 INR:</span>
+                  <span className="text-sm font-bold text-white font-mono">
+                    ₹{Number(summary.revenue_inr || 0).toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-xs text-gray-400 font-medium">🇺🇸 USD:</span>
+                  <span className="text-sm font-bold text-white font-mono">
+                    ${Number(summary.revenue_usd || 0).toLocaleString("en-US")}
+                  </span>
+                </div>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-xs text-gray-400 font-medium">🇬🇧 GBP:</span>
+                  <span className="text-sm font-bold text-white font-mono">
+                    £{Number(summary.revenue_gbp || 0).toLocaleString("en-GB")}
+                  </span>
+                </div>
+              </div>
+              <p className="text-[10px] text-gray-500 mt-2 border-t border-gray-800/80 pt-1.5">
+                All 3 countries revenue
               </p>
             </div>
 
@@ -648,8 +665,9 @@ export default function ReportsPage() {
                         <td className="py-3 px-4 text-center font-semibold text-gray-300">
                           {ord.total_items}
                         </td>
-                        <td className="py-3 px-4 text-right font-black text-white">
-                          ₹{Number(ord.grand_total).toFixed(2)}
+                        <td className="py-3 px-4 text-right font-bold text-white font-mono">
+                          {ord.currency === "USD" ? "$" : ord.currency === "GBP" ? "£" : "₹"}
+                          {Number(ord.grand_total).toFixed(2)}
                         </td>
                         <td className="py-3 px-4 text-center">
                           <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
