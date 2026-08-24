@@ -1791,6 +1791,9 @@ export default function Home() {
                                       const countryId = selected ? selected.id : "";
                                       setFieldValue("country", countryId);
                                       setFieldValue("state", "");
+                                      if (countryId === "India") setFieldValue("currency", "INR");
+                                      else if (countryId === "USA") setFieldValue("currency", "USD");
+                                      else if (countryId === "UK") setFieldValue("currency", "GBP");
                                     }}
                                     onBlur={() => setFieldTouched("country", true)}
                                     getOptionLabel={(opt: any) => opt.name}
