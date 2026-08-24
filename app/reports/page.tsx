@@ -456,13 +456,14 @@ export default function ReportsPage() {
                     <th className="py-3 px-4 text-center">Assigned Leads</th>
                     <th className="py-3 px-4 text-center">Converted Leads</th>
                     <th className="py-3 px-4 text-center">Orders Closed</th>
-                    <th className="py-3 px-4 text-right">Revenue Generated (₹)</th>
+                    <th className="py-3 px-4 text-right">Revenue Generated</th>
                     <th className="py-3 px-4 text-center">Conversion Rate</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800/80">
                   {leaderboard.length > 0 ? (
                     leaderboard.map((ag: any) => {
+                      const hasRevenue = Number(ag.revenue_inr || 0) > 0 || Number(ag.revenue_usd || 0) > 0 || Number(ag.revenue_gbp || 0) > 0;
                       return (
                         <tr key={ag.agent_id} className="hover:bg-[#1a1a1a] transition">
                           <td className="py-3.5 px-4 font-bold text-white">
@@ -483,8 +484,28 @@ export default function ReportsPage() {
                           <td className="py-3.5 px-4 text-center font-semibold text-purple-400">
                             {ag.total_orders}
                           </td>
-                          <td className="py-3.5 px-4 text-right font-black text-yellow-400 text-sm">
-                            ₹{Number(ag.total_revenue || 0).toLocaleString("en-IN")}
+                          <td className="py-3.5 px-4 text-right">
+                            {hasRevenue ? (
+                              <div className="flex flex-col items-end gap-0.5 font-mono text-xs">
+                                {Number(ag.revenue_inr || 0) > 0 && (
+                                  <span className="text-yellow-400 font-bold">
+                                    ₹{Number(ag.revenue_inr).toLocaleString("en-IN")}
+                                  </span>
+                                )}
+                                {Number(ag.revenue_usd || 0) > 0 && (
+                                  <span className="text-yellow-300 font-bold">
+                                    ${Number(ag.revenue_usd).toLocaleString("en-US")}
+                                  </span>
+                                )}
+                                {Number(ag.revenue_gbp || 0) > 0 && (
+                                  <span className="text-yellow-200 font-bold">
+                                    £{Number(ag.revenue_gbp).toLocaleString("en-GB")}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-500 font-semibold text-xs font-mono">₹0</span>
+                            )}
                           </td>
                           <td className="py-3.5 px-4 text-center">
                             <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-green-950/80 text-green-400 border border-green-800">
