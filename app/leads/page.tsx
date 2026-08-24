@@ -62,7 +62,7 @@ export default function Home() {
   const [assignLeadData, setAssignLeadData] = useState<any[]>([]);
 
   // PAGINATION USE STATES
-  const [globalPageSize] = useState<number>(10);
+  const [globalPageSize] = useState<number>(50);
   const [unAssignPage, setUnAssignPage] = useState<number>(1);
   const [unAssignTotalPages, setUsAssignTotalPages] = useState<number>(1);
 
@@ -85,7 +85,7 @@ export default function Home() {
   // END PAGINATION USE STATES
 
   const [filterPage, setFilterPage] = useState<number>(1);
-  const [pageSize] = useState<number>(10);
+  const [pageSize] = useState<number>(50);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalPagesFilter, setTotalPagesFilter] = useState<number>(1);
   const [filterData, setFilterData] = useState<any>({
@@ -209,8 +209,8 @@ export default function Home() {
   const normalizePhone = (raw?: string) =>
     (raw ?? "").replace(/\s+|[-()]/g, ""); // remove spaces, dashes, parentheses
 
-  // Accepts: 8888888888, +918888888888, +91 8888888888, +91-8888888888, +91(888)8888888
-  const IN_PHONE_RX = /^(?:\+91[\s-]?)?[6-9]\d{9}$/;
+  // Accepts: international phone numbers with optional + and 7 to 15 digits
+  const INTL_PHONE_RX = /^\+?[0-9]{7,15}$/;
 
   // ✅ Validation schema (with transform to strip spaces etc.)
   const LeadSchema = Yup.object({
@@ -224,7 +224,15 @@ export default function Home() {
       .transform((v, o) => normalizePhone(o)) // strip spaces/dashes/()
       .trim()
       .required("Phone number is required")
-      .matches(IN_PHONE_RX, "Enter a valid phone number (with or without +91)"),
+      .test(
+        "is-valid-phone",
+        "Enter a valid phone number (e.g. +919876543210, +447911123456)",
+        (val) => {
+          if (!val) return false;
+          const clean = (val || "").replace(/\s+|[-()]/g, "");
+          return /^\+?[0-9]{7,15}$/.test(clean);
+        }
+      ),
 
     address_line1: Yup.string().nullable().notRequired(),
     address_line2: Yup.string().nullable().notRequired(),
