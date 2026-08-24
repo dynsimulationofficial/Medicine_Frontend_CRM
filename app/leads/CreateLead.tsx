@@ -203,10 +203,11 @@ const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
       .required("Phone number is required")
       .test(
         "is-valid-phone",
-        "Enter a valid 10-digit phone number",
+        "Enter a valid phone number (e.g. +919876543210, +447911123456)",
         (val) => {
           if (!val) return false;
-          return /^(\+91|\+1|\+44)[0-9]{10}$/.test(val);
+          const clean = (val || "").replace(/\s+|[-()]/g, "");
+          return /^\+?[0-9]{7,15}$/.test(clean);
         }
       ),
     address_line1: Yup.string().nullable().notRequired(),
