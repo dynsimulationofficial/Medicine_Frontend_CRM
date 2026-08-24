@@ -6,12 +6,29 @@ import axios, {
 } from "axios";
 import StorageManager from "./StorageManager";
 
-const defaultBaseURL =
-  "http://localhost:8016/api/v1/managelead";
+export const LOCAL_API_URL = "http://localhost:8016/api/v1/managelead";
+export const STAGING_API_URL =
+  "https://medicine-crm-backend-staging.dynsimulation.com/api/v1/managelead";
+
+export const getBaseURL = (): string => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return LOCAL_API_URL;
+    }
+    return STAGING_API_URL;
+  }
+  return process.env.NODE_ENV === "development"
+    ? LOCAL_API_URL
+    : STAGING_API_URL;
+};
 
 class AxiosProvider {
   private static instance: AxiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || defaultBaseURL,
+    baseURL: getBaseURL(),
   });
 
   // --- configure interceptors only once ---
@@ -35,6 +52,7 @@ class AxiosProvider {
           headers.set("Content-Type", "application/json");
 
         config.headers = headers;
+        config.baseURL = getBaseURL();
         return config;
       }
     );

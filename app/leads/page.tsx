@@ -24,7 +24,7 @@ import { LiaArrowCircleDownSolid } from "react-icons/lia";
 import { MdRemoveRedEye } from "react-icons/md";
 import { IoCloseOutline, IoMailOpenOutline } from "react-icons/io5";
 import { RxAvatar } from "react-icons/rx";
-import AxiosProvider from "../../provider/AxiosProvider";
+import AxiosProvider, { getBaseURL } from "../../provider/AxiosProvider";
 import { RiAccountCircleLine, RiDeleteBin6Line } from "react-icons/ri";
 import { RxCross2 } from "react-icons/rx";
 import StorageManager from "../../provider/StorageManager";
@@ -320,7 +320,7 @@ export default function Home() {
 
       // ✅ Perform the upload
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8016/api/v1/managelead"}/leads/bulk/upload`,
+        `${getBaseURL()}/leads/bulk/upload`,
         {
           method: "POST",
           body: fd,
