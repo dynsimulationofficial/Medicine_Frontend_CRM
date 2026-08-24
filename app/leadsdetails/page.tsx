@@ -90,6 +90,7 @@ const DISPO_AUTOFILL = new Set([
   "Voice Mail Not Set",
   "No Answer",
 ]);
+
 const storage = new StorageManager();
 const loggedInUserName = storage.getUserName();
 const loggedInUserRole = storage.getUserRole();
@@ -123,6 +124,8 @@ export default function Home() {
   const [orderItems, setOrderItems] = useState<Array<{ id?: string; medicine_name: string; unit: string; quantity: number | string; rate: number | string }>>([
     { medicine_name: "", unit: "Strip", quantity: 1, rate: "" },
   ]);
+  const [medicineSuggestions, setMedicineSuggestions] = useState<Array<{ medicine_name: string; unit?: string; rate?: number | string }>>([]);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState<number | null>(null);
   const [isSavingOrder, setIsSavingOrder] = useState<boolean>(false);
   const [modalImage, setModalImage] = useState<string>("");
   //const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -527,10 +530,32 @@ export default function Home() {
     }
   };
 
+  const fetchMedicineSuggestions = async () => {
+    try {
+      const res = await AxiosProvider.get("/leads/medicines/suggestions");
+      const dbList = res.data?.data?.suggestions || [];
+      const map = new Map<string, any>();
+      dbList.forEach((m: any) => {
+        if (m.medicine_name && m.medicine_name.trim()) {
+          map.set(m.medicine_name.trim().toLowerCase(), {
+            medicine_name: m.medicine_name.trim(),
+            unit: m.unit || "Strip",
+            rate: m.rate || "",
+          });
+        }
+      });
+      setMedicineSuggestions(Array.from(map.values()));
+    } catch (err) {
+      console.error("fetchMedicineSuggestions error:", err);
+      setMedicineSuggestions([]);
+    }
+  };
+
   useEffect(() => {
     if (leadId) {
       fetchLeadOrders();
     }
+    fetchMedicineSuggestions();
   }, [leadId, hitApi]);
 
   // END FETCH AGENT AND LEAD SOURCE
@@ -550,6 +575,7 @@ export default function Home() {
   };
 
   const openCreateOrderFlyout = () => {
+    fetchMedicineSuggestions();
     setEditingOrderId(null);
     setEditingOrderNumber(null);
     setOrderStatus("Pending");
@@ -559,12 +585,14 @@ export default function Home() {
     setCourierName("");
     setTrackingNumber("");
     setOrderItems([{ medicine_name: "", unit: "Strip", quantity: 1, rate: "" }]);
+    setActiveSuggestionIndex(null);
     setFlyoutFilterOpen(true);
     setIsOrderFlyout(true);
   };
   const openOrderFlyout = openCreateOrderFlyout;
 
   const openEditOrderFlyout = (order: any) => {
+    fetchMedicineSuggestions();
     setEditingOrderId(order.id);
     setEditingOrderNumber(order.order_number);
     setOrderStatus(order.order_status || "Pending");
@@ -4378,7 +4406,7 @@ export default function Home() {
                   return (
                     <div
                       key={index}
-                      className="p-3.5 bg-[#141414] border border-gray-700 rounded-lg space-y-3 relative group"
+                      className={`p-3.5 bg-[#141414] border border-gray-700 rounded-lg space-y-3 relative group ${activeSuggestionIndex === index ? "z-50" : "z-10"}`}
                     >
                       <div className="flex justify-between items-center">
                         <span className="text-xs font-bold text-primary-400 bg-primary-950/60 px-2 py-0.5 rounded border border-primary-800/40">
@@ -4400,19 +4428,63 @@ export default function Home() {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5">
-                        {/* Medicine Name */}
-                        <div className="md:col-span-4">
+                        {/* Medicine Name with Autocomplete Suggestions */}
+                        <div className="md:col-span-4 relative">
                           <label className="block text-xs font-medium text-gray-300 mb-1">
                             Medicine Name <span className="text-red-500">*</span>
                           </label>
                           <input
                             type="text"
                             required
-                            placeholder="e.g. Paracetamol 650mg"
+                            list={`med-suggestions-list-${index}`}
+                            autoComplete="off"
+                            placeholder="e.g. Cenforce 100mg, Paracetamol"
                             value={item.medicine_name}
-                            onChange={(e) => handleOrderItemChange(index, "medicine_name", e.target.value)}
-                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
+                            onFocus={() => setActiveSuggestionIndex(index)}
+                            onChange={(e) => {
+                              handleOrderItemChange(index, "medicine_name", e.target.value);
+                              setActiveSuggestionIndex(index);
+                            }}
+                            className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-3 py-2 focus:outline-none focus:border-primary-500 placeholder-gray-500"
                           />
+
+                          {/* HTML5 Native Datalist Fallback */}
+                          <datalist id={`med-suggestions-list-${index}`}>
+                            {medicineSuggestions.map((sug, sIdx) => (
+                              <option key={sIdx} value={sug.medicine_name} />
+                            ))}
+                          </datalist>
+
+                          {/* Dynamic Medicine Suggestions Floating Dropdown */}
+                          {activeSuggestionIndex === index && item.medicine_name.trim().length > 0 && (() => {
+                            const q = item.medicine_name.trim().toLowerCase();
+                            const matches = medicineSuggestions.filter((m) =>
+                              m.medicine_name.toLowerCase().includes(q)
+                            ).slice(0, 8);
+
+                            if (matches.length === 0) return null;
+
+                            return (
+                              <div
+                                style={{ zIndex: 9999 }}
+                                className="absolute top-full left-0 right-0 mt-1 bg-[#1c1c1c] border border-gray-600 rounded-lg shadow-2xl overflow-hidden max-h-56 overflow-y-auto"
+                              >
+                                {matches.map((sug, sIdx) => (
+                                  <div
+                                    key={sIdx}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      handleOrderItemChange(index, "medicine_name", sug.medicine_name);
+                                      setActiveSuggestionIndex(null);
+                                    }}
+                                    className="px-3 py-2.5 hover:bg-primary-900/60 hover:text-white cursor-pointer border-b border-gray-800/80 last:border-none text-xs font-semibold text-white transition-colors"
+                                  >
+                                    {sug.medicine_name}
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
                         </div>
 
                         {/* Unit */}
