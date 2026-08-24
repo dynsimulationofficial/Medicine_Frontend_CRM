@@ -117,7 +117,12 @@ export default function AgentDashboardPage() {
 
   // Quick count for converted deals
   const convertedCount = assignedLeads.filter(
-    (l) => l.lead_status === "Converted" || l.payment_status === "Paid",
+    (l) =>
+      l.lead_status === "Converted" ||
+      l.payment_status === "Paid" ||
+      l.delivery_status === "Delivered" ||
+      l.delivery_status === "Shipped" ||
+      l.delivery_status === "Confirmed",
   ).length;
 
   return (
