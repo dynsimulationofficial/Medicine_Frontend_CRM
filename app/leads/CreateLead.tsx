@@ -303,9 +303,9 @@ const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
                         }
                       }}
                     >
-                      <option value="+91">+91 (India)</option>
-                      <option value="+44">+44 (UK)</option>
-                      <option value="+1">+1 (USA)</option>
+                      <option value="+91">+91</option>
+                      <option value="+44">+44</option>
+                      <option value="+1">+1</option>
                     </select>
                     <input
                       type="text"
