@@ -1,6 +1,8 @@
 "use client";
-import React from "react";
+
+import React, { SetStateAction, useEffect, useRef, useState, useContext } from "react";
 import Image from "next/image";
+import LeadProfileSidebar from "./LeadProfileSidebar";
 import Tabs from "../component/Tabs";
 import { CiSettings } from "react-icons/ci";
 import {
@@ -9,10 +11,8 @@ import {
   IoIosNotificationsOutline,
   IoMdClose,
 } from "react-icons/io";
-import { SetStateAction, useEffect, useRef, useState } from "react";
 import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
 import * as Yup from "yup";
-import { useContext } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PhoneInput from "react-phone-input-2";
@@ -54,7 +54,7 @@ import OtpInput from "react-otp-input";
 import { FiFilter } from "react-icons/fi";
 import { LuSquareActivity } from "react-icons/lu";
 import { IoCloseOutline } from "react-icons/io5";
-import AppCalendar, { TaskData } from "../component/AppCalendar";
+import LeadTasksTab, { TaskData } from "./LeadTasksTab";
 import { useSearchParams } from "next/navigation";
 import { AiOutlineSearch } from "react-icons/ai";
 import { tasks } from "firebase-functions/v2";
@@ -208,7 +208,7 @@ export default function Home() {
     useState("");
   // console.log("VVVVVVVVVVVVVVVVVVVVVVVVVV", selectedDropDownTaskValue);
   const hiddenLinkRef = useRef<HTMLAnchorElement | null>(null);
-  const [isActivityFilter, setIsActvityFilter] = useState<boolean>(false);
+  
   const [isTaskFilter, setIsTaskFilter] = useState<boolean>(false);
   const [isDocumentFilter, setIsDocumentFilter] = useState<boolean>(false);
   const [fileteredTaskData, setFilteredTasKData] = useState<[]>([]);
@@ -685,10 +685,7 @@ export default function Home() {
     setFlyoutFilterOpen(true);
     setDocument(true);
   };
-  const openLeadActivityFlyOut = () => {
-    setFlyoutFilterOpen(true);
-    setIsActvityFilter(true);
-  };
+  
   const openLeadTaskInFlyout = () => {
     setFlyoutFilterOpen(true);
     setIsTaskFilter(true);
@@ -723,7 +720,7 @@ export default function Home() {
     setFlyoutFilterOpen(false);
     setDocument(false);
     setUpdateActivityHistory(false);
-    setIsActvityFilter(false);
+    
     setIsTaskFilter(false);
     setIsDocumentFilter(false);
     setIsDocumentEdit(false);
@@ -1003,360 +1000,322 @@ export default function Home() {
     {
       label: "Activity History",
       content: (
-        <>
-          {/* Tab content 3 */}
-          <div className="container mx-auto p-4">
-            <button
-              onClick={() => openLeadActivityFlyOut()}
-              className="bg-primary-600 hover:bg-primary-700 py-3 px-4 rounded-[4px] text-sm font-medium text-white mb-2"
-            >
-              Filter Activity
-            </button>
-
-            {fetchLeadActivityData && fetchLeadActivityData.length > 0 ? (
-              fetchLeadActivityData.map((activity) => {
-                const formattedOccurredCa = activity.created_at_ca || "--";
-
-                return (
-                  <div
-                    key={activity.id}
-                    className="w-full flex justify-between gap-4 hover:bg-primary-800 py-2 px-2 rounded transition-colors border-b border-[#E7E7E7] odd:bg-[#404040]"
-                  >
-                    {/* Left: icon + occurred date/time */}
-                    <div className="flex gap-2 shrink-0">
-                      <TbActivity className="bg-primary-500 text-white p-1 text-2xl rounded-full" />
-                      <div className="leading-5 text-sm text-white">
-                        <p>{formattedOccurredCa}</p>
-                      </div>
-                    </div>
-
-                    {/* Middle: details */}
-                    <div className="flex-1 min-w-0 text-white">
-                      <p>
-                        <span className="text-primary-300">
-                          {activity.disposition}:
-                        </span>{" "}
-                        {activity.conversation.length > maxLength &&
-                        !isConversationExpanded
-                          ? activity.conversation.substring(0, maxLength) +
-                            "..."
-                          : activity.conversation}
-                      </p>
-                      {activity.conversation.length > maxLength && (
-                        <button
-                          onClick={toggleConversationExpansion}
-                          className="text-primary-300 underline text-sm"
+        <div className="w-full">
+          {fetchLeadActivityData && fetchLeadActivityData.length > 0 ? (
+            <>
+              <div className="w-full overflow-x-auto border border-gray-600 rounded-lg">
+                <table className="w-full text-left text-sm text-white">
+                  <thead className="text-xs uppercase talbleheaderBg text-white border-b border-gray-600">
+                    <tr>
+                      <th className="py-3 px-4 w-12 text-center">#</th>
+                      <th className="py-3 px-4">Date / Time</th>
+                      <th className="py-3 px-4">Disposition</th>
+                      <th className="py-3 px-4">Conversation</th>
+                      <th className="py-3 px-4">Added By</th>
+                      <th className="py-3 px-4 text-center w-28">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-700/60">
+                    {fetchLeadActivityData.map((activity, idx) => {
+                      const formattedOccurredCa = activity.created_at_ca || "--";
+                      return (
+                        <tr
+                          key={activity.id}
+                          className="odd:bg-[#404040] even:bg-[#2d2d2d] hover:bg-primary-700/80 transition-colors"
                         >
-                          {isConversationExpanded ? "Show less" : "Show more"}
-                        </button>
-                      )}
+                          <td className="py-3 px-4 text-center text-gray-300 font-medium">
+                            {idx + 1}
+                          </td>
+                          <td className="py-3 px-4 text-xs text-gray-200 whitespace-nowrap">
+                            {formattedOccurredCa}
+                          </td>
+                          <td className="py-3 px-4 font-semibold text-primary-300">
+                            {activity.disposition || "-"}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-100">
+                            <p>
+                              {activity.conversation?.length > maxLength &&
+                              !isConversationExpanded
+                                ? activity.conversation.substring(0, maxLength) + "..."
+                                : activity.conversation}
+                            </p>
+                            {activity.conversation?.length > maxLength && (
+                              <button
+                                onClick={toggleConversationExpansion}
+                                className="text-primary-300 underline text-xs mt-1 cursor-pointer"
+                              >
+                                {isConversationExpanded ? "Show less" : "Show more"}
+                              </button>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-xs text-gray-300">
+                            {activity.agent_name || "-"} {activity.edited ? "(Edited)" : ""}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                type="button"
+                                onClick={() => openActivityHistoryFlyout(activity)}
+                                className="py-1 px-2.5 bg-primary-600 hover:bg-primary-700 rounded text-white text-sm cursor-pointer transition-colors"
+                                title="Edit Activity"
+                              >
+                                <MdEdit />
+                              </button>
+                              {userRole === "Admin" && (
+                                <button
+                                  type="button"
+                                  onClick={() => deleteActivityHistory(activity)}
+                                  className="py-1 px-2.5 bg-red-600 hover:bg-red-700 rounded text-white text-sm cursor-pointer transition-colors"
+                                  title="Delete Activity"
+                                >
+                                  <RiDeleteBin6Line />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
 
-                      <p className="text-xs text-gray-400">
-                        Added by {activity.agent_name} on {formattedOccurredCa}{" "}
-                        {activity.edited ? "(Edited)" : ""}
-                      </p>
-                    </div>
-
-                    {/* Right: Action buttons */}
-                    <div className="space-x-2 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => openActivityHistoryFlyout(activity)}
-                        className="py-1.5 px-3 rounded text-sm bg-primary-500 text-white hover:bg-primary-600"
-                      >
-                        {/* Edit */}
-                        <MdEdit />
-                      </button>
-                      {userRole === "Admin" && (
-                        <button
-                          type="button"
-                          onClick={() => deleteActivityHistory(activity)}
-                          className="py-1.5 px-3 rounded text-sm bg-red-600 text-white hover:bg-red-700"
-                        >
-                          {/* Delete */}
-                          <RiDeleteBin6Line />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <p className="text-center text-gray-400 py-4">No data found</p>
-            )}
-
-            {/* PAGINATION */}
-            {isActivityHistoryPagination &&
-              fetchLeadActivityData.length > 0 && (
-                <div className="flex justify-center items-center my-10 relative">
+              {/* Activity Pagination */}
+              {isActivityHistoryPagination && fetchLeadActivityData.length > 0 && (
+                <div className="flex justify-center items-center my-6 relative">
                   <button
                     onClick={() => handleChangepagination(page - 1)}
                     disabled={page === 1}
-                    className="px-2 py-2 mx-2 border rounded bg-primary-500 hover:bg-primary-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-2 py-2 mx-2 border border-gray-600 rounded bg-primary-600 hover:bg-primary-700 text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <HiChevronDoubleLeft className="w-6 h-auto" />
                   </button>
-                  <span className="text-gray-400 text-sm">
+                  <span className="text-gray-300 text-sm">
                     Page {page} of {totalPages}
                   </span>
                   <button
                     onClick={() => handleChangepagination(page + 1)}
                     disabled={page === totalPages}
-                    className="px-2 py-2 mx-2 border rounded bg-primary-500 hover:bg-primary-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-2 py-2 mx-2 border border-gray-600 rounded bg-primary-600 hover:bg-primary-700 text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <HiChevronDoubleRight className="w-6 h-auto" />
                   </button>
                 </div>
               )}
-            {/* END PAGINATION */}
-          </div>
-        </>
+            </>
+          ) : (
+            <p className="text-center text-gray-400 py-12 text-base font-medium">No data found</p>
+          )}
+        </div>
       ),
-      // End Tab content 2
     },
     {
       label: "Task",
       content: (
-        <>
-          {/* Tab content 3 */}
-
-          <AppCalendar
-            leadId={leadId}
-            reloadKey={reloadKey}
-            hitApi={hitApi}
-            setHitApi={setHitApi}
-            openEditTask={openEditTask}
-            openLeadTaskInFlyout={openLeadTaskInFlyout}
-            incomingTasks={fileteredTaskData}
-            //filteredTaskData={fileteredTaskData}
-          />
-          {/* End Tab content 3 */}
-        </>
+        <LeadTasksTab
+          leadId={leadId}
+          reloadKey={reloadKey}
+          hitApi={hitApi}
+          setHitApi={setHitApi}
+          openEditTask={openEditTask}
+          openLeadTaskInFlyout={openLeadTaskInFlyout}
+          incomingTasks={fileteredTaskData}
+        />
       ),
     },
     {
       label: "Document",
       content: (
-        <>
-          {/* Tab content 4 */}
-          <div className="space-y-3">
-            {docs.length === 0 ? (
-              <p className="text-sm text-gray-400">No documents found</p>
-            ) : (
-              docs.map((d) => (
-                <div
-                  key={d.id}
-                  className="grid grid-cols-[30%_1fr] gap-4  p-3 border border-white rounded hover:bg-primary-600 transition-colors"
-                >
-                  {/* Left Column: Notes */}
-                  <div className="flex items-center">
-                    <p className="text-base text-white whitespace-pre-wrap capitalize">
-                      {d.notes || "—"}
-                    </p>
-                  </div>
-
-                  {/* Right Column: File Info + Buttons */}
-                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-3 flex-wrap">
-                    <div className="min-w-0">
-                      <p className="font-medium text-white truncate">
+        <div className="w-full">
+          {docs && docs.length > 0 ? (
+            <div className="w-full overflow-x-auto border border-gray-600 rounded-lg">
+              <table className="w-full text-left text-sm text-white">
+                <thead className="text-xs uppercase talbleheaderBg text-white border-b border-gray-600">
+                  <tr>
+                    <th className="py-3 px-4 w-12 text-center">#</th>
+                    <th className="py-3 px-4">File Name</th>
+                    <th className="py-3 px-4">Type</th>
+                    <th className="py-3 px-4">Size</th>
+                    <th className="py-3 px-4">Uploaded On</th>
+                    <th className="py-3 px-4">Notes</th>
+                    <th className="py-3 px-4 text-center w-36">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700/60">
+                  {docs.map((d, idx) => (
+                    <tr
+                      key={d.id || idx}
+                      className="odd:bg-[#404040] even:bg-[#2d2d2d] hover:bg-primary-700/80 transition-colors"
+                    >
+                      <td className="py-3 px-4 text-center text-gray-300 font-medium">
+                        {idx + 1}
+                      </td>
+                      <td className="py-3 px-4 font-semibold text-white truncate max-w-xs">
                         {d.file_name}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {d.mime_type} · {fmtSize(d.file_size)} ·{" "}
-                        {new Date(d.created_at_ca).toLocaleString()}{" "}
-                        {d.is_edited ? "(Edited)" : ""}
-                      </p>
-                    </div>
-
-                    <div className="flex gap-2 flex-wrap mt-2 md:mt-0">
-                      <button
-                        onClick={() => downloadDocument(d.download, d.file_name)}
-                        className="py-2 px-3 border border-gray-600 rounded text-sm text-white hover:bg-primary-500 hover:text-white transition-colors cursor-pointer"
-                      >
-                        Download
-                      </button>
-                      <button
-                        onClick={() => openEditDocumentFlyOut(d)}
-                        className="py-2 px-3 border border-gray-600 rounded text-sm text-white hover:bg-primary-500 hover:text-white transition-colors"
-                      >
-                        {/* Edit */}
-                        <MdEdit />
-                      </button>
-                      <button
-                        onClick={() => deleteDocument(d)}
-                        className="py-2 px-3 border border-red-500 rounded text-sm text-white hover:bg-red-600 hover:text-white transition-colors"
-                      >
-                        {/* Delete */}
-                        <RiDeleteBin6Line />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* End Tab content 4 */}
-        </>
+                      </td>
+                      <td className="py-3 px-4 text-xs text-gray-300">
+                        {d.mime_type || "-"}
+                      </td>
+                      <td className="py-3 px-4 text-xs text-gray-200">
+                        {fmtSize(d.file_size)}
+                      </td>
+                      <td className="py-3 px-4 text-xs text-gray-200 whitespace-nowrap">
+                        {d.created_at_ca ? new Date(d.created_at_ca).toLocaleString() : "-"}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-200">
+                        {d.notes || "—"}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex gap-2 justify-center">
+                          <button
+                            onClick={() => downloadDocument(d.download, d.file_name)}
+                            className="py-1 px-2.5 bg-primary-600 hover:bg-primary-700 rounded text-xs text-white cursor-pointer transition-colors"
+                          >
+                            Download
+                          </button>
+                          <button
+                            onClick={() => openEditDocumentFlyOut(d)}
+                            className="py-1 px-2 bg-primary-600 hover:bg-primary-700 rounded text-white text-sm cursor-pointer transition-colors"
+                            title="Edit Document"
+                          >
+                            <MdEdit />
+                          </button>
+                          <button
+                            onClick={() => deleteDocument(d)}
+                            className="py-1 px-2 bg-red-600 hover:bg-red-700 rounded text-white text-sm cursor-pointer transition-colors"
+                            title="Delete Document"
+                          >
+                            <RiDeleteBin6Line />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-center text-gray-400 py-12 text-base font-medium">No data found</p>
+          )}
+        </div>
       ),
     },
     {
       label: "Order",
       content: (
-        <>
-          <div className="container mx-auto p-4">
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <p className="text-lg font-bold text-white">Customer Orders</p>
-                <p className="text-xs text-gray-400">All orders placed by this customer</p>
-              </div>
+        <div className="w-full">
+          {ordersList && ordersList.length > 0 ? (
+            <div className="w-full overflow-x-auto border border-gray-600 rounded-lg">
+              <table className="w-full text-left text-sm text-white">
+                <thead className="text-xs uppercase talbleheaderBg text-white border-b border-gray-600">
+                  <tr>
+                    <th className="py-3 px-4 w-12 text-center">#</th>
+                    <th className="py-3 px-4">Order Number</th>
+                    <th className="py-3 px-4">Date</th>
+                    <th className="py-3 px-4 text-center">Items</th>
+                    <th className="py-3 px-4 text-right">Grand Total</th>
+                    <th className="py-3 px-4 text-center">Order Status</th>
+                    <th className="py-3 px-4 text-center">Payment</th>
+                    <th className="py-3 px-4 text-center w-36">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700/60">
+                  {ordersList.map((ord: any, idx: number) => {
+                    return (
+                      <React.Fragment key={ord.id || idx}>
+                        <tr className="odd:bg-[#404040] even:bg-[#2d2d2d] hover:bg-primary-700/80 transition-colors">
+                          <td className="py-3 px-4 text-center text-gray-300 font-medium">
+                            {idx + 1}
+                          </td>
+                          <td className="py-3 px-4 font-bold text-primary-300">
+                            {ord.order_number}
+                          </td>
+                          <td className="py-3 px-4 text-xs text-gray-200">
+                            {new Date(ord.created_at).toLocaleDateString()}{" "}
+                            {new Date(ord.created_at).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </td>
+                          <td className="py-3 px-4 text-center font-medium text-white">
+                            <span className="px-2 py-0.5 rounded bg-gray-700 text-xs font-semibold text-white">
+                              {ord.total_items} Items
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-right font-extrabold text-white text-base">
+                            {Number(ord.grand_total).toFixed(2)}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <select
+                              value={ord.order_status || "Pending"}
+                              onChange={(e) =>
+                                handleQuickUpdateOrderStatus(
+                                  ord.id,
+                                  e.target.value,
+                                  ord.payment_status,
+                                )
+                              }
+                              className="bg-black/60 border border-gray-600 text-xs text-white rounded px-2 py-1 outline-none cursor-pointer"
+                            >
+                              <option value="Pending">Pending</option>
+                              <option value="Processing">Processing</option>
+                              <option value="Confirmed">Confirmed</option>
+                              <option value="Shipped">Shipped</option>
+                              <option value="Delivered">Delivered</option>
+                              <option value="Cancelled">Cancelled</option>
+                            </select>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <select
+                              value={ord.payment_status || "Pending"}
+                              onChange={(e) =>
+                                handleQuickUpdateOrderStatus(
+                                  ord.id,
+                                  ord.order_status,
+                                  e.target.value,
+                                )
+                              }
+                              className="bg-black/60 border border-gray-600 text-xs text-white rounded px-2 py-1 outline-none cursor-pointer"
+                            >
+                              <option value="Pending">Pending</option>
+                              <option value="Paid">Paid</option>
+                              <option value="Failed">Failed</option>
+                              <option value="Refunded">Refunded</option>
+                            </select>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                onClick={() => openEditOrderFlyout(ord)}
+                                className="py-1 px-2.5 bg-primary-600 hover:bg-primary-700 rounded text-white text-sm cursor-pointer transition-colors"
+                                title="Edit Order"
+                              >
+                                <MdEdit />
+                              </button>
+                              <button
+                                onClick={() => deleteLeadOrder(ord)}
+                                className="py-1 px-2.5 bg-red-600 hover:bg-red-700 rounded text-white text-sm cursor-pointer transition-colors"
+                                title="Delete Order"
+                              >
+                                <RiDeleteBin6Line />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-
-            {ordersList && ordersList.length > 0 ? (
-              <div className="space-y-4">
-                <div className="w-full overflow-x-auto border border-gray-700 rounded-lg">
-                  <table className="w-full text-left text-sm text-gray-200">
-                    <thead className="bg-[#181818] text-gray-400 uppercase text-xs border-b border-gray-700">
-                      <tr>
-                        <th className="py-3 px-4 w-12 text-center">#</th>
-                        <th className="py-3 px-4">Order Number</th>
-                        <th className="py-3 px-4">Date</th>
-                        <th className="py-3 px-4 text-center">Items</th>
-                        <th className="py-3 px-4 text-right">Grand Total</th>
-                        <th className="py-3 px-4 text-center">Order Status</th>
-                        <th className="py-3 px-4 text-center">Payment</th>
-                        <th className="py-3 px-4 text-center w-36">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-800">
-                      {ordersList.map((ord: any, idx: number) => {
-                        const isExpanded = expandedOrderId === ord.id;
-                        return (
-                          <React.Fragment key={ord.id || idx}>
-                            <tr className="odd:bg-[#1E1E1E] even:bg-[#141414] hover:bg-gray-800/60 transition-colors">
-                              <td className="py-3 px-4 text-center text-gray-400 font-medium">{idx + 1}</td>
-                              <td className="py-3 px-4 font-bold text-primary-400">
-                                {ord.order_number}
-                              </td>
-                              <td className="py-3 px-4 text-xs text-gray-300">
-                                {new Date(ord.created_at).toLocaleDateString()} {new Date(ord.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </td>
-                              <td className="py-3 px-4 text-center font-medium text-white">
-                                <span className="px-2 py-0.5 rounded bg-gray-700 text-xs font-semibold text-white">
-                                  {ord.total_items} Items
-                                </span>
-                              </td>
-                              <td className="py-3 px-4 text-right font-extrabold text-white text-base">
-                                {Number(ord.grand_total).toFixed(2)}
-                              </td>
-                              <td className="py-3 px-4 text-center">
-                                <select
-                                  value={ord.order_status || "Pending"}
-                                  onChange={(e) =>
-                                    handleQuickUpdateOrderStatus(
-                                      ord.id,
-                                      e.target.value,
-                                      ord.payment_status,
-                                      ord.payment_mode
-                                    )
-                                  }
-                                  className={`px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer bg-black focus:outline-none ${
-                                    ord.order_status === "Delivered"
-                                      ? "text-green-300 border-green-700/60"
-                                      : ord.order_status === "Shipped"
-                                      ? "text-blue-300 border-blue-700/60"
-                                      : ord.order_status === "Confirmed"
-                                      ? "text-purple-300 border-purple-700/60"
-                                      : ord.order_status === "Cancelled"
-                                      ? "text-red-300 border-red-700/60"
-                                      : "text-yellow-300 border-yellow-700/60"
-                                  }`}
-                                >
-                                  <option value="Pending">Pending</option>
-                                  <option value="Confirmed">Confirmed</option>
-                                  <option value="Shipped">Shipped</option>
-                                  <option value="Delivered">Delivered</option>
-                                  <option value="Cancelled">Cancelled</option>
-                                </select>
-                              </td>
-                              <td className="py-3 px-4 text-center">
-                                <span className={`px-2 py-0.5 rounded text-xs ${
-                                  ord.payment_status === "Paid"
-                                    ? "bg-green-950 text-green-400 border border-green-800"
-                                    : "bg-gray-800 text-gray-300"
-                                }`}>
-                                  {ord.payment_mode || "COD"} · {ord.payment_status || "Pending"}
-                                </span>
-                              </td>
-                              <td className="py-3 px-4 text-center">
-                                <div className="flex items-center justify-center gap-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={() => openViewOrderFlyout(ord)}
-                                    className="p-1.5 rounded text-primary-400 hover:bg-primary-950/60 hover:text-white transition-colors cursor-pointer"
-                                    title="View order details in flyout"
-                                  >
-                                    <FaEye className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => openEditOrderFlyout(ord)}
-                                    className="p-1.5 rounded text-gray-300 hover:text-white hover:bg-gray-700 transition-colors cursor-pointer"
-                                    title="Edit Order"
-                                  >
-                                    <MdEdit className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => deleteLeadOrder(ord)}
-                                    className="p-1.5 rounded text-red-400 hover:text-white hover:bg-red-600 transition-colors cursor-pointer"
-                                    title="Delete Order"
-                                  >
-                                    <RiDeleteBin6Line className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          </React.Fragment>
-                        );
-                      })}
-                    </tbody>
-                    <tfoot className="bg-[#111111] border-t-2 border-primary-600">
-                      <tr>
-                        <td colSpan={3} className="py-4 px-4 font-bold text-white text-sm whitespace-nowrap">
-                          Total Orders: {ordersList.length}
-                        </td>
-                        <td colSpan={3} className="py-4 px-4 text-right font-bold text-gray-300 text-sm whitespace-nowrap">
-                          All Orders Grand Total:
-                        </td>
-                        <td colSpan={2} className="py-4 px-4 text-left font-black text-primary-400 text-xl whitespace-nowrap">
-                          {Number(allOrdersGrandTotal || 0).toFixed(2)}
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              </div>
-            ) : (
-              <div className="py-12 border border-dashed border-gray-700 rounded-lg text-center bg-[#151515]">
-                <FaPills className="w-10 h-10 text-gray-500 mx-auto mb-3" />
-                <p className="text-base text-gray-300 font-medium mb-1">No orders placed yet</p>
-                <p className="text-xs text-gray-500 mb-4">Click below to generate the first order for this lead.</p>
-                <button
-                  type="button"
-                  onClick={() => openCreateOrderFlyout()}
-                  className="bg-primary-600 hover:bg-primary-700 py-2.5 px-6 rounded-[4px] text-sm font-semibold text-white inline-flex items-center gap-2 cursor-pointer transition-colors"
-                >
-                  <FaPills className="w-4 h-4" />
-                  + Create First Order
-                </button>
-              </div>
-            )}
-          </div>
-        </>
+          ) : (
+            <p className="text-center text-gray-400 py-12 text-base font-medium">No data found</p>
+          )}
+        </div>
       ),
     },
   ];
+
   if (checking) {
     return (
       <div className="h-screen flex flex-col gap-5 justify-center items-center bg-white">
@@ -1584,605 +1543,11 @@ export default function Home() {
                   </div>
                 </div>
                 <div className=" grid grid-cols-[30%_70%]  gap-4">
-                  <div className="  w-full">
-                    {/* LEAD */}
-                    {/* CONTACT & ADDRESS INFORMATION */}
-                    {isEditFirstLead ? (
-                      /* ---------- VIEW MODE ---------- */
-                      <div className="w-full rounded bg-primary-600 px-4 py-6 mb-6">
-                        <div className="flex justify-between text-white mb-5 capitalize">
-                          <div className="flex gap-2 items-center">
-                            <FaStar className="text-white text-base" />
-                            <div>
-                              <p className="text-base font-medium leading-none">
-                                {data?.full_name || "-"}
-                              </p>
-                              {data?.address?.country && (
-                                <p className="text-xs text-gray-200 mt-1">{data?.address?.country}</p>
-                              )}
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setIsEditFirstLead(false)}
-                            className="px-4 py-2 rounded-[4px] bg-white text-secondBlack text-sm font-medium flex gap-1 items-center hover:bg-gray-100"
-                          >
-                            <span>
-                              <MdEdit />
-                            </span>
-                            Edit
-                          </button>
-                        </div>
-
-                        {/* Email */}
-                        <div className="flex text-white items-center gap-2 mb-3">
-                          <IoIosMail className="text-lg flex-shrink-0" />
-                          <p className="text-sm font-medium leading-none truncate">
-                            {data?.email || "-"}
-                          </p>
-                        </div>
-
-                        {/* Phone / Mobile */}
-                        <div className="flex text-white items-center gap-2 mb-3">
-                          <IoIosCall className="text-lg flex-shrink-0" />
-                          <p className="text-sm font-medium leading-none">
-                            {data?.phone || "-"}
-                          </p>
-                        </div>
-
-                        {/* Address */}
-                        <div className="flex text-white items-start gap-2 mb-3">
-                          <MdLocationPin className="text-lg flex-shrink-0 mt-0.5" />
-                          <p className="text-sm font-medium leading-relaxed">
-                            {[
-                              data?.address?.line1,
-                              data?.address?.line2,
-                              data?.address?.city,
-                              data?.address?.state,
-                              data?.address?.postal_code,
-                              data?.address?.country
-                            ].filter(Boolean).join(", ") || "-"}
-                          </p>
-                        </div>
-
-                        {/* Note */}
-                        {data?.note && (
-                          <div className="flex text-white items-start gap-2 mb-3 border-t border-white/20 pt-3">
-                            <PiNotepadLight className="text-lg flex-shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-xs text-gray-200 font-medium">Note:</p>
-                              <p className="text-sm font-medium leading-relaxed">{data?.note}</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      /* ---------- EDIT MODE (Formik form) ---------- */
-                      <div className="w-full rounded px-0 py-0 mb-6">
-                        <Formik
-                          enableReinitialize
-                          initialValues={{
-                            full_name: data?.full_name ?? "",
-                            email: data?.email ?? "",
-                            phone: data?.phone ?? "",
-                            country: data?.address?.country ?? data?.country ?? "India",
-                            state: data?.address?.state ?? data?.state ?? "",
-                            city: data?.address?.city ?? data?.city ?? "",
-                            address_line1: data?.address?.line1 ?? data?.address_line1 ?? "",
-                            address_line2: data?.address?.line2 ?? data?.address_line2 ?? "",
-                            postal_code: data?.address?.postal_code ?? data?.postal_code ?? "",
-                            note: data?.note ?? "",
-                          }}
-                          validationSchema={Yup.object({
-                            full_name: Yup.string().trim().required("Full name is required"),
-                            email: Yup.string().trim().email("Invalid email").required("Email is required"),
-                            phone: Yup.string().trim().required("Mobile is required"),
-                            country: Yup.string().trim().nullable(),
-                            state: Yup.string().trim().nullable(),
-                            city: Yup.string().trim().nullable(),
-                            address_line1: Yup.string().trim().nullable(),
-                            address_line2: Yup.string().trim().nullable(),
-                            postal_code: Yup.string().trim().nullable(),
-                            note: Yup.string().trim().nullable(),
-                          })}
-                          onSubmit={async (values, { setSubmitting }) => {
-                            try {
-                              const payload = {
-                                id: data?.id,
-                                ...values,
-                              };
-                              await AxiosProvider.post("/leads/update", payload);
-                              toast.success("Lead contact updated successfully");
-                              setIsEditFirstLead(true);
-                              setHitApi(!hitApi);
-                            } catch (e: any) {
-                              console.error(e);
-                              toast.error(e.response?.data?.msg || e.response?.data?.message || "Failed to update lead");
-                            } finally {
-                              setSubmitting(false);
-                            }
-                          }}
-                        >
-                          {({
-                            isSubmitting,
-                            values,
-                            setFieldValue,
-                            setFieldTouched,
-                          }) => {
-                            const currentStates = statesByCountry[values.country] || Object.values(statesByCountry).flat();
-
-                            return (
-                              <Form className="w-full rounded bg-primary-600 px-4 py-6 mb-6 space-y-4 text-white">
-                                <div className="flex justify-between items-center mb-2">
-                                  <p className="text-base font-semibold">Edit Contact & Address</p>
-                                </div>
-
-                                {/* Full Name */}
-                                <div>
-                                  <label className="block text-xs font-medium text-white mb-1">
-                                    Full Name <span className="text-red-300">*</span>
-                                  </label>
-                                  <Field
-                                    name="full_name"
-                                    type="text"
-                                    className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
-                                    placeholder="Enter full name"
-                                  />
-                                  <ErrorMessage name="full_name" component="p" className="text-red-300 text-xs mt-1" />
-                                </div>
-
-                                {/* Email */}
-                                <div>
-                                  <label className="block text-xs font-medium text-white mb-1">
-                                    Email <span className="text-red-300">*</span>
-                                  </label>
-                                  <Field
-                                    name="email"
-                                    type="email"
-                                    className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
-                                    placeholder="name@example.com"
-                                  />
-                                  <ErrorMessage name="email" component="p" className="text-red-300 text-xs mt-1" />
-                                </div>
-
-                                {/* Mobile / Phone */}
-                                <div>
-                                  <label className="block text-xs font-medium text-white mb-1">
-                                    Mobile <span className="text-red-300">*</span>
-                                  </label>
-                                  <div className="flex w-full border border-white/30 rounded-[4px] bg-black/40 overflow-hidden focus-within:border-white">
-                                    <select 
-                                      className="bg-black text-white text-xs border-r border-white/30 px-2 py-2 outline-none cursor-pointer"
-                                      value={values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91"}
-                                      onChange={(e) => {
-                                        const currentCode = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
-                                        const numberPart = (values.phone || "").replace(currentCode, "");
-                                        setFieldValue("phone", numberPart ? e.target.value + numberPart : "");
-                                      }}
-                                    >
-                                      <option value="+91">+91</option>
-                                      <option value="+1">+1</option>
-                                      <option value="+44">+44</option>
-                                    </select>
-                                    <input
-                                      type="text"
-                                      maxLength={10}
-                                      className="w-full bg-transparent text-white text-sm px-3 py-2 outline-none placeholder-gray-300"
-                                      placeholder="Enter mobile number"
-                                      value={(() => {
-                                        const code = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
-                                        return (values.phone || "").substring(code.length);
-                                      })()}
-                                      onChange={(e) => {
-                                        const code = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
-                                        const digitsOnly = e.target.value.replace(/\D/g, "");
-                                        setFieldValue("phone", digitsOnly ? code + digitsOnly : "");
-                                      }}
-                                      onBlur={() => setFieldTouched("phone", true)}
-                                    />
-                                  </div>
-                                  <ErrorMessage name="phone" component="p" className="text-red-300 text-xs mt-1" />
-                                </div>
-
-                                {/* Country */}
-                                <div>
-                                  <label className="block text-xs font-medium text-white mb-1">Country</label>
-                                  <Select
-                                    value={countryOptions.find((opt) => opt.id === values.country) || null}
-                                    onChange={(selected: any) => {
-                                      const countryId = selected ? selected.id : "";
-                                      setFieldValue("country", countryId);
-                                      setFieldValue("state", "");
-                                      if (countryId === "India") setFieldValue("currency", "INR");
-                                      else if (countryId === "USA") setFieldValue("currency", "USD");
-                                      else if (countryId === "UK") setFieldValue("currency", "GBP");
-                                    }}
-                                    onBlur={() => setFieldTouched("country", true)}
-                                    getOptionLabel={(opt: any) => opt.name}
-                                    getOptionValue={(opt: any) => opt.id}
-                                    options={countryOptions}
-                                    placeholder="Select Country"
-                                    classNames={{
-                                      control: () => "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black/40 !border-white/30",
-                                    }}
-                                    styles={{
-                                      menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                                      option: (base, { isFocused, isSelected }) => ({
-                                        ...base,
-                                        backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                                        color: "#fff",
-                                      }),
-                                      singleValue: (base) => ({ ...base, color: "#fff" }),
-                                      input: (base) => ({ ...base, color: "#fff" }),
-                                      placeholder: (base) => ({ ...base, color: "#ccc" }),
-                                    }}
-                                  />
-                                </div>
-
-                                {/* State / Region */}
-                                <div>
-                                  <label className="block text-xs font-medium text-white mb-1">State / Region</label>
-                                  <Select
-                                    value={currentStates.find((opt: any) => opt.id === values.state || opt.name === values.state) || null}
-                                    onChange={(selected: any) => setFieldValue("state", selected ? selected.id : "")}
-                                    onBlur={() => setFieldTouched("state", true)}
-                                    getOptionLabel={(opt: any) => opt.name}
-                                    getOptionValue={(opt: any) => opt.id}
-                                    options={currentStates}
-                                    placeholder="Select State / Region"
-                                    isClearable
-                                    classNames={{
-                                      control: () => "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black/40 !border-white/30",
-                                    }}
-                                    styles={{
-                                      menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                                      option: (base, { isFocused, isSelected }) => ({
-                                        ...base,
-                                        backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                                        color: "#fff",
-                                      }),
-                                      singleValue: (base) => ({ ...base, color: "#fff" }),
-                                      input: (base) => ({ ...base, color: "#fff" }),
-                                      placeholder: (base) => ({ ...base, color: "#ccc" }),
-                                    }}
-                                  />
-                                </div>
-
-                                {/* City */}
-                                <div>
-                                  <label className="block text-xs font-medium text-white mb-1">City</label>
-                                  <Field
-                                    name="city"
-                                    type="text"
-                                    className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
-                                    placeholder="Enter city"
-                                  />
-                                </div>
-
-                                {/* Address Line 1 */}
-                                <div>
-                                  <label className="block text-xs font-medium text-white mb-1">Address Line 1</label>
-                                  <Field
-                                    name="address_line1"
-                                    type="text"
-                                    className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
-                                    placeholder="House / Street / Area"
-                                  />
-                                </div>
-
-                                {/* Address Line 2 */}
-                                <div>
-                                  <label className="block text-xs font-medium text-white mb-1">Address Line 2</label>
-                                  <Field
-                                    name="address_line2"
-                                    type="text"
-                                    className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
-                                    placeholder="Apartment / Suite / Landmark"
-                                  />
-                                </div>
-
-                                {/* Postal Code */}
-                                <div>
-                                  <label className="block text-xs font-medium text-white mb-1">Postal Code</label>
-                                  <Field
-                                    name="postal_code"
-                                    type="text"
-                                    className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
-                                    placeholder="Enter postal code"
-                                  />
-                                </div>
-
-                                {/* Note */}
-                                <div>
-                                  <label className="block text-xs font-medium text-white mb-1">Note</label>
-                                  <Field
-                                    as="textarea"
-                                    name="note"
-                                    rows={2}
-                                    className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
-                                    placeholder="Enter notes..."
-                                  />
-                                </div>
-
-                                {/* Actions */}
-                                <div className="flex justify-end gap-3 pt-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => setIsEditFirstLead(true)}
-                                    className="px-4 py-2 rounded-[4px] border border-white text-white text-sm font-medium hover:bg-white/10"
-                                  >
-                                    Cancel
-                                  </button>
-                                  <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="px-4 py-2 rounded-[4px] bg-white text-primary-700 text-sm font-medium hover:bg-gray-100 disabled:opacity-60"
-                                  >
-                                    {isSubmitting ? "Saving..." : "Save"}
-                                  </button>
-                                </div>
-                              </Form>
-                            );
-                          }}
-                        </Formik>
-                      </div>
-                    )}
-
-                    {/* LEAD PROPERTIES & ORDER INFORMATION */}
-                    {isleadPropertyEdit ? (
-                      <div className="w-full border border-gray-700 rounded overflow-hidden mb-6">
-                        <table className="w-full text-sm text-left text-white">
-                          <thead className="text-xs">
-                            <tr className="border border-gray-700 talbleheaderBg">
-                              <th
-                                scope="col"
-                                colSpan={2}
-                                className="px-3 py-3 md:p-3 border border-gray-700 font-semibold text-white text-base"
-                              >
-                                <div className="flex justify-between items-center">
-                                  <span>Lead & Order Properties</span>
-                                  <span
-                                    className="flex gap-1 items-center px-4 py-2 rounded-[4px] bg-primary-600 text-white text-sm font-medium cursor-pointer hover:bg-primary-700"
-                                    onClick={() => setIsLeadPropertyEdit(!isleadPropertyEdit)}
-                                  >
-                                    <MdEdit />
-                                    <span>Edit</span>
-                                  </span>
-                                </div>
-                              </th>
-                            </tr>
-                          </thead>
-
-                          <tbody>
-                            {[
-                              { label: "Lead Number", value: data?.lead_number },
-                              { label: "Lead Status", value: data?.lead_status || "New" },
-                              { label: "Agent Name", value: data?.agent?.name || data?.owner_name || "Unassigned" },
-                              { label: "Lead Source", value: data?.lead_source },
-                              { label: "Best time to call", value: data?.best_time_to_call },
-                              { label: "WhatsApp Number", value: data?.whatsapp_number },
-                            ].map((row, idx) => (
-                              <tr
-                                key={idx}
-                                className="border transition-colors border-b border-gray-700 odd:bg-[#1E1E1E] even:bg-[#141414]"
-                              >
-                                <td className="text-sm text-gray-400 py-3 px-4 font-medium w-1/3">
-                                  {row.label}
-                                </td>
-                                <td className="text-sm font-medium text-white py-3 px-4">
-                                  {row.value || "-"}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      // LEAD PROPERTIES EDIT FORM
-                      <div className="w-full border border-gray-700 rounded overflow-hidden mb-6 bg-[#181818] p-4">
-                        <p className="text-base font-semibold text-white mb-4 border-b border-gray-700 pb-2">
-                          Edit Lead Properties
-                        </p>
-                        <Formik
-                          enableReinitialize
-                          initialValues={{
-                            id: leadId,
-                            agent_id: data?.agent?.id ?? "",
-                            lead_status: data?.lead_status ?? "New",
-                            lead_source_id: data?.lead_source_id || data?.lead_source?.id || (leadSourceData.find((s) => s.name?.toLowerCase() === (typeof data?.lead_source === 'string' ? data?.lead_source?.toLowerCase() : ''))?.id) || "",
-                            best_time_to_call: data?.best_time_to_call ?? "",
-                            whatsapp_number: data?.whatsapp_number ?? "",
-                          }}
-                          validationSchema={Yup.object({
-                            agent_id: Yup.string().nullable(),
-                            lead_status: Yup.string().nullable(),
-                            lead_source_id: Yup.string().nullable(),
-                            best_time_to_call: Yup.string().trim().nullable(),
-                            whatsapp_number: Yup.string().trim().nullable(),
-                          })}
-                          onSubmit={async (values, { setSubmitting }) => {
-                            try {
-                              const payload: any = {
-                                id: leadId,
-                                agent_id: values.agent_id || undefined,
-                                lead_status: values.lead_status || undefined,
-                                lead_source_id: values.lead_source_id || undefined,
-                                best_time_to_call: values.best_time_to_call || undefined,
-                                whatsapp_number: values.whatsapp_number || undefined,
-                              };
-                              await AxiosProvider.post("/leads/update", payload);
-                              toast.success("Lead properties updated successfully");
-                              setHitApi(!hitApi);
-                              setIsLeadPropertyEdit(true);
-                            } catch (error: any) {
-                              toast.error("Failed to update lead properties");
-                            } finally {
-                              setSubmitting(false);
-                            }
-                          }}
-                        >
-                          {({
-                            setFieldValue,
-                            setFieldTouched,
-                            values,
-                            isSubmitting,
-                          }) => (
-                            <Form className="space-y-4">
-                              {/* Assign Agent */}
-                              <div>
-                                <label className="block text-xs font-medium text-gray-300 mb-1">Agent Name</label>
-                                <Select
-                                  value={agent.find((opt) => opt.id === values.agent_id) || null}
-                                  onChange={(selected: any) => setFieldValue("agent_id", selected ? selected.id : "")}
-                                  onBlur={() => setFieldTouched("agent_id", true)}
-                                  getOptionLabel={(opt: any) => opt.name}
-                                  getOptionValue={(opt: any) => opt.id}
-                                  options={agent}
-                                  placeholder="Select Agent"
-                                  isClearable
-                                  classNames={{
-                                    control: () => "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
-                                  }}
-                                  styles={{
-                                    menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                                    option: (base, { isFocused, isSelected }) => ({
-                                      ...base,
-                                      backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                                      color: "#fff",
-                                    }),
-                                    singleValue: (base) => ({ ...base, color: "#fff" }),
-                                    input: (base) => ({ ...base, color: "#fff" }),
-                                    placeholder: (base) => ({ ...base, color: "#888" }),
-                                  }}
-                                />
-                              </div>
-
-                              {/* Lead Status */}
-                              <div>
-                                <label className="block text-xs font-medium text-gray-300 mb-1">Lead Status</label>
-                                <Select
-                                  value={leadStatusOptions.find((opt) => opt.id === values.lead_status) || null}
-                                  onChange={(selected: any) => setFieldValue("lead_status", selected ? selected.id : "New")}
-                                  onBlur={() => setFieldTouched("lead_status", true)}
-                                  getOptionLabel={(opt: any) => opt.name}
-                                  getOptionValue={(opt: any) => opt.id}
-                                  options={leadStatusOptions}
-                                  placeholder="Select Lead Status"
-                                  classNames={{
-                                    control: () => "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
-                                  }}
-                                  styles={{
-                                    menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                                    option: (base, { isFocused, isSelected }) => ({
-                                      ...base,
-                                      backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                                      color: "#fff",
-                                    }),
-                                    singleValue: (base) => ({ ...base, color: "#fff" }),
-                                    input: (base) => ({ ...base, color: "#fff" }),
-                                    placeholder: (base) => ({ ...base, color: "#888" }),
-                                  }}
-                                />
-                              </div>
-
-                              {/* Lead Source */}
-                              <div>
-                                <label className="block text-xs font-medium text-gray-300 mb-1">Lead Source</label>
-                                <Select
-                                  value={leadSourceData.find((opt) => opt.id === values.lead_source_id || opt.name?.toLowerCase() === values.lead_source_id?.toLowerCase() || (data?.lead_source && opt.name?.toLowerCase() === (typeof data.lead_source === 'string' ? data.lead_source.toLowerCase() : ''))) || null}
-                                  onChange={(selected: any) => setFieldValue("lead_source_id", selected ? selected.id : "")}
-                                  onBlur={() => setFieldTouched("lead_source_id", true)}
-                                  getOptionLabel={(opt: any) => opt.name}
-                                  getOptionValue={(opt: any) => opt.id}
-                                  options={leadSourceData}
-                                  placeholder="Select Lead Source"
-                                  isClearable
-                                  classNames={{
-                                    control: () => "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
-                                  }}
-                                  styles={{
-                                    menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                                    option: (base, { isFocused, isSelected }) => ({
-                                      ...base,
-                                      backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                                      color: "#fff",
-                                    }),
-                                    singleValue: (base) => ({ ...base, color: "#fff" }),
-                                    input: (base) => ({ ...base, color: "#fff" }),
-                                    placeholder: (base) => ({ ...base, color: "#888" }),
-                                  }}
-                                />
-                              </div>
-
-                              {/* Best time to call */}
-                              <div>
-                                <label className="block text-xs font-medium text-gray-300 mb-1">Best time to call</label>
-                                <Field
-                                  name="best_time_to_call"
-                                  type="text"
-                                  className="w-full border border-gray-700 rounded-[4px] text-white bg-black text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
-                                  placeholder="e.g. 3-5 PM"
-                                />
-                              </div>
-
-                              {/* WhatsApp Number */}
-                              <div>
-                                <label className="block text-xs font-medium text-gray-300 mb-1">WhatsApp Number</label>
-                                <div className="flex w-full border border-gray-700 rounded-[4px] bg-black overflow-hidden focus-within:border-primary-500">
-                                  <select 
-                                    className="bg-black text-white text-xs border-r border-gray-700 px-2 py-2 outline-none cursor-pointer"
-                                    value={values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91"}
-                                    onChange={(e) => {
-                                      const currentCode = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
-                                      const numberPart = (values.whatsapp_number || "").replace(currentCode, "");
-                                      setFieldValue("whatsapp_number", e.target.value + numberPart);
-                                    }}
-                                  >
-                                    <option value="+91">+91</option>
-                                    <option value="+1">+1</option>
-                                    <option value="+44">+44</option>
-                                  </select>
-                                  <input
-                                    type="text"
-                                    maxLength={10}
-                                    className="w-full bg-transparent text-white text-sm px-3 py-2 outline-none placeholder-gray-500"
-                                    placeholder="Enter whatsapp number"
-                                    value={(() => {
-                                      const code = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
-                                      return (values.whatsapp_number || "").substring(code.length);
-                                    })()}
-                                    onChange={(e) => {
-                                      const code = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
-                                      const digitsOnly = e.target.value.replace(/\D/g, "");
-                                      setFieldValue("whatsapp_number", code + digitsOnly);
-                                    }}
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Actions */}
-                              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-700">
-                                <button
-                                  type="button"
-                                  onClick={() => setIsLeadPropertyEdit(true)}
-                                  className="px-4 py-2 rounded-[4px] border border-gray-700 text-white text-sm font-medium bg-black hover:bg-gray-900"
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  type="submit"
-                                  disabled={isSubmitting}
-                                  className="px-4 py-2 rounded-[4px] bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 disabled:opacity-60"
-                                >
-                                  {isSubmitting ? "Saving..." : "Save Properties"}
-                                </button>
-                              </div>
-                            </Form>
-                          )}
-                        </Formik>
-                      </div>
-                    )}
-                  </div>
+                  <LeadProfileSidebar
+                    data={data}
+                    leadId={leadId}
+                    onUpdate={() => setHitApi((prev) => !prev)}
+                  />
 
                   <div className=" md:flex relative w-full">
                     <Tabs tabs={tabs} />
@@ -3025,264 +2390,6 @@ export default function Home() {
                   </div>
                 </form>
               )}
-            </Formik>
-          </div>
-        )}
-        {isActivityFilter && (
-          <div className="w-full min-h-auto  text-white p-4">
-            <div className="flex justify-between mb-4">
-              <p className="text-primary-500 text-[26px] font-bold leading-9">
-                Filter Activity
-              </p>
-              <IoCloseOutline
-                onClick={() => closeFlyOut()}
-                className="h-8 w-8 border border-gray-700 text-white rounded cursor-pointer"
-              />
-            </div>
-            <div className="w-full border-b border-gray-700 mb-4"></div>
-
-            <Formik<{
-              conversation: string;
-              disposition_id: string;
-              agent_id: string;
-              startDate: string;
-              endDate: string;
-              lead_id: string;
-            }>
-              initialValues={{
-                conversation: "",
-                disposition_id: "",
-                agent_id: "",
-                startDate: "",
-                endDate: "",
-                lead_id: leadId,
-              }}
-              onSubmit={async (values, { setSubmitting, resetForm }) => {
-                if (
-                  !values.conversation &&
-                  !values.disposition_id &&
-                  !values.agent_id &&
-                  !values.startDate &&
-                  !values.endDate
-                ) {
-                  toast.error("At least 1 field is required");
-                } else {
-                  try {
-                    const res = await AxiosProvider.post(
-                      "/lead/activity/filter",
-                      values,
-                    );
-                    setFetchLeadaActivityData(res.data.data.activities);
-                    setFlyoutFilterOpen(false);
-                    setIsActivityHistoryPaination(false);
-                    setIsActvityFilter(false);
-                    resetForm();
-                  } catch (error) {
-                    console.error("Error filtering activity:", error);
-                    toast.error("Not Filtered, try again");
-                  }
-                }
-                setSubmitting(false);
-              }}
-            >
-              {(formik) => {
-                type Option = { id: string; name: string };
-                const fmt = (d: Date) => {
-                  const y = d.getFullYear();
-                  const m = String(d.getMonth() + 1).padStart(2, "0");
-                  const day = String(d.getDate()).padStart(2, "0");
-                  return `${y}-${m}-${day}`;
-                };
-
-                const {
-                  values,
-                  handleChange,
-                  handleSubmit,
-                  setFieldValue,
-                  setFieldTouched,
-                  isSubmitting,
-                } = formik;
-
-                return (
-                  <form onSubmit={handleSubmit} noValidate>
-                    {/* Date Range */}
-                    <div className="w-full flex flex-col md:flex-row gap-4 md:justify-between mb-4 sm:mb-6">
-                      <div className="w-full md:w-[49%]">
-                        <p className="text-white font-medium text-base leading-6 mb-2">
-                          From
-                        </p>
-                        <DatePicker
-                          selected={
-                            values.startDate ? new Date(values.startDate) : null
-                          }
-                          onChange={(date: Date | null) =>
-                            setFieldValue("startDate", date ? fmt(date) : "")
-                          }
-                          onBlur={() => setFieldTouched("startDate", true)}
-                          name="startDate"
-                          dateFormat="yyyy-MM-dd"
-                          placeholderText="yyyy-mm-dd"
-                          className="hover:shadow-hoverInputShadow focus-border-primary !w-full border border-gray-700 rounded-[4px] text-sm leading-4 font-medium placeholder-gray-400 py-4 px-4 bg-black text-white shadow-sm"
-                          popperClassName="custom-datepicker"
-                        />
-                      </div>
-
-                      <div className="w-full md:w-[49%]">
-                        <p className="text-white font-medium text-base leading-6 mb-2">
-                          To
-                        </p>
-                        <DatePicker
-                          selected={
-                            values.endDate ? new Date(values.endDate) : null
-                          }
-                          onChange={(date: Date | null) =>
-                            setFieldValue("endDate", date ? fmt(date) : "")
-                          }
-                          onBlur={() => setFieldTouched("endDate", true)}
-                          name="endDate"
-                          dateFormat="yyyy-MM-dd"
-                          placeholderText="yyyy-mm-dd"
-                          className="hover:shadow-hoverInputShadow focus-border-primary !w-full border border-gray-700 rounded-[4px] text-sm leading-4 font-medium placeholder-gray-400 py-4 px-4 bg-black text-white shadow-sm"
-                          popperClassName="custom-datepicker"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Conversation / Disposition / Agent */}
-                    <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 md:justify-between mb-4 sm:mb-6">
-                      <div className="w-full relative">
-                        <p className="text-white font-medium text-base leading-6 mb-2">
-                          Conversation
-                        </p>
-                        <input
-                          type="text"
-                          name="conversation"
-                          value={values.conversation}
-                          onChange={handleChange}
-                          onBlur={() => setFieldTouched("conversation", true)}
-                          placeholder="Enter conversation"
-                          className="hover:shadow-hoverInputShadow focus-border-primary w-full border border-gray-700 rounded-[4px] text-sm leading-4 font-medium placeholder-gray-400 py-4 px-4 bg-black text-white"
-                        />
-                      </div>
-
-                      <div className="w-full relative">
-                        <p className="text-white font-medium text-base leading-6 mb-2">
-                          Disposition
-                        </p>
-                        <Select
-                          value={
-                            (disposition || []).find(
-                              (opt: any) => opt.id === values.disposition_id,
-                            ) || null
-                          }
-                          onChange={(selected: any) =>
-                            setFieldValue(
-                              "disposition_id",
-                              selected ? selected.id : "",
-                            )
-                          }
-                          onBlur={() => setFieldTouched("disposition_id", true)}
-                          getOptionLabel={(opt: any) => opt.name}
-                          getOptionValue={(opt: any) => opt.id}
-                          options={disposition}
-                          placeholder="Select Disposition"
-                          isClearable
-                          classNames={{
-                            control: ({ isFocused }) =>
-                              `!w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                isFocused
-                                  ? "!border-primary-500"
-                                  : "!border-gray-700"
-                              }`,
-                          }}
-                          styles={{
-                            menu: (base) => ({
-                              ...base,
-                              borderRadius: 4,
-                              backgroundColor: "#000",
-                            }),
-                            option: (base, { isFocused, isSelected }) => ({
-                              ...base,
-                              backgroundColor: isSelected
-                                ? "var(--primary-500)"
-                                : isFocused
-                                  ? "#222"
-                                  : "#000",
-                              color: "#fff",
-                              cursor: "pointer",
-                            }),
-                            singleValue: (base) => ({ ...base, color: "#fff" }),
-                            placeholder: (base) => ({ ...base, color: "#999" }),
-                          }}
-                        />
-                      </div>
-
-                      <div className="w-full relative">
-                        <p className="text-white font-medium text-base leading-6 mb-2">
-                          Agent
-                        </p>
-                        <Select
-                          value={
-                            (agent || []).find(
-                              (opt: any) => opt.id === values.agent_id,
-                            ) || null
-                          }
-                          onChange={(selected: any) =>
-                            setFieldValue(
-                              "agent_id",
-                              selected ? selected.id : "",
-                            )
-                          }
-                          onBlur={() => setFieldTouched("agent_id", true)}
-                          getOptionLabel={(opt: any) => opt.name}
-                          getOptionValue={(opt: any) => opt.id}
-                          options={agent}
-                          placeholder="Select Agent"
-                          isClearable
-                          classNames={{
-                            control: ({ isFocused }) =>
-                              `!w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                isFocused
-                                  ? "!border-primary-500"
-                                  : "!border-gray-700"
-                              }`,
-                          }}
-                          styles={{
-                            menu: (base) => ({
-                              ...base,
-                              borderRadius: 4,
-                              backgroundColor: "#000",
-                            }),
-                            option: (base, { isFocused, isSelected }) => ({
-                              ...base,
-                              backgroundColor: isSelected
-                                ? "var(--primary-500)"
-                                : isFocused
-                                  ? "#222"
-                                  : "#000",
-                              color: "#fff",
-                              cursor: "pointer",
-                            }),
-                            singleValue: (base) => ({ ...base, color: "#fff" }),
-                            placeholder: (base) => ({ ...base, color: "#999" }),
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Submit */}
-                    <div className="mt-10 w-full flex flex-col gap-y-4 md:flex-row justify-between items-center">
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="py-[13px] px-[26px] bg-primary-500 rounded-[4px] text-base font-medium leading-6 text-white hover:text-dark cursor-pointer w-full text-center hover:bg-primary-700"
-                      >
-                        Filter Lead Activity
-                      </button>
-                    </div>
-                  </form>
-                );
-              }}
             </Formik>
           </div>
         )}
