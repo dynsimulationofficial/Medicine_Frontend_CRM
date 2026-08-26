@@ -1116,12 +1116,13 @@ export default function Home() {
       content: (
         <LeadTasksTab
           leadId={leadId}
-          reloadKey={reloadKey}
+          leadName={data?.full_name}
+          agentId={data?.agent?.id}
+          agentName={data?.agent?.name}
           hitApi={hitApi}
           setHitApi={setHitApi}
-          openEditTask={openEditTask}
-          openLeadTaskInFlyout={openLeadTaskInFlyout}
-          incomingTasks={fileteredTaskData}
+          isCreateOpen={task}
+          onCloseCreate={() => setTask(false)}
         />
       ),
     },
