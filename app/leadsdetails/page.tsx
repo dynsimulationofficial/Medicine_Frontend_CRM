@@ -1017,7 +1017,9 @@ export default function Home() {
                   </thead>
                   <tbody className="divide-y divide-gray-700/60">
                     {fetchLeadActivityData.map((activity, idx) => {
-                      const formattedOccurredCa = activity.created_at_ca || "--";
+                      const formattedOccurredCa = activity.created_at
+                        ? new Date(activity.created_at).toLocaleString()
+                        : (activity.created_at_ca || "--");
                       return (
                         <tr
                           key={activity.id}
