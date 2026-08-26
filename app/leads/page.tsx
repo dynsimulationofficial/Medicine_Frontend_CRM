@@ -2205,6 +2205,8 @@ const stateDisplay = values.state ? allStates.find((o: any) => norm(o.id) === no
                     email: values.email,
                     phone: values.phone || undefined,
                     address_line1: values.address_line1 || undefined,
+                    address_line2: values.address_line2 || undefined,
+                    city: values.city || undefined,
                     country: values.country || undefined,
                     state: values.state || undefined,
                     postal_code: values.postal_code || undefined,

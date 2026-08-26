@@ -233,6 +233,8 @@ const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
           email: "",
           phone: "",
           address_line1: "",
+          address_line2: "",
+          city: "",
           country: "India",
           state: "",
           postal_code: "",
