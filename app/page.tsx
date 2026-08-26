@@ -138,15 +138,16 @@ export default function LoginHome() {
           className=" absolute  top-[90%] right-0 left-0 mx-auto"
         />
       </div> */}
-      <div className="absolute top-0 bottom-0 left-0 right-0 mx-auto my-auto w-[90%] max-w-[500px] h-[587px] shadow-loginBoxShadow  px-6 sm:px-12 py-10 sm:py-16 rounded-lg mainContainerBg">
+    <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-[480px] shadow-loginBoxShadow px-6 sm:px-10 py-8 sm:py-10 rounded-xl mainContainerBg border border-gray-800">
         <Image
           src="/images/crmlogo.png"
-          alt="OrizonIcon"
-          width={200}
-          height={150}
-          className="mx-auto mb-5"
+          alt="CRM Logo"
+          width={180}
+          height={130}
+          className="mx-auto mb-4 object-contain"
         />
-        <p className="font-bold text-lg sm:text-base leading-normal text-center  mb-6">
+        <p className="font-bold text-lg sm:text-xl leading-normal text-center text-white mb-6">
           Login to LEAD CRM
         </p>
         <Formik
@@ -155,27 +156,27 @@ export default function LoginHome() {
           onSubmit={handleSubmitLogin}
         >
           {({ setFieldValue }) => (
-            <Form className="w-full">
-              <div className="w-full">
-                {/* Email Field */}
-                <p className=" text-base leading-normal mb-2">Email</p>
-                <div className="relative">
-                  <Field
-                    type="text"
-                    name="email"
-                    autoComplete="username"
-                    placeholder="Enter your User ID/Email"
-                    className="focus:outline-none w-full h-[50px] border border-[#DFEAF2] rounded-[4px] text-[15px]  pl-4 mb-7 hover:shadow-hoverInputShadow focus:border-primary-500 bg-black"
-                  />
-                  <ErrorMessage
-                    name="email"
-                    component="div"
-                    className="text-red-500 text-sm absolute top-14"
-                  />
-                </div>
+            <Form className="w-full space-y-4">
+              {/* Email Field */}
+              <div>
+                <p className="text-white text-sm font-medium mb-1.5">Email</p>
+                <Field
+                  type="text"
+                  name="email"
+                  autoComplete="username"
+                  placeholder="Enter your User ID/Email"
+                  className="focus:outline-none w-full h-[48px] border border-gray-700 rounded-[6px] text-[15px] px-4 text-white hover:border-gray-500 focus:border-primary-500 bg-black transition-colors"
+                />
+                <ErrorMessage
+                  name="email"
+                  component="div"
+                  className="text-red-500 text-xs mt-1"
+                />
+              </div>
 
-                {/* Password Field */}
-                <p className=" text-base leading-normal mb-2">Password</p>
+              {/* Password Field */}
+              <div>
+                <p className="text-white text-sm font-medium mb-1.5">Password</p>
                 <div className="relative">
                   <Field
                     type={showPassword ? "text" : "password"}
@@ -185,40 +186,38 @@ export default function LoginHome() {
                     }
                     autoComplete="current-password"
                     placeholder="Enter your password"
-                    className="focus:outline-none w-full h-[50px] border border-[#DFEAF2] rounded-[4px] text-[15px] pl-4 mb-8  hover:shadow-hoverInputShadow focus:border-primary-500 bg-black"
+                    className="focus:outline-none w-full h-[48px] border border-gray-700 rounded-[6px] text-[15px] pl-4 pr-11 text-white hover:border-gray-500 focus:border-primary-500 bg-black transition-colors"
                   />
-                  {showPassword ? (
-                    <FaRegEye
-                      onClick={togglePasswordVisibility}
-                      className="absolute top-4 right-4  text-[15px] cursor-pointer"
-                    />
-                  ) : (
-                    <FaRegEyeSlash
-                      onClick={togglePasswordVisibility}
-                      className="absolute top-4 right-4  text-[15px] cursor-pointer"
-                    />
-                  )}
-                  <ErrorMessage
-                    name="password"
-                    component="div"
-                    className="text-red-500 text-sm absolute top-14"
-                  />
+                  <button
+                    type="button"
+                    onClick={togglePasswordVisibility}
+                    className="absolute top-0 bottom-0 right-0 px-3 flex items-center text-gray-400 hover:text-white"
+                  >
+                    {showPassword ? <FaRegEye className="text-base" /> : <FaRegEyeSlash className="text-base" />}
+                  </button>
                 </div>
+                <ErrorMessage
+                  name="password"
+                  component="div"
+                  className="text-red-500 text-xs mt-1"
+                />
+              </div>
 
-                {/* Terms Checkbox */}
-                <div className="flex items-center mb-9 relative">
+              {/* Terms Checkbox */}
+              <div>
+                <div className="flex items-center">
                   <Field
                     type="checkbox"
                     name="terms"
                     id="terms"
-                    className="mt-0.5 mr-2 w-4 h-4 accent-primary-600"
+                    className="mt-0.5 mr-2.5 w-4 h-4 accent-primary-600 cursor-pointer"
                   />
-                  <label htmlFor="terms" className="text-sm ">
+                  <label htmlFor="terms" className="text-xs sm:text-sm text-gray-300 cursor-pointer">
                     I agree to the{" "}
                     <a
                       href="/"
                       target="_blank"
-                      className="underline text-primary-600"
+                      className="underline text-primary-500 hover:text-primary-400"
                     >
                       Terms and Conditions
                     </a>{" "}
@@ -226,23 +225,25 @@ export default function LoginHome() {
                     <a
                       href="/"
                       target="_blank"
-                      className="underline text-primary-600"
+                      className="underline text-primary-500 hover:text-primary-400"
                     >
                       Privacy Policy
                     </a>
                   </label>
-                  <ErrorMessage
-                    name="terms"
-                    component="div"
-                    className="text-red-500 text-sm mb-3 absolute top-7"
-                  />
                 </div>
+                <ErrorMessage
+                  name="terms"
+                  component="div"
+                  className="text-red-500 text-xs mt-1"
+                />
+              </div>
 
-                {/* Submit Button */}
+              {/* Submit Button */}
+              <div className="pt-2">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-primary-600 rounded-[4px] w-full h-[50px] text-center text-white text-lg font-medium leading-normal mb-3 hover:bg-primary-700 active:bg-primary-700 transition duration-100"
+                  className="bg-primary-600 rounded-[6px] w-full h-[48px] text-center text-white text-base font-semibold leading-normal hover:bg-primary-700 active:bg-primary-800 transition duration-150 shadow-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading ? "Logging in..." : "Login"}
                 </button>
@@ -251,6 +252,7 @@ export default function LoginHome() {
           )}
         </Formik>
       </div>
+    </div>
     </>
   );
 }

@@ -131,34 +131,34 @@ export default function OtpHome() {
 
   return (
     <>
-      <div className="absolute top-0 bottom-0 left-0 right-0 mx-auto my-auto w-[90%] max-w-[500px] h-[587px] shadow-loginBoxShadow  px-6 sm:px-12 py-10 sm:py-16 rounded-lg mainContainerBg">
+    <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-[480px] shadow-loginBoxShadow px-6 sm:px-10 py-8 sm:py-10 rounded-xl mainContainerBg border border-gray-800 text-center">
         <Image
           src="/images/crmlogo.png"
-          alt="OrizonIcon"
-          width={200}
-          height={150}
-          className="mx-auto mb-16"
+          alt="CRM Logo"
+          width={180}
+          height={130}
+          className="mx-auto mb-4 object-contain"
         />
-        <p className="font-bold text-lg sm:text-base leading-normal text-center  mb-2">
+        <p className="font-bold text-lg sm:text-xl leading-normal text-center text-white mb-2">
           Verify your email
         </p>
-        {/* <button onClick={() => setIsLogged(true)}>FCM</button> */}
         {qrCode && (
           <Image
             src={qrCode}
             alt="QR Code"
             width={100}
             height={100}
-            className="mx-auto"
+            className="mx-auto mb-4"
           />
         )}
-        <p className=" text-base leading-[26px] text-center mb-10 sm:mb-14">
+        <p className="text-sm text-gray-300 leading-relaxed text-center mb-6">
           We&apos;ve sent you a one-time password (OTP). Please enter it below
           to confirm your account.
         </p>
         <form onSubmit={handleSubmit} className="w-full">
           <div>
-            <div className="flex items-center justify-between mb-10 sm:mb-14 w-[96%] mx-auto">
+            <div className="flex items-center justify-between mb-8 w-full mx-auto">
               <OtpInput
                 value={otp}
                 onChange={handleChange}
@@ -192,7 +192,7 @@ export default function OtpHome() {
                           prev?.focus();
                         }
                       }}
-                      className="!w-[14%] md:!w-[55px] h-12 sm:h-14 py-3 sm:py-4 text-center sm:px-5 border-b border-[#BDD1E0] text-white text-lg sm:text-xl font-semibold leading-normal focus:outline-none focus:border-b-2 focus-within:border-primary-500 bg-black"
+                      className="!w-[14%] md:!w-[52px] h-12 sm:h-14 py-2 sm:py-3 text-center border border-gray-700 rounded-[6px] text-white text-lg sm:text-xl font-semibold leading-normal focus:outline-none focus:border-primary-500 bg-black transition-colors"
                     />
                   );
                 }}
@@ -202,15 +202,16 @@ export default function OtpHome() {
             <div className="w-full">
               <button
                 type="submit"
-                className="bg-primary-600 border rounded-[4px] w-full h-[50px] text-center text-white text-lg font-medium leading-normal mb-3 hover:bg-primary-700 active:bg-primary-700"
+                className="bg-primary-600 rounded-[6px] w-full h-[48px] text-center text-white text-base font-semibold leading-normal hover:bg-primary-700 active:bg-primary-800 transition duration-150 shadow-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 disabled={loading}
               >
-                {loading ? "OTP Verifying..." : "Verify OTP"}
+                {loading ? "Verifying OTP..." : "Verify OTP"}
               </button>
             </div>
           </div>
         </form>
       </div>
+    </div>
     </>
   );
 }
