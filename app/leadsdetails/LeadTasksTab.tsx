@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { MdEdit } from "react-icons/md";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { IoCloseOutline } from "react-icons/io5";
+import { FiPlusCircle } from "react-icons/fi";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import DatePicker from "react-datepicker";
@@ -60,7 +61,7 @@ const formatDateTime = (date: Date): string => {
   const year = date.getFullYear();
   let hours = date.getHours();
   const minutes = pad(date.getMinutes());
-  const ampm = hours >= 12 ? "pm" : "am";
+  const ampm = hours >= 12 ? "PM" : "AM";
   hours = hours % 12;
   hours = hours ? hours : 12;
   return `${month}-${day}-${year} ${pad(hours)}:${minutes}${ampm}`;
@@ -79,6 +80,9 @@ export default function LeadTasksTab({
   const [tasks, setTasks] = useState<TaskData[]>([]);
   const [completedMap, setCompletedMap] = useState<Record<string, boolean>>({});
   const [editingTask, setEditingTask] = useState<TaskData | null>(null);
+  const [isLocalCreateOpen, setIsLocalCreateOpen] = useState(false);
+
+  const isCreateVisible = isCreateOpen || isLocalCreateOpen;
 
   const fetchTasks = async () => {
     try {
@@ -101,46 +105,63 @@ export default function LeadTasksTab({
     if (leadId) fetchTasks();
   }, [leadId, hitApi]);
 
-  const isCompletedByStatus = (s?: string) => {
-    const x = (s || "").toLowerCase();
-    return x === "completed" || x === "done";
+  const isCompletedByStatus = (status?: string): boolean => {
+    if (!status) return false;
+    const s = status.toLowerCase();
+    return s === "completed" || s === "complete" || s === "done";
   };
 
-  const statusBadge = (s?: string) => {
-    const x = (s || "").toLowerCase();
-    if (x === "completed" || x === "done")
-      return "bg-green-700/50 text-green-200 border-green-500";
-    if (x === "pending" || x === "due")
-      return "bg-yellow-700/50 text-yellow-200 border-yellow-500";
-    if (x === "cancelled" || x === "canceled" || x === "failed")
-      return "bg-red-700/50 text-red-200 border-red-500";
-    return "bg-gray-700 text-gray-200 border-gray-600";
+  const isTaskLocked = (t: TaskData): boolean => {
+    return Boolean(completedMap[t.id] || isCompletedByStatus(t.status));
   };
 
-  const isTaskLocked = (t: TaskData) =>
-    completedMap[t.id] || isCompletedByStatus(t.status);
-
-  const completeTask = async (id: string) => {
+  const completeTask = async (taskId: string) => {
     try {
-      await AxiosProvider.post("/leads/tasks/complete", {
-        lead_id: leadId,
-        task_id: id,
-      });
-      toast.success("Task marked as completed");
-      setCompletedMap((m) => ({ ...m, [id]: true }));
+      await AxiosProvider.post("/leads/tasks/complete", { task_id: taskId, lead_id: leadId });
+      setCompletedMap((prev) => ({ ...prev, [taskId]: true }));
+      toast.success("Task completed successfully");
       setHitApi((prev) => !prev);
-    } catch (error) {
-      console.error("Error completing task:", error);
-      toast.error("Task not completed");
+      fetchTasks();
+    } catch (e: any) {
+      console.error("Error completing task:", e);
+      toast.error(e?.response?.data?.message || e?.response?.data?.msg || "Failed to complete task");
     }
   };
 
+  const statusBadge = (status?: string) => {
+    if (isCompletedByStatus(status)) {
+      return "bg-green-900/40 text-green-300 border-green-700";
+    }
+    if (status?.toLowerCase() === "cancelled") {
+      return "bg-red-900/40 text-red-300 border-red-700";
+    }
+    return "bg-yellow-900/40 text-yellow-300 border-yellow-700";
+  };
+
   const defaultStart = new Date();
-  const defaultEnd = new Date(defaultStart.getTime() + 15 * 60000);
+  const defaultEnd = new Date(Date.now() + 30 * 60 * 1000);
+
+  const closeCreateDrawer = () => {
+    setIsLocalCreateOpen(false);
+    if (onCloseCreate) onCloseCreate();
+  };
+
+  const currentOwner = agentName || (storage.getUserRole() === "Agent" ? storage.getUserName() : "") || "Wasique80";
 
   return (
     <div className="w-full">
-      {/* 1. TABLE VIEW */}
+      {/* Top Add Task Button */}
+      <div className="flex justify-end items-center mb-4">
+        <button
+          type="button"
+          onClick={() => setIsLocalCreateOpen(true)}
+          className="flex items-center gap-2 py-2 px-4 rounded bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium cursor-pointer transition shadow"
+        >
+          <FiPlusCircle className="w-4 h-4" /> Add Task
+        </button>
+      </div>
+
+      {/* 1. TASKS TABLE */}
       {!tasks || tasks.length === 0 ? (
         <p className="text-center text-gray-400 py-12 text-base font-medium">
           No data found
@@ -207,10 +228,13 @@ export default function LeadTasksTab({
                     </td>
                     <td className="py-3 px-4 text-center">
                       <button
-                        type="button"
                         onClick={() => setEditingTask(t)}
                         disabled={locked}
-                        className="py-1 px-2.5 bg-primary-600 hover:bg-primary-700 rounded text-white text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                        className={`py-1 px-2.5 rounded text-white text-sm transition-colors ${
+                          locked
+                            ? "bg-gray-600 opacity-40 cursor-not-allowed"
+                            : "bg-primary-600 hover:bg-primary-700 cursor-pointer"
+                        }`}
                         title="Edit Task"
                       >
                         <MdEdit />
@@ -224,30 +248,233 @@ export default function LeadTasksTab({
         </div>
       )}
 
-      {/* 2. CREATE TASK MODAL / FLYOUT */}
-      {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-[#1E1E1E] border border-gray-700 rounded-lg max-w-2xl w-full p-6 text-white shadow-2xl relative my-8">
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-primary-500 text-2xl font-bold">
-                Create Lead Task
-              </p>
-              <IoCloseOutline
-                onClick={onCloseCreate}
-                className="h-8 w-8 border border-gray-700 text-white rounded cursor-pointer hover:bg-gray-800 transition"
-              />
-            </div>
-            <div className="w-full border-b border-gray-700 mb-6"></div>
+      {/* 2. CREATE LEAD TASK FLYOUT */}
+      <div
+        className={`fixed inset-0 bg-black/60 backdrop-blur-[1px] z-40 transition-opacity duration-300 ease-in-out cursor-pointer ${
+          isCreateVisible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={closeCreateDrawer}
+      />
+      <div
+        className={`fixed top-0 right-0 z-50 h-screen overflow-y-auto bg-[#141414] w-[400px] sm:w-[500px] md:w-[550px] shadow-2xl border-l border-gray-800 transform transition-transform duration-300 ease-in-out ${
+          isCreateVisible ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="w-full min-h-auto p-6 sm:p-8 text-white">
+          <div className="flex justify-between items-center mb-6">
+            <p className="text-primary-500 text-[26px] font-bold leading-9">
+              Create Lead Task
+            </p>
+            <IoCloseOutline
+              onClick={closeCreateDrawer}
+              className="h-8 w-8 border border-gray-700 text-white rounded cursor-pointer hover:bg-gray-800 transition"
+            />
+          </div>
 
+          <Formik
+            key={isCreateVisible ? "create-task-open" : "create-task-closed"}
+            initialValues={{
+              owner: currentOwner,
+              associated_lead: leadName || "Lead",
+              subject: `Meeting: ${leadName || "Lead"}`,
+              location: "online",
+              description: "",
+              start_at: defaultStart,
+              end_at: defaultEnd,
+            }}
+            validationSchema={Yup.object({
+              location: Yup.string().trim().required("Location is required"),
+              description: Yup.string().trim().optional(),
+              start_at: Yup.date().required("Start date is required"),
+              end_at: Yup.date().required("End date is required"),
+            })}
+            onSubmit={async (values, { setSubmitting }) => {
+              const activeAgentId =
+                agentId ||
+                (storage.getUserRole() === "Agent" ? storage.getUserId() : "") ||
+                null;
+              const payload: any = {
+                lead_id: leadId,
+                details: values.description || "",
+                subject: values.subject || "",
+                task_type: "followup",
+                start_at: values.start_at ? values.start_at.toISOString() : undefined,
+                end_at: values.end_at ? values.end_at.toISOString() : undefined,
+                start_at_text: values.start_at ? formatDateTime(values.start_at) : "",
+                end_at_text: values.end_at ? formatDateTime(values.end_at) : "",
+                location: values.location,
+              };
+              if (activeAgentId) {
+                payload.assigned_agent_id = activeAgentId;
+              }
+              try {
+                await AxiosProvider.post("/leads/tasks/create", payload);
+                toast.success("Lead task created successfully");
+                setHitApi((prev) => !prev);
+                closeCreateDrawer();
+              } catch (err: any) {
+                toast.error(err?.response?.data?.message || err?.response?.data?.msg || "Lead task could not be created");
+              } finally {
+                setSubmitting(false);
+              }
+            }}
+          >
+            {({
+              values,
+              handleChange,
+              handleSubmit,
+              setFieldValue,
+              isSubmitting,
+            }) => (
+              <form onSubmit={handleSubmit} noValidate className="space-y-4">
+                {/* Row 1: Owner & Associated Lead */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-white font-medium text-sm mb-1">Owner</p>
+                    <input
+                      type="text"
+                      value={values.owner}
+                      readOnly
+                      className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium text-sm mb-1">Associated Lead</p>
+                    <input
+                      type="text"
+                      value={values.associated_lead}
+                      readOnly
+                      className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+
+                {/* Row 2: Subject & Location */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-white font-medium text-sm mb-1">Subject</p>
+                    <input
+                      type="text"
+                      name="subject"
+                      value={values.subject}
+                      onChange={handleChange}
+                      placeholder="Meeting: Name"
+                      className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium text-sm mb-1">Location</p>
+                    <input
+                      type="text"
+                      name="location"
+                      value={values.location}
+                      onChange={handleChange}
+                      placeholder="online"
+                      className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Schedule Header */}
+                <div className="pt-1">
+                  <p className="text-white font-medium text-sm">Schedule</p>
+                </div>
+
+                {/* From Date */}
+                <div>
+                  <p className="text-white font-medium text-sm mb-1">From</p>
+                  <DatePicker
+                    selected={values.start_at}
+                    onChange={(date: Date | null) => {
+                      if (date) setFieldValue("start_at", date);
+                    }}
+                    showTimeSelect
+                    timeFormat="h:mma"
+                    timeIntervals={15}
+                    dateFormat="MM-dd-yyyy h:mma"
+                    className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
+                  />
+                </div>
+
+                {/* To Date */}
+                <div>
+                  <p className="text-white font-medium text-sm mb-1">To</p>
+                  <DatePicker
+                    selected={values.end_at}
+                    onChange={(date: Date | null) => {
+                      if (date) setFieldValue("end_at", date);
+                    }}
+                    showTimeSelect
+                    timeFormat="h:mma"
+                    timeIntervals={15}
+                    dateFormat="MM-dd-yyyy h:mma"
+                    className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
+                  />
+                </div>
+
+                {/* Description (optional) */}
+                <div>
+                  <p className="text-white font-medium text-sm mb-1">Description (optional)</p>
+                  <textarea
+                    name="description"
+                    value={values.description}
+                    onChange={handleChange}
+                    rows={4}
+                    placeholder="Add description (optional)"
+                    className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white resize-y"
+                  />
+                </div>
+
+                {/* Single Full-width Blue Button */}
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full py-3 bg-primary-600 hover:bg-primary-700 rounded text-white text-base font-medium transition cursor-pointer disabled:opacity-50"
+                  >
+                    {isSubmitting ? "Creating..." : "Create Task Activity"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </Formik>
+        </div>
+      </div>
+
+      {/* 3. EDIT TASK RIGHT-SIDE FLYOUT */}
+      <div
+        className={`fixed inset-0 bg-black/60 backdrop-blur-[1px] z-40 transition-opacity duration-300 ease-in-out cursor-pointer ${
+          editingTask ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setEditingTask(null)}
+      />
+      <div
+        className={`fixed top-0 right-0 z-50 h-screen overflow-y-auto bg-[#141414] w-[400px] sm:w-[500px] md:w-[550px] shadow-2xl border-l border-gray-800 transform transition-transform duration-300 ease-in-out ${
+          editingTask ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="w-full min-h-auto p-6 sm:p-8 text-white">
+          <div className="flex justify-between items-center mb-6">
+            <p className="text-primary-500 text-[26px] font-bold leading-9">
+              Update Task
+            </p>
+            <IoCloseOutline
+              onClick={() => setEditingTask(null)}
+              className="h-8 w-8 border border-gray-700 text-white rounded cursor-pointer hover:bg-gray-800 transition"
+            />
+          </div>
+
+          {editingTask && (
             <Formik
+              enableReinitialize
               initialValues={{
-                owner: agentId || (storage.getUserRole() === "Agent" ? storage.getUserId() : "") || "",
-                associated_lead: leadName || "",
-                subject: `Follow Up: ${leadName}`,
-                location: "online",
-                description: "",
-                start_at: defaultStart,
-                end_at: defaultEnd,
+                owner: editingTask?.owner_name || currentOwner,
+                associated_lead: editingTask?.associated_lead?.full_name || leadName || "Lead",
+                subject: editingTask?.subject || `Meeting: ${leadName || "Lead"}`,
+                location: editingTask?.location || "online",
+                description: editingTask?.details || "",
+                start_at: editingTask?.start_at ? new Date(editingTask.start_at) : defaultStart,
+                end_at: editingTask?.end_at ? new Date(editingTask.end_at) : defaultEnd,
               }}
               validationSchema={Yup.object({
                 location: Yup.string().trim().required("Location is required"),
@@ -256,27 +483,22 @@ export default function LeadTasksTab({
                 end_at: Yup.date().required("End date is required"),
               })}
               onSubmit={async (values, { setSubmitting }) => {
-                const activeAgentId =
-                  agentId ||
-                  (storage.getUserRole() === "Agent" ? storage.getUserId() : "") ||
-                  "";
                 const payload = {
-                  lead_id: leadId,
-                  assigned_agent_id: activeAgentId,
+                  task_id: editingTask.id,
+                  location: values.location,
                   details: values.description || "",
-                  subject: values.subject || "",
-                  task_type: "followup",
+                  start_at: values.start_at ? values.start_at.toISOString() : undefined,
+                  end_at: values.end_at ? values.end_at.toISOString() : undefined,
                   start_at_text: values.start_at ? formatDateTime(values.start_at) : "",
                   end_at_text: values.end_at ? formatDateTime(values.end_at) : "",
-                  location: values.location,
                 };
                 try {
-                  await AxiosProvider.post("/leads/tasks/create", payload);
-                  toast.success("Lead task created successfully");
+                  await AxiosProvider.post("/leads/tasks/edit", payload);
+                  toast.success("Lead task updated successfully");
                   setHitApi((prev) => !prev);
-                  if (onCloseCreate) onCloseCreate();
-                } catch (error: any) {
-                  toast.error("Lead task could not be created");
+                  setEditingTask(null);
+                } catch (err: any) {
+                  toast.error(err?.response?.data?.message || err?.response?.data?.msg || "Lead task could not be updated");
                 } finally {
                   setSubmitting(false);
                 }
@@ -284,23 +506,21 @@ export default function LeadTasksTab({
             >
               {({
                 values,
-                errors,
-                touched,
                 handleChange,
                 handleSubmit,
-                setFieldTouched,
                 setFieldValue,
                 isSubmitting,
               }) => (
-                <form onSubmit={handleSubmit} noValidate>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <form onSubmit={handleSubmit} noValidate className="space-y-4">
+                  {/* Row 1: Owner & Associated Lead */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-white font-medium text-sm mb-1">Owner</p>
                       <input
                         type="text"
-                        value={agentName || (storage.getUserRole() === "Agent" ? storage.getUserName() : "") || "Unassigned"}
+                        value={values.owner}
                         readOnly
-                        className="w-full border border-gray-700 rounded text-sm p-3 bg-black/60 text-white cursor-not-allowed"
+                        className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white cursor-not-allowed"
                       />
                     </div>
                     <div>
@@ -309,9 +529,13 @@ export default function LeadTasksTab({
                         type="text"
                         value={values.associated_lead}
                         readOnly
-                        className="w-full border border-gray-700 rounded text-sm p-3 bg-black/60 text-white cursor-not-allowed"
+                        className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white cursor-not-allowed"
                       />
                     </div>
+                  </div>
+
+                  {/* Row 2: Subject & Location */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-white font-medium text-sm mb-1">Subject</p>
                       <input
@@ -329,220 +553,77 @@ export default function LeadTasksTab({
                         name="location"
                         value={values.location}
                         onChange={handleChange}
-                        onBlur={() => setFieldTouched("location", true)}
-                        placeholder="Enter location"
                         className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
-                      />
-                      {touched.location && errors.location && (
-                        <p className="text-red-400 text-xs mt-1">{String(errors.location)}</p>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-white font-medium text-sm mb-1">From Date & Time</p>
-                      <DatePicker
-                        selected={values.start_at}
-                        onChange={(date: Date | null) => {
-                          if (date) {
-                            setFieldValue("start_at", date);
-                            setFieldValue("end_at", new Date(date.getTime() + 15 * 60000));
-                          }
-                        }}
-                        showTimeSelect
-                        timeFormat="h:mma"
-                        timeIntervals={15}
-                        dateFormat="MM-dd-yyyy h:mma"
-                        className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
-                      />
-                    </div>
-                    <div>
-                      <p className="text-white font-medium text-sm mb-1">To Date & Time</p>
-                      <DatePicker
-                        selected={values.end_at}
-                        onChange={(date: Date | null) => {
-                          if (date) setFieldValue("end_at", date);
-                        }}
-                        showTimeSelect
-                        timeFormat="h:mma"
-                        timeIntervals={15}
-                        dateFormat="MM-dd-yyyy h:mma"
-                        className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <p className="text-white font-medium text-sm mb-1">Description (Optional)</p>
-                      <textarea
-                        name="description"
-                        value={values.description}
-                        onChange={handleChange}
-                        rows={3}
-                        placeholder="Add task details..."
-                        className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white resize-y"
                       />
                     </div>
                   </div>
 
-                  <div className="mt-6 flex justify-end gap-3">
-                    <button
-                      type="button"
-                      onClick={onCloseCreate}
-                      className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 rounded text-white text-sm font-medium transition cursor-pointer"
-                    >
-                      Cancel
-                    </button>
+                  {/* Schedule Header */}
+                  <div className="pt-1">
+                    <p className="text-white font-medium text-sm">Schedule</p>
+                  </div>
+
+                  {/* From Date */}
+                  <div>
+                    <p className="text-white font-medium text-sm mb-1">From</p>
+                    <DatePicker
+                      selected={values.start_at}
+                      onChange={(date: Date | null) => {
+                        if (date) setFieldValue("start_at", date);
+                      }}
+                      showTimeSelect
+                      timeFormat="h:mma"
+                      timeIntervals={15}
+                      dateFormat="MM-dd-yyyy h:mma"
+                      className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
+                    />
+                  </div>
+
+                  {/* To Date */}
+                  <div>
+                    <p className="text-white font-medium text-sm mb-1">To</p>
+                    <DatePicker
+                      selected={values.end_at}
+                      onChange={(date: Date | null) => {
+                        if (date) setFieldValue("end_at", date);
+                      }}
+                      showTimeSelect
+                      timeFormat="h:mma"
+                      timeIntervals={15}
+                      dateFormat="MM-dd-yyyy h:mma"
+                      className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
+                    />
+                  </div>
+
+                  {/* Description (optional) */}
+                  <div>
+                    <p className="text-white font-medium text-sm mb-1">Description (optional)</p>
+                    <textarea
+                      name="description"
+                      value={values.description}
+                      onChange={handleChange}
+                      rows={4}
+                      placeholder="Add description (optional)"
+                      className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white resize-y"
+                    />
+                  </div>
+
+                  {/* Single Full-width Blue Button */}
+                  <div className="pt-2">
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 rounded text-white text-sm font-medium transition cursor-pointer disabled:opacity-50"
+                      className="w-full py-3 bg-primary-600 hover:bg-primary-700 rounded text-white text-base font-medium transition cursor-pointer disabled:opacity-50"
                     >
-                      {isSubmitting ? "Creating..." : "Create Task"}
+                      {isSubmitting ? "Updating..." : "Save Changes"}
                     </button>
                   </div>
                 </form>
               )}
             </Formik>
-          </div>
+          )}
         </div>
-      )}
-
-      {/* 3. EDIT TASK MODAL / FLYOUT */}
-      {editingTask && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-[#1E1E1E] border border-gray-700 rounded-lg max-w-2xl w-full p-6 text-white shadow-2xl relative my-8">
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-primary-500 text-2xl font-bold">
-                Update Task
-              </p>
-              <IoCloseOutline
-                onClick={() => setEditingTask(null)}
-                className="h-8 w-8 border border-gray-700 text-white rounded cursor-pointer hover:bg-gray-800 transition"
-              />
-            </div>
-            <div className="w-full border-b border-gray-700 mb-6"></div>
-
-            <Formik
-              enableReinitialize
-              initialValues={{
-                location: editingTask?.location || "",
-                description: editingTask?.details || "",
-                start_at: editingTask?.start_at ? new Date(editingTask.start_at) : defaultStart,
-                end_at: editingTask?.end_at ? new Date(editingTask.end_at) : defaultEnd,
-              }}
-              validationSchema={Yup.object({
-                location: Yup.string().trim().required("Location is required"),
-                description: Yup.string().trim().optional(),
-                start_at: Yup.date().required("Start date is required"),
-                end_at: Yup.date().required("End date is required"),
-              })}
-              onSubmit={async (values, { setSubmitting }) => {
-                const payload = {
-                  task_id: editingTask.id,
-                  location: values.location,
-                  details: values.description || "",
-                  start_at_text: values.start_at ? formatDateTime(values.start_at) : "",
-                  end_at_text: values.end_at ? formatDateTime(values.end_at) : "",
-                };
-                try {
-                  await AxiosProvider.post("/leads/tasks/edit", payload);
-                  toast.success("Lead task updated successfully");
-                  setHitApi((prev) => !prev);
-                  setEditingTask(null);
-                } catch (error: any) {
-                  toast.error("Lead task could not be updated");
-                } finally {
-                  setSubmitting(false);
-                }
-              }}
-            >
-              {({
-                values,
-                errors,
-                touched,
-                handleChange,
-                handleSubmit,
-                setFieldTouched,
-                setFieldValue,
-                isSubmitting,
-              }) => (
-                <form onSubmit={handleSubmit} noValidate>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <p className="text-white font-medium text-sm mb-1">Location</p>
-                      <input
-                        type="text"
-                        name="location"
-                        value={values.location}
-                        onChange={handleChange}
-                        onBlur={() => setFieldTouched("location", true)}
-                        placeholder="Enter location"
-                        className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
-                      />
-                      {touched.location && errors.location && (
-                        <p className="text-red-400 text-xs mt-1">{String(errors.location)}</p>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-white font-medium text-sm mb-1">Start Date & Time</p>
-                      <DatePicker
-                        selected={values.start_at}
-                        onChange={(date: Date | null) => {
-                          if (date) setFieldValue("start_at", date);
-                        }}
-                        showTimeSelect
-                        timeFormat="h:mma"
-                        timeIntervals={15}
-                        dateFormat="MM-dd-yyyy h:mma"
-                        className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
-                      />
-                    </div>
-                    <div>
-                      <p className="text-white font-medium text-sm mb-1">End Date & Time</p>
-                      <DatePicker
-                        selected={values.end_at}
-                        onChange={(date: Date | null) => {
-                          if (date) setFieldValue("end_at", date);
-                        }}
-                        showTimeSelect
-                        timeFormat="h:mma"
-                        timeIntervals={15}
-                        dateFormat="MM-dd-yyyy h:mma"
-                        className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <p className="text-white font-medium text-sm mb-1">Details (Optional)</p>
-                      <textarea
-                        name="description"
-                        value={values.description}
-                        onChange={handleChange}
-                        rows={3}
-                        placeholder="Add task details..."
-                        className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white resize-y"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-6 flex justify-end gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setEditingTask(null)}
-                      className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 rounded text-white text-sm font-medium transition cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 rounded text-white text-sm font-medium transition cursor-pointer disabled:opacity-50"
-                    >
-                      {isSubmitting ? "Updating..." : "Update Task"}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </Formik>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

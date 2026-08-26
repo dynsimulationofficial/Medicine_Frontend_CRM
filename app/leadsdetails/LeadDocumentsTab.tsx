@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { MdEdit } from "react-icons/md";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoCloseOutline } from "react-icons/io5";
+import { FiPlusCircle } from "react-icons/fi";
 import Swal from "sweetalert2";
 
 export interface DocumentData {
@@ -48,6 +49,10 @@ export default function LeadDocumentsTab({
   const [docs, setDocs] = useState<DocumentData[]>([]);
   const [editingDoc, setEditingDoc] = useState<DocumentData | null>(null);
   const [editNotes, setEditNotes] = useState<string>("");
+  const [editFile, setEditFile] = useState<File | null>(null);
+  const [isLocalCreateOpen, setIsLocalCreateOpen] = useState(false);
+
+  const isCreateVisible = isCreateOpen || isLocalCreateOpen;
 
   // Create form state
   const [createNotes, setCreateNotes] = useState<string>("");
@@ -87,8 +92,7 @@ export default function LeadDocumentsTab({
       } else {
         toast.error("Download URL not available");
       }
-    } catch (e) {
-      console.error("Download error:", e);
+    } catch {
       toast.error("Failed to download document");
     }
   };
@@ -102,24 +106,21 @@ export default function LeadDocumentsTab({
       color: "#ffffff",
       iconColor: "#eab308",
       showCancelButton: true,
-      confirmButtonText: "Yes, Delete",
-      cancelButtonText: "Cancel",
       confirmButtonColor: "#ef4444",
       cancelButtonColor: "#374151",
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel",
       customClass: {
         popup: "border border-gray-700 rounded-2xl shadow-2xl",
       },
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await AxiosProvider.post("/leads/documents/soft-delete", {
-            id: doc.id,
-          });
-          toast.success("Document successfully deleted");
+          await AxiosProvider.post("/leads/documents/delete", { id: doc.id });
+          toast.success("Document deleted successfully");
           setHitApi((prev) => !prev);
           fetchDocs();
-        } catch (error) {
-          console.error("Error deleting document:", error);
+        } catch {
           toast.error("Failed to delete document");
         }
       }
@@ -148,9 +149,8 @@ export default function LeadDocumentsTab({
       setCreateFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       setHitApi((prev) => !prev);
-      if (onCloseCreate) onCloseCreate();
-    } catch (e) {
-      console.error("Upload error:", e);
+      closeCreateDrawer();
+    } catch {
       toast.error("Failed to upload document");
     } finally {
       setIsUploading(false);
@@ -162,22 +162,53 @@ export default function LeadDocumentsTab({
     if (!editingDoc) return;
 
     try {
-      await AxiosProvider.post("/leads/document/notes", {
-        id: editingDoc.id,
-        notes: editNotes,
-      });
-      toast.success("Document notes updated successfully");
+      if (editFile) {
+        const fd = new FormData();
+        fd.append("lead_id", leadId);
+        fd.append("file", editFile);
+        if (editNotes.trim()) fd.append("notes", editNotes.trim());
+
+        await AxiosProvider.post("/leads/documents/upload", fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        try {
+          await AxiosProvider.post("/leads/documents/delete", { id: editingDoc.id });
+        } catch {}
+        toast.success("Document updated successfully");
+      } else {
+        await AxiosProvider.post("/leads/document/notes", {
+          id: editingDoc.id,
+          notes: editNotes,
+        });
+        toast.success("Document notes updated successfully");
+      }
       setEditingDoc(null);
+      setEditFile(null);
       setHitApi((prev) => !prev);
       fetchDocs();
-    } catch (e) {
-      console.error("Update notes error:", e);
-      toast.error("Failed to update document notes");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || err?.response?.data?.msg || "Failed to update document");
     }
+  };
+
+  const closeCreateDrawer = () => {
+    setIsLocalCreateOpen(false);
+    if (onCloseCreate) onCloseCreate();
   };
 
   return (
     <div className="w-full">
+      {/* Top Upload Button */}
+      <div className="flex justify-end items-center mb-4">
+        <button
+          type="button"
+          onClick={() => setIsLocalCreateOpen(true)}
+          className="flex items-center gap-2 py-2 px-4 rounded bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium cursor-pointer transition shadow"
+        >
+          <FiPlusCircle className="w-4 h-4" /> Upload Document
+        </button>
+      </div>
+
       {/* 1. DOCUMENTS TABLE */}
       {!docs || docs.length === 0 ? (
         <p className="text-center text-gray-400 py-12 text-base font-medium">
@@ -255,45 +286,124 @@ export default function LeadDocumentsTab({
         </div>
       )}
 
-      {/* 2. CREATE / UPLOAD DOCUMENT MODAL */}
-      {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-[#1E1E1E] border border-gray-700 rounded-lg max-w-xl w-full p-6 text-white shadow-2xl relative my-8">
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-primary-500 text-2xl font-bold">
-                Upload Document
+      {/* 2. UPLOAD DOCUMENT RIGHT-SIDE FLYOUT */}
+      <div
+        className={`fixed inset-0 bg-black/60 backdrop-blur-[1px] z-40 transition-opacity duration-300 ease-in-out cursor-pointer ${
+          isCreateVisible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={closeCreateDrawer}
+      />
+      <div
+        className={`fixed top-0 right-0 z-50 h-screen overflow-y-auto bg-[#141414] w-[400px] sm:w-[500px] md:w-[600px] shadow-2xl border-l border-gray-800 transform transition-transform duration-300 ease-in-out ${
+          isCreateVisible ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="w-full min-h-auto p-6 sm:p-8 text-white">
+          <div className="flex justify-between items-center mb-6">
+            <p className="text-primary-600 text-2xl font-bold leading-9">
+              Upload Document
+            </p>
+            <IoCloseOutline
+              onClick={closeCreateDrawer}
+              className="h-8 w-8 border border-gray-700 text-white rounded cursor-pointer hover:bg-gray-800 transition"
+            />
+          </div>
+          <div className="w-full border-b border-gray-700 mb-6"></div>
+
+          <form onSubmit={handleCreateSubmit} className="space-y-5">
+            <div>
+              <p className="text-white font-medium text-sm mb-1">
+                Document Notes / Name
               </p>
-              <IoCloseOutline
-                onClick={onCloseCreate}
-                className="h-8 w-8 border border-gray-700 text-white rounded cursor-pointer hover:bg-gray-800 transition"
+              <input
+                type="text"
+                value={createNotes}
+                onChange={(e) => setCreateNotes(e.target.value)}
+                placeholder="Enter document notes or title"
+                className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white outline-none focus:border-primary-500"
               />
             </div>
-            <div className="w-full border-b border-gray-700 mb-6"></div>
 
-            <form onSubmit={handleCreateSubmit} className="space-y-4">
+            <div>
+              <p className="text-white font-medium text-sm mb-1">
+                Select File <span className="text-red-400">*</span>
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={(e) => setCreateFile(e.target.files?.[0] || null)}
+                accept=".jpeg,.jpg,.png,.webp,.pdf,.xls,.xlsx,.csv"
+                required
+                className="w-full border border-gray-700 rounded text-sm p-2.5 bg-black text-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-primary-600 file:text-white hover:file:bg-primary-700 cursor-pointer"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Allowed: JPEG, PNG, WEBP, PDF, XLS, XLSX, CSV
+              </p>
+            </div>
+
+            <div className="mt-8 flex gap-3 pt-4 border-t border-gray-700">
+              <button
+                type="button"
+                onClick={closeCreateDrawer}
+                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded text-white text-sm font-medium transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isUploading}
+                className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 rounded text-white text-sm font-medium transition cursor-pointer disabled:opacity-50"
+              >
+                {isUploading ? "Uploading..." : "Upload Document"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* 3. EDIT DOCUMENT NOTES RIGHT-SIDE FLYOUT */}
+      <div
+        className={`fixed inset-0 bg-black/60 backdrop-blur-[1px] z-40 transition-opacity duration-300 ease-in-out cursor-pointer ${
+          editingDoc ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setEditingDoc(null)}
+      />
+      <div
+        className={`fixed top-0 right-0 z-50 h-screen overflow-y-auto bg-[#141414] w-[400px] sm:w-[500px] md:w-[600px] shadow-2xl border-l border-gray-800 transform transition-transform duration-300 ease-in-out ${
+          editingDoc ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="w-full min-h-auto p-6 sm:p-8 text-white">
+          <div className="flex justify-between items-center mb-6">
+            <p className="text-primary-600 text-2xl font-bold leading-9">
+              Edit Document
+            </p>
+            <IoCloseOutline
+              onClick={() => setEditingDoc(null)}
+              className="h-8 w-8 border border-gray-700 text-white rounded cursor-pointer hover:bg-gray-800 transition"
+            />
+          </div>
+          <div className="w-full border-b border-gray-700 mb-6"></div>
+
+          {editingDoc && (
+            <form onSubmit={handleEditSubmit} className="space-y-5">
               <div>
-                <p className="text-white font-medium text-sm mb-1">
-                  Document Notes / Name
-                </p>
+                <p className="text-white font-medium text-sm mb-1">Current File</p>
                 <input
                   type="text"
-                  value={createNotes}
-                  onChange={(e) => setCreateNotes(e.target.value)}
-                  placeholder="Enter document notes or title"
-                  className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white outline-none"
+                  value={editingDoc.file_name}
+                  readOnly
+                  className="w-full border border-gray-700 rounded text-sm p-3 bg-black/60 text-white cursor-not-allowed"
                 />
               </div>
 
               <div>
                 <p className="text-white font-medium text-sm mb-1">
-                  Select File <span className="text-red-400">*</span>
+                  Choose New File <span className="text-gray-400 font-normal text-xs">(optional - to replace existing file)</span>
                 </p>
                 <input
-                  ref={fileInputRef}
                   type="file"
-                  onChange={(e) => setCreateFile(e.target.files?.[0] || null)}
-                  accept=".jpeg,.jpg,.png,.webp,.pdf,.xls,.xlsx,.csv"
-                  required
+                  onChange={(e) => setEditFile(e.target.files?.[0] || null)}
                   className="w-full border border-gray-700 rounded text-sm p-2.5 bg-black text-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-primary-600 file:text-white hover:file:bg-primary-700 cursor-pointer"
                 />
                 <p className="text-xs text-gray-400 mt-1">
@@ -301,83 +411,39 @@ export default function LeadDocumentsTab({
                 </p>
               </div>
 
-              <div className="mt-6 flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={onCloseCreate}
-                  className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 rounded text-white text-sm font-medium transition cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isUploading}
-                  className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 rounded text-white text-sm font-medium transition cursor-pointer disabled:opacity-50"
-                >
-                  {isUploading ? "Uploading..." : "Upload Document"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* 3. EDIT DOCUMENT NOTES MODAL */}
-      {editingDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-[#1E1E1E] border border-gray-700 rounded-lg max-w-xl w-full p-6 text-white shadow-2xl relative my-8">
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-primary-500 text-2xl font-bold">
-                Edit Document Notes
-              </p>
-              <IoCloseOutline
-                onClick={() => setEditingDoc(null)}
-                className="h-8 w-8 border border-gray-700 text-white rounded cursor-pointer hover:bg-gray-800 transition"
-              />
-            </div>
-            <div className="w-full border-b border-gray-700 mb-6"></div>
-
-            <form onSubmit={handleEditSubmit} className="space-y-4">
               <div>
-                <p className="text-white font-medium text-sm mb-1">File Name</p>
-                <input
-                  type="text"
-                  value={editingDoc.file_name}
-                  readOnly
-                  className="w-full border border-gray-700 rounded text-sm p-3 bg-black/60 text-gray-300 cursor-not-allowed"
-                />
-              </div>
-
-              <div>
-                <p className="text-white font-medium text-sm mb-1">Notes</p>
+                <p className="text-white font-medium text-sm mb-1">Document Notes</p>
                 <textarea
+                  rows={4}
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
-                  rows={4}
-                  placeholder="Update notes..."
-                  className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white outline-none resize-y"
+                  placeholder="Enter notes..."
+                  className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white outline-none focus:border-primary-500 resize-none"
                 />
               </div>
 
-              <div className="mt-6 flex justify-end gap-3 pt-2">
+              <div className="mt-8 flex gap-3 pt-4 border-t border-gray-700">
                 <button
                   type="button"
-                  onClick={() => setEditingDoc(null)}
-                  className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 rounded text-white text-sm font-medium transition cursor-pointer"
+                  onClick={() => {
+                    setEditingDoc(null);
+                    setEditFile(null);
+                  }}
+                  className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded text-white text-sm font-medium transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 rounded text-white text-sm font-medium transition cursor-pointer"
+                  className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 rounded text-white text-sm font-medium transition cursor-pointer"
                 >
-                  Save Notes
+                  Save Changes
                 </button>
               </div>
             </form>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

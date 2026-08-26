@@ -54,6 +54,7 @@ export default function LeadOrdersTab({
 }: Props) {
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [editingOrder, setEditingOrder] = useState<OrderData | null>(null);
+  const [isLocalCreateOpen, setIsLocalCreateOpen] = useState(false);
 
   // Form state for Create / Edit
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
@@ -84,18 +85,6 @@ export default function LeadOrdersTab({
     if (leadId) fetchOrders();
   }, [leadId, hitApi]);
 
-  // When opening Create modal
-  useEffect(() => {
-    if (isCreateOpen) {
-      setOrderItems([{ medicine_name: "", unit: "Strip", quantity: 1, rate: 0 }]);
-      setPaymentStatus("Pending");
-      setPaymentMode("COD");
-      setOrderStatus("Pending");
-      setOrderNotes("");
-    }
-  }, [isCreateOpen]);
-
-  // When opening Edit modal
   const openEdit = (ord: OrderData) => {
     setEditingOrder(ord);
     setPaymentStatus(ord.payment_status || "Pending");
@@ -123,17 +112,15 @@ export default function LeadOrdersTab({
     newPaymentStatus?: string
   ) => {
     try {
-      await AxiosProvider.post("/leads/orders/status", {
-        id: orderId,
-        lead_id: leadId,
+      await AxiosProvider.post("/leads/orders/update-status", {
+        order_id: orderId,
         order_status: newOrderStatus,
         payment_status: newPaymentStatus,
       });
       toast.success("Order status updated");
       setHitApi((prev) => !prev);
       fetchOrders();
-    } catch (e) {
-      console.error("Error updating order status:", e);
+    } catch {
       toast.error("Failed to update status");
     }
   };
@@ -147,43 +134,25 @@ export default function LeadOrdersTab({
       color: "#ffffff",
       iconColor: "#eab308",
       showCancelButton: true,
-      confirmButtonText: "Yes, Delete",
-      cancelButtonText: "Cancel",
       confirmButtonColor: "#ef4444",
       cancelButtonColor: "#374151",
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel",
       customClass: {
         popup: "border border-gray-700 rounded-2xl shadow-2xl",
       },
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await AxiosProvider.post("/leads/orders/delete", {
-            id: ord.id,
-            lead_id: leadId,
-          });
-          toast.success(`Order ${ord.order_number} deleted successfully`);
+          await AxiosProvider.post("/leads/orders/delete", { id: ord.id });
+          toast.success("Order deleted successfully");
           setHitApi((prev) => !prev);
           fetchOrders();
-        } catch (error) {
-          console.error("Error deleting order:", error);
+        } catch {
           toast.error("Failed to delete order");
         }
       }
     });
-  };
-
-  // Autocomplete medicine fetch
-  const fetchSuggestions = async (q: string) => {
-    if (!q || q.length < 2) {
-      setSuggestions([]);
-      return;
-    }
-    try {
-      const res = await AxiosProvider.get(`/leads/medicines/suggestions?q=${encodeURIComponent(q)}`);
-      setSuggestions(res.data?.data?.suggestions || []);
-    } catch {
-      setSuggestions([]);
-    }
   };
 
   const handleItemChange = (index: number, field: keyof OrderItem, val: any) => {
@@ -192,60 +161,74 @@ export default function LeadOrdersTab({
     setOrderItems(updated);
 
     if (field === "medicine_name") {
-      fetchSuggestions(val);
-      setActiveSugIndex(index);
+      fetchSuggestions(val, index);
     }
   };
 
-  const handleSelectSuggestion = (index: number, sug: any) => {
+  const fetchSuggestions = async (query: string, index: number) => {
+    try {
+      const res = await AxiosProvider.get(
+        `/leads/medicines/suggestions?q=${encodeURIComponent(query)}`
+      );
+      if (res.data?.success) {
+        setSuggestions(res.data.data?.suggestions || []);
+        setActiveSugIndex(index);
+      }
+    } catch {
+      setSuggestions([]);
+    }
+  };
+
+  const selectSuggestion = (index: number, item: any) => {
     const updated = [...orderItems];
     updated[index] = {
       ...updated[index],
-      medicine_name: sug.medicine_name,
-      unit: sug.unit || updated[index].unit || "Strip",
-      rate: sug.rate !== undefined ? sug.rate : updated[index].rate,
+      medicine_name: item.medicine_name,
+      unit: item.unit || "Strip",
+      rate: item.rate != null ? Number(item.rate) : updated[index].rate,
     };
     setOrderItems(updated);
     setActiveSugIndex(null);
   };
 
-  const handleAddItem = () => {
-    setOrderItems([...orderItems, { medicine_name: "", unit: "Strip", quantity: 1, rate: 0 }]);
+  const addItemRow = () => {
+    setOrderItems([
+      ...orderItems,
+      { medicine_name: "", unit: "Strip", quantity: 1, rate: 0 },
+    ]);
   };
 
-  const handleRemoveItem = (index: number) => {
+  const removeItemRow = (index: number) => {
     if (orderItems.length === 1) {
-      setOrderItems([{ medicine_name: "", unit: "Strip", quantity: 1, rate: 0 }]);
+      toast.warning("At least one medicine item is required");
       return;
     }
     setOrderItems(orderItems.filter((_, i) => i !== index));
   };
 
-  const calculateGrandTotal = () => {
-    return orderItems.reduce((acc, curr) => {
-      const q = Number(curr.quantity) || 0;
-      const r = Number(curr.rate) || 0;
-      return acc + q * r;
-    }, 0);
-  };
+  const grandTotal = orderItems.reduce((sum, it) => {
+    const q = Number(it.quantity) || 0;
+    const r = Number(it.rate) || 0;
+    return sum + q * r;
+  }, 0);
 
   const handleSaveOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    const validItems = orderItems.filter((i) => i.medicine_name.trim() !== "");
-    if (!validItems.length) {
-      toast.error("Please add at least one medicine item");
+    const validItems = orderItems.filter((it) => it.medicine_name.trim() !== "");
+    if (validItems.length === 0) {
+      toast.error("Please enter at least one valid medicine name");
       return;
     }
 
     setIsSaving(true);
     try {
       const payload = {
-        id: editingOrder?.id || undefined,
+        order_id: editingOrder?.id || undefined,
         lead_id: leadId,
+        order_status: orderStatus,
         payment_status: paymentStatus,
         payment_mode: paymentMode,
-        order_status: orderStatus,
-        order_notes: orderNotes.trim() || undefined,
+        order_notes: orderNotes,
         items: validItems.map((it) => ({
           id: it.id || undefined,
           medicine_name: it.medicine_name.trim(),
@@ -259,24 +242,42 @@ export default function LeadOrdersTab({
       toast.success(res.data?.msg || "Order saved successfully");
       setHitApi((prev) => !prev);
       fetchOrders();
-      setEditingOrder(null);
-      if (onCloseCreate) onCloseCreate();
+      handleCloseModal();
     } catch (e: any) {
-      console.error("Save order error:", e);
       toast.error(e?.response?.data?.msg || "Failed to save order");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const isModalOpen = isCreateOpen || !!editingOrder;
+  const isModalOpen = isCreateOpen || isLocalCreateOpen || !!editingOrder;
   const handleCloseModal = () => {
     setEditingOrder(null);
+    setIsLocalCreateOpen(false);
     if (onCloseCreate) onCloseCreate();
   };
 
   return (
     <div className="w-full">
+      {/* Top Add Order Button */}
+      <div className="flex justify-end items-center mb-4">
+        <button
+          type="button"
+          onClick={() => {
+            setEditingOrder(null);
+            setOrderItems([{ medicine_name: "", unit: "Strip", quantity: 1, rate: 0 }]);
+            setPaymentStatus("Pending");
+            setPaymentMode("COD");
+            setOrderStatus("Pending");
+            setOrderNotes("");
+            setIsLocalCreateOpen(true);
+          }}
+          className="flex items-center gap-2 py-2 px-4 rounded bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium cursor-pointer transition shadow"
+        >
+          <FaPills className="w-4 h-4" /> Add Order
+        </button>
+      </div>
+
       {/* 1. ORDERS TABLE */}
       {!orders || orders.length === 0 ? (
         <p className="text-center text-gray-400 py-12 text-base font-medium">
@@ -325,34 +326,32 @@ export default function LeadOrdersTab({
                     {Number(ord.grand_total).toFixed(2)}
                   </td>
                   <td className="py-3 px-4 text-center">
-                    <select
-                      value={ord.order_status || "Pending"}
-                      onChange={(e) =>
-                        handleQuickUpdateStatus(ord.id, e.target.value, ord.payment_status)
-                      }
-                      className="bg-black/60 border border-gray-600 text-xs text-white rounded px-2 py-1 outline-none cursor-pointer"
+                    <span
+                      className={`px-2.5 py-0.5 rounded text-xs font-semibold border ${
+                        ord.order_status === "Delivered"
+                          ? "bg-green-900/40 text-green-300 border-green-700"
+                          : ord.order_status === "Shipped" || ord.order_status === "Confirmed"
+                          ? "bg-blue-900/40 text-blue-300 border-blue-700"
+                          : ord.order_status === "Cancelled"
+                          ? "bg-red-900/40 text-red-300 border-red-700"
+                          : "bg-yellow-900/40 text-yellow-300 border-yellow-700"
+                      }`}
                     >
-                      <option value="Pending">Pending</option>
-                      <option value="Processing">Processing</option>
-                      <option value="Confirmed">Confirmed</option>
-                      <option value="Shipped">Shipped</option>
-                      <option value="Delivered">Delivered</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
+                      {ord.order_status || "Pending"}
+                    </span>
                   </td>
                   <td className="py-3 px-4 text-center">
-                    <select
-                      value={ord.payment_status || "Pending"}
-                      onChange={(e) =>
-                        handleQuickUpdateStatus(ord.id, ord.order_status, e.target.value)
-                      }
-                      className="bg-black/60 border border-gray-600 text-xs text-white rounded px-2 py-1 outline-none cursor-pointer"
+                    <span
+                      className={`px-2 py-0.5 rounded text-xs font-semibold border ${
+                        ord.payment_status === "Paid"
+                          ? "bg-green-900/40 text-green-300 border-green-700"
+                          : ord.payment_status === "Partial"
+                          ? "bg-yellow-900/40 text-yellow-300 border-yellow-700"
+                          : "bg-red-900/40 text-red-300 border-red-700"
+                      }`}
                     >
-                      <option value="Pending">Pending</option>
-                      <option value="Paid">Paid</option>
-                      <option value="Failed">Failed</option>
-                      <option value="Refunded">Refunded</option>
-                    </select>
+                      {ord.payment_status || "Pending"}
+                    </span>
                   </td>
                   <td className="py-3 px-4 text-center">
                     <div className="flex gap-2 justify-center">
@@ -379,230 +378,235 @@ export default function LeadOrdersTab({
         </div>
       )}
 
-      {/* 2. CREATE / EDIT ORDER MODAL */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-[#1E1E1E] border border-gray-700 rounded-xl max-w-4xl w-full p-6 text-white shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2">
-                <FaPills className="text-primary-400 text-xl" />
-                <p className="text-primary-400 text-2xl font-bold">
-                  {editingOrder ? `Update Order - ${editingOrder.order_number}` : "Create New Order"}
-                </p>
-              </div>
-              <IoCloseOutline
-                onClick={handleCloseModal}
-                className="h-8 w-8 border border-gray-700 text-white rounded cursor-pointer hover:bg-gray-800 transition"
-              />
+      {/* 2. CREATE / EDIT ORDER RIGHT-SIDE FLYOUT */}
+      <div
+        className={`fixed inset-0 bg-black/60 backdrop-blur-[1px] z-40 transition-opacity duration-300 ease-in-out cursor-pointer ${
+          isModalOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={handleCloseModal}
+      />
+      <div
+        className={`fixed top-0 right-0 z-50 h-screen overflow-y-auto bg-[#141414] w-[420px] sm:w-[600px] md:w-[700px] xl:w-[800px] shadow-2xl border-l border-gray-800 transform transition-transform duration-300 ease-in-out ${
+          isModalOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="w-full min-h-auto p-6 sm:p-8 text-white">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-2">
+              <FaPills className="text-primary-400 text-xl" />
+              <p className="text-primary-600 text-2xl font-bold leading-9">
+                {editingOrder ? `Update Order - ${editingOrder.order_number}` : "Create New Order"}
+              </p>
             </div>
-            <div className="w-full border-b border-gray-700 mb-6"></div>
+            <IoCloseOutline
+              onClick={handleCloseModal}
+              className="h-8 w-8 border border-gray-700 text-white rounded cursor-pointer hover:bg-gray-800 transition"
+            />
+          </div>
+          <div className="w-full border-b border-gray-700 mb-6"></div>
 
-            <form onSubmit={handleSaveOrder} className="space-y-4">
-              {/* Medicine Items List */}
+          <form onSubmit={handleSaveOrder} className="space-y-4">
+            {/* Status & Payment Pickers */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-black/50 border border-gray-700 rounded-lg">
+              <div>
+                <p className="text-xs text-gray-300 mb-1 font-medium">Order Status</p>
+                <select
+                  value={orderStatus}
+                  onChange={(e) => setOrderStatus(e.target.value)}
+                  className="w-full bg-black border border-gray-700 rounded text-xs p-2 text-white outline-none focus:border-primary-500"
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Confirmed">Confirmed</option>
+                  <option value="Shipped">Shipped</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-300 mb-1 font-medium">Payment Mode</p>
+                <select
+                  value={paymentMode}
+                  onChange={(e) => setPaymentMode(e.target.value)}
+                  className="w-full bg-black border border-gray-700 rounded text-xs p-2 text-white outline-none focus:border-primary-500"
+                >
+                  <option value="COD">Cash on Delivery (COD)</option>
+                  <option value="Prepaid">Prepaid (Online)</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="UPI">UPI</option>
+                </select>
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-300 mb-1 font-medium">Payment Status</p>
+                <select
+                  value={paymentStatus}
+                  onChange={(e) => setPaymentStatus(e.target.value)}
+                  className="w-full bg-black border border-gray-700 rounded text-xs p-2 text-white outline-none focus:border-primary-500"
+                >
+                  <option value="Pending">Pending / Unpaid</option>
+                  <option value="Partial">Partially Paid</option>
+                  <option value="Paid">Fully Paid</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Medicine Items List */}
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <p className="text-sm font-bold text-white">
+                  Order Items ({orderItems.length})
+                </p>
+                <button
+                  type="button"
+                  onClick={addItemRow}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-primary-600 hover:bg-primary-700 rounded text-xs text-white cursor-pointer font-medium"
+                >
+                  <FaPlus className="w-2.5 h-2.5" /> Add Another Item
+                </button>
+              </div>
+
               <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <p className="text-sm font-bold text-gray-200 uppercase tracking-wider">
-                    Medicine Items
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleAddItem}
-                    className="px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
-                  >
-                    <FaPlus className="w-3 h-3" /> Add Medicine
-                  </button>
-                </div>
-
                 {orderItems.map((item, idx) => {
-                  const itemTotal = (Number(item.quantity) || 0) * (Number(item.rate) || 0);
+                  const lineTotal = (Number(item.quantity) || 0) * (Number(item.rate) || 0);
                   return (
                     <div
                       key={idx}
-                      className="p-3.5 bg-black/50 border border-gray-700 rounded-lg grid grid-cols-12 gap-3 items-center relative"
+                      className="p-3 bg-black/60 border border-gray-700 rounded-lg relative"
                     >
-                      {/* Medicine Name with Search Suggestions */}
-                      <div className="col-span-12 md:col-span-5 relative">
-                        <label className="block text-xs text-gray-400 mb-1">
-                          Medicine Name *
-                        </label>
-                        <input
-                          type="text"
-                          value={item.medicine_name}
-                          onChange={(e) => handleItemChange(idx, "medicine_name", e.target.value)}
-                          onFocus={() => setActiveSugIndex(idx)}
-                          placeholder="Search or enter medicine name"
-                          required
-                          className="w-full border border-gray-700 rounded text-sm p-2.5 bg-black text-white outline-none focus:border-primary-500"
-                        />
-                        {/* Autocomplete dropdown */}
-                        {activeSugIndex === idx && suggestions.length > 0 && (
-                          <div className="absolute left-0 right-0 top-full mt-1 bg-[#1a1a1a] border border-gray-600 rounded-lg shadow-xl z-20 max-h-48 overflow-y-auto">
-                            {suggestions.map((sug, sIdx) => (
-                              <div
-                                key={sIdx}
-                                onClick={() => handleSelectSuggestion(idx, sug)}
-                                className="px-3 py-2 text-xs text-white hover:bg-primary-600 hover:text-white cursor-pointer border-b border-gray-800 last:border-0 flex justify-between items-center"
-                              >
-                                <span>{sug.medicine_name}</span>
-                                <span className="text-gray-400 text-[10px]">
-                                  {sug.unit} | {sug.rate}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        {/* Medicine Name with Suggestions */}
+                        <div className="col-span-12 sm:col-span-5 relative">
+                          <p className="text-xs text-gray-400 mb-1">Medicine Name *</p>
+                          <input
+                            type="text"
+                            value={item.medicine_name}
+                            onFocus={() => fetchSuggestions(item.medicine_name || "", idx)}
+                            onChange={(e) =>
+                              handleItemChange(idx, "medicine_name", e.target.value)
+                            }
+                            placeholder="Type medicine name..."
+                            required
+                            className="w-full bg-black border border-gray-700 rounded text-xs p-2 text-white outline-none focus:border-primary-500"
+                          />
+                          {activeSugIndex === idx && suggestions.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 z-50 bg-[#1c1c1c] border border-gray-600 rounded-md shadow-2xl max-h-56 overflow-y-auto mt-1 divide-y divide-gray-700/60">
+                              {suggestions.map((sug, sIdx) => (
+                                <div
+                                  key={sIdx}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    selectSuggestion(idx, sug);
+                                  }}
+                                  className="p-2.5 text-xs text-white hover:bg-primary-600 cursor-pointer flex justify-between items-center transition-colors"
+                                >
+                                  <span className="font-semibold text-gray-100">{sug.medicine_name}</span>
+                                  <span className="text-primary-300 text-[11px] font-medium">
+                                    {sug.unit || "Strip"}{sug.rate && Number(sug.rate) > 0 ? ` • ₹${Number(sug.rate).toFixed(2)}` : ""}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Unit */}
+                        <div className="col-span-4 sm:col-span-2">
+                          <p className="text-xs text-gray-400 mb-1">Unit</p>
+                          <input
+                            type="text"
+                            value={item.unit}
+                            onChange={(e) => handleItemChange(idx, "unit", e.target.value)}
+                            placeholder="Strip/Box"
+                            className="w-full bg-black border border-gray-700 rounded text-xs p-2 text-white outline-none"
+                          />
+                        </div>
+
+                        {/* Quantity */}
+                        <div className="col-span-4 sm:col-span-2">
+                          <p className="text-xs text-gray-400 mb-1">Qty</p>
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
+                            className="w-full bg-black border border-gray-700 rounded text-xs p-2 text-white text-center outline-none"
+                          />
+                        </div>
+
+                        {/* Rate */}
+                        <div className="col-span-3 sm:col-span-2">
+                          <p className="text-xs text-gray-400 mb-1">Rate</p>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={item.rate}
+                            onChange={(e) => handleItemChange(idx, "rate", e.target.value)}
+                            className="w-full bg-black border border-gray-700 rounded text-xs p-2 text-white text-right outline-none"
+                          />
+                        </div>
+
+                        {/* Remove button */}
+                        <div className="col-span-1 flex justify-center items-end pt-5">
+                          <button
+                            type="button"
+                            onClick={() => removeItemRow(idx)}
+                            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded transition cursor-pointer"
+                            title="Remove Item"
+                          >
+                            <FaTrash className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
 
-                      {/* Unit */}
-                      <div className="col-span-4 md:col-span-2">
-                        <label className="block text-xs text-gray-400 mb-1">Unit</label>
-                        <input
-                          type="text"
-                          value={item.unit}
-                          onChange={(e) => handleItemChange(idx, "unit", e.target.value)}
-                          className="w-full border border-gray-700 rounded text-sm p-2.5 bg-black text-white outline-none"
-                        />
-                      </div>
-
-                      {/* Quantity */}
-                      <div className="col-span-4 md:col-span-2">
-                        <label className="block text-xs text-gray-400 mb-1">Quantity</label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={item.quantity}
-                          onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
-                          required
-                          className="w-full border border-gray-700 rounded text-sm p-2.5 bg-black text-white outline-none text-center"
-                        />
-                      </div>
-
-                      {/* Rate */}
-                      <div className="col-span-3 md:col-span-2">
-                        <label className="block text-xs text-gray-400 mb-1">Rate</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={item.rate}
-                          onChange={(e) => handleItemChange(idx, "rate", e.target.value)}
-                          required
-                          className="w-full border border-gray-700 rounded text-sm p-2.5 bg-black text-white outline-none text-right"
-                        />
-                      </div>
-
-                      {/* Delete item button */}
-                      <div className="col-span-1 flex justify-center pt-5">
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveItem(idx)}
-                          className="text-red-400 hover:text-red-300 p-1.5 rounded transition cursor-pointer"
-                          title="Remove item"
-                        >
-                          <FaTrash className="w-3.5 h-3.5" />
-                        </button>
+                      <div className="mt-1.5 text-right text-xs text-gray-400">
+                        Total: <span className="text-primary-300 font-bold">{lineTotal.toFixed(2)}</span>
                       </div>
                     </div>
                   );
                 })}
               </div>
+            </div>
 
-              {/* Order Properties */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-800">
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Order Status</label>
-                  <select
-                    value={orderStatus}
-                    onChange={(e) => setOrderStatus(e.target.value)}
-                    className="w-full border border-gray-700 rounded text-sm p-2.5 bg-black text-white outline-none cursor-pointer"
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Processing">Processing</option>
-                    <option value="Confirmed">Confirmed</option>
-                    <option value="Shipped">Shipped</option>
-                    <option value="Delivered">Delivered</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
-                </div>
+            {/* Notes */}
+            <div>
+              <p className="text-xs text-gray-300 mb-1 font-medium">Order Notes / Instructions</p>
+              <textarea
+                rows={2}
+                value={orderNotes}
+                onChange={(e) => setOrderNotes(e.target.value)}
+                placeholder="Shipping instructions, dosage instructions, etc."
+                className="w-full bg-black border border-gray-700 rounded text-xs p-2.5 text-white outline-none focus:border-primary-500 resize-none"
+              />
+            </div>
 
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Payment Status</label>
-                  <select
-                    value={paymentStatus}
-                    onChange={(e) => setPaymentStatus(e.target.value)}
-                    className="w-full border border-gray-700 rounded text-sm p-2.5 bg-black text-white outline-none cursor-pointer"
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Paid">Paid</option>
-                    <option value="Failed">Failed</option>
-                    <option value="Refunded">Refunded</option>
-                  </select>
-                </div>
+            {/* Grand Total Footer */}
+            <div className="flex justify-between items-center p-3 bg-primary-900/20 border border-primary-500/40 rounded-lg">
+              <span className="text-sm font-semibold text-gray-200">Grand Total:</span>
+              <span className="text-xl font-black text-primary-400">{grandTotal.toFixed(2)}</span>
+            </div>
 
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Payment Mode</label>
-                  <select
-                    value={paymentMode}
-                    onChange={(e) => setPaymentMode(e.target.value)}
-                    className="w-full border border-gray-700 rounded text-sm p-2.5 bg-black text-white outline-none cursor-pointer"
-                  >
-                    <option value="COD">COD</option>
-                    <option value="Online">Online</option>
-                    <option value="Card">Card</option>
-                    <option value="Bank Transfer">Bank Transfer</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Order Notes */}
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Order Notes (Optional)</label>
-                <textarea
-                  value={orderNotes}
-                  onChange={(e) => setOrderNotes(e.target.value)}
-                  rows={2}
-                  placeholder="e.g. Deliver before 5 PM, customer requested extra packing"
-                  className="w-full border border-gray-700 rounded text-sm p-2.5 bg-black text-white outline-none resize-y"
-                />
-              </div>
-
-              {/* Total Summary Footer */}
-              <div className="p-4 bg-black/60 border border-primary-600/60 rounded-xl flex justify-between items-center">
-                <div>
-                  <p className="text-xs text-gray-400">Total Items</p>
-                  <p className="text-lg font-bold text-white">
-                    {orderItems.filter((i) => i.medicine_name.trim() !== "").length} Items
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-400">Grand Total</p>
-                  <p className="text-2xl font-black text-primary-400">
-                    {calculateGrandTotal().toFixed(2)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 rounded text-white text-sm font-medium transition cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 rounded text-white text-sm font-semibold transition cursor-pointer disabled:opacity-50"
-                >
-                  {isSaving ? "Saving..." : editingOrder ? "Update Order" : "Generate & Save Order"}
-                </button>
-              </div>
-            </form>
-          </div>
+            {/* Submit buttons */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded text-white text-sm font-medium transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 rounded text-white text-sm font-medium transition cursor-pointer disabled:opacity-50"
+              >
+                {isSaving ? "Saving Order..." : editingOrder ? "Update Order" : "Place Order"}
+              </button>
+            </div>
+          </form>
         </div>
-      )}
+      </div>
     </div>
   );
 }
