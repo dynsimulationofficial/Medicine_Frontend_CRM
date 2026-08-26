@@ -133,6 +133,12 @@ const UnassignedLeadsTable = ({
     fetchLeads(page, filterData);
   }, [page, refreshKey, filterData]);
 
+  // Clear selection on refreshKey change
+  useEffect(() => {
+    setSelectedIds([]);
+    onSelectionChange && onSelectionChange([]);
+  }, [refreshKey]);
+
   // Sync checkboxes
   useEffect(() => {
     if (!data?.length) {

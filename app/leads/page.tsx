@@ -105,6 +105,7 @@ export default function Home() {
           userRole={userRole}
           refreshKey={refreshKey}
           onViewLead={handleViewLead}
+          onSelectionChange={(ids: string[]) => setSelectedIds(ids)}
         />
       ),
     },

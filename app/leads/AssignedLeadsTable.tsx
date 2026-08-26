@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FaSearchPlus } from "react-icons/fa";
+import { FaRegCheckCircle, FaSearchPlus } from "react-icons/fa";
 import { RxAvatar } from "react-icons/rx";
 import { IoMailOpenOutline, IoCloseOutline } from "react-icons/io5";
 import { MdOutlinePhone, MdOutlineLocationCity, MdOutlineSettings, MdEdit } from "react-icons/md";
@@ -51,7 +51,8 @@ const AssignedLeadsTable = ({
   userRole = "",
   refreshKey = 0,
   onViewLead,
-  }: any) => {
+  onSelectionChange,
+}: any) => {
   const [data, setData] = useState<any[]>([]);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -59,17 +60,26 @@ const AssignedLeadsTable = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
 
+  // Checkbox selection
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
   // Filter state inside Assigned
   const [filterData, setFilterData] = useState<any | null>(null);
 
-  // ✅ Exact sample code formula: single flyout state
-  const [flyout, setFlyout] = useState<"edit" | "search" | "">("");
-  const [selectedData, setSelectedData] = useState<any | null>(null);
-  
   // Local dropdown states
   const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
   const [agentList, setAgentList] = useState<any[]>([]);
 
+  // ✅ Exact sample code formula: single flyout state
+  const [flyout, setFlyout] = useState<"edit" | "search" | "">("");
+  const [selectedData, setSelectedData] = useState<any | null>(null);
+
+  const closeFlyout = () => {
+    setFlyout("");
+    setSelectedData(null);
+  };
+
+  // Fetch dropdowns on mount
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
@@ -85,11 +95,6 @@ const AssignedLeadsTable = ({
     };
     fetchDropdowns();
   }, []);
-
-  const closeFlyout = () => {
-    setFlyout("");
-    setSelectedData(null);
-  };
 
   // Fetch Assigned Leads API (Standard or Filtered)
   const fetchLeads = async (targetPage: number = page, appliedFilter: any = filterData) => {
@@ -125,6 +130,39 @@ const AssignedLeadsTable = ({
   useEffect(() => {
     fetchLeads(page, filterData);
   }, [page, refreshKey, filterData]);
+
+  // Clear selection on refreshKey change
+  useEffect(() => {
+    setSelectedIds([]);
+    onSelectionChange && onSelectionChange([]);
+  }, [refreshKey]);
+
+  // Sync checkboxes
+  useEffect(() => {
+    if (!data?.length) {
+      setSelectedIds([]);
+      onSelectionChange && onSelectionChange([]);
+      return;
+    }
+    const valid = new Set(data.map((x: any) => x.id));
+    const nextSelected = selectedIds.filter((id) => valid.has(id));
+    setSelectedIds(nextSelected);
+    onSelectionChange && onSelectionChange(nextSelected);
+  }, [data]);
+
+  const toggleRow = (id: string, checked: boolean) => {
+    const next = checked ? [...selectedIds, id] : selectedIds.filter((x) => x !== id);
+    setSelectedIds(next);
+    onSelectionChange && onSelectionChange(next);
+  };
+
+  const toggleAll = (checked: boolean) => {
+    const next = checked ? data.map((i: any) => i.id) : [];
+    setSelectedIds(next);
+    onSelectionChange && onSelectionChange(next);
+  };
+
+  const areAllSelected = !!data?.length && data.every((i: any) => selectedIds.includes(i.id));
 
   // --- Edit Lead Submit ---
   const handleUpdateLead = async (values: any) => {
@@ -200,6 +238,21 @@ const AssignedLeadsTable = ({
           <tr>
             <th scope="col" className="px-3 py-3 md:p-3">
               <div className="flex items-center gap-2">
+                <FaRegCheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                <span className="font-semibold text-white text-lg sm:text-base">
+                  Select
+                </span>
+                <input
+                  type="checkbox"
+                  className="accent-primary-600"
+                  checked={areAllSelected}
+                  onChange={(e) => toggleAll(e.target.checked)}
+                />
+              </div>
+            </th>
+
+            <th scope="col" className="px-3 py-3 md:p-3">
+              <div className="flex items-center gap-2">
                 <RxAvatar className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 <span className="font-semibold text-white text-lg sm:text-base">
                   Full Name
@@ -257,13 +310,13 @@ const AssignedLeadsTable = ({
         <tbody>
           {isLoading ? (
             <tr>
-              <td colSpan={6} className="text-center py-8 text-white">
+              <td colSpan={7} className="text-center py-8 text-white">
                 <div className="animate-pulse">Loading leads...</div>
               </td>
             </tr>
           ) : !data || data.length === 0 || isError ? (
             <tr>
-              <td colSpan={6} className="text-center text-xl py-8 text-white">
+              <td colSpan={7} className="text-center text-xl py-8 text-white">
                 <div>Data not found</div>
               </td>
             </tr>
@@ -273,6 +326,15 @@ const AssignedLeadsTable = ({
                 key={item?.id ?? index}
                 className="odd:bg-[#404040] hover:bg-primary-700 py-3 border-b border-[#E7E7E7]"
               >
+                <td className="px-3 py-2 text-center">
+                  <input
+                    type="checkbox"
+                    className="accent-primary-600"
+                    checked={selectedIds.includes(item.id)}
+                    onChange={(e) => toggleRow(item.id, e.target.checked)}
+                  />
+                </td>
+
                 {/* Full name */}
                 <td
                   onClick={() => onViewLead && onViewLead(item.id)}
@@ -706,8 +768,8 @@ const AssignedLeadsTable = ({
                             }}
                           >
                             <option value="+91">+91</option>
-                            <option value="+1">+1</option>
                             <option value="+44">+44</option>
+                            <option value="+1">+1</option>
                           </select>
                           <input
                             type="text"
