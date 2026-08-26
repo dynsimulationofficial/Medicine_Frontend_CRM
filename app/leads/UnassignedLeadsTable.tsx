@@ -9,6 +9,7 @@ import { BiUserPin } from "react-icons/bi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { HiChevronDoubleLeft, HiChevronDoubleRight } from "react-icons/hi";
 import { FaEllipsisVertical } from "react-icons/fa6";
+import { FiFilter } from "react-icons/fi";
 import { Tooltip } from "react-tooltip";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
@@ -51,8 +52,7 @@ const UnassignedLeadsTable = ({
   userRole = "",
   refreshKey = 0,
   onViewLead,
-  onSelectionChange,
-  }: any) => {
+}: any) => {
   const [data, setData] = useState<any[]>([]);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -66,15 +66,22 @@ const UnassignedLeadsTable = ({
   // Filter state inside Unassigned
   const [filterData, setFilterData] = useState<any | null>(null);
 
-  // ✅ Exact sample code formula: single flyout state
-  const [flyout, setFlyout] = useState<"edit" | "assign" | "search" | "">("");
-  const [selectedData, setSelectedData] = useState<any | null>(null);
-  const [selectedAgent, setSelectedAgent] = useState<any | null>(null);
-
   // Local dropdown states
   const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
   const [agentList, setAgentList] = useState<any[]>([]);
 
+  // ✅ Exact sample code formula: single flyout state
+  const [flyout, setFlyout] = useState<"edit" | "assign" | "search" | "bulk_assign" | "">("");
+  const [selectedData, setSelectedData] = useState<any | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<any | null>(null);
+
+  const closeFlyout = () => {
+    setFlyout("");
+    setSelectedData(null);
+    setSelectedAgent(null);
+  };
+
+  // Fetch dropdowns on mount
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
@@ -90,13 +97,6 @@ const UnassignedLeadsTable = ({
     };
     fetchDropdowns();
   }, []);
-
-
-  const closeFlyout = () => {
-    setFlyout("");
-    setSelectedData(null);
-    setSelectedAgent(null);
-  };
 
   // Fetch Unassigned Leads API (Standard or Filtered)
   const fetchLeads = async (targetPage: number = page, appliedFilter: any = filterData) => {
@@ -136,32 +136,24 @@ const UnassignedLeadsTable = ({
   // Clear selection on refreshKey change
   useEffect(() => {
     setSelectedIds([]);
-    onSelectionChange && onSelectionChange([]);
   }, [refreshKey]);
 
-  // Sync checkboxes
+  // Sync checkboxes with current page data
   useEffect(() => {
     if (!data?.length) {
       setSelectedIds([]);
-      onSelectionChange && onSelectionChange([]);
       return;
     }
     const valid = new Set(data.map((x: any) => x.id));
-    const nextSelected = selectedIds.filter((id) => valid.has(id));
-    setSelectedIds(nextSelected);
-    onSelectionChange && onSelectionChange(nextSelected);
+    setSelectedIds((prev) => prev.filter((id) => valid.has(id)));
   }, [data]);
 
   const toggleRow = (id: string, checked: boolean) => {
-    const next = checked ? [...selectedIds, id] : selectedIds.filter((x) => x !== id);
-    setSelectedIds(next);
-    onSelectionChange && onSelectionChange(next);
+    setSelectedIds((prev) => (checked ? [...prev, id] : prev.filter((x) => x !== id)));
   };
 
   const toggleAll = (checked: boolean) => {
-    const next = checked ? data.map((i: any) => i.id) : [];
-    setSelectedIds(next);
-    onSelectionChange && onSelectionChange(next);
+    setSelectedIds(checked ? data.map((i: any) => i.id) : []);
   };
 
   const areAllSelected = !!data?.length && data.every((i: any) => selectedIds.includes(i.id));
@@ -202,6 +194,28 @@ const UnassignedLeadsTable = ({
     }
   };
 
+  // --- Bulk Assign Agent Submit ---
+  const handleBulkAssignAgent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedAgent) {
+      toast.error("Please select an agent");
+      return;
+    }
+    try {
+      await AxiosProvider.post("/leads/assigned/bulk", {
+        lead_ids: selectedIds,
+        agent_id: selectedAgent.id,
+      });
+      toast.success("Leads assigned successfully");
+      setSelectedIds([]);
+      setSelectedAgent(null);
+      closeFlyout();
+      fetchLeads(page, filterData);
+    } catch (error: any) {
+      toast.error("Failed to assign leads");
+    }
+  };
+
   // --- Delete Lead ---
   const handleDeleteLead = async (leadId: string) => {
     const res = await Swal.fire({
@@ -235,24 +249,38 @@ const UnassignedLeadsTable = ({
 
   return (
     <>
-      {/* Table Toolbar (Search & Filter) */}
-      <div className="flex justify-end items-center gap-3 mb-4">
-        {filterData && (
+      {/* Table Toolbar (Bulk Action on Left, Search & Filter on Right) */}
+      <div className="flex justify-between items-center gap-3 mb-4">
+        <div>
+          {selectedIds.length > 0 && userRole === "Admin" && (
+            <button
+              onClick={() => setFlyout("bulk_assign")}
+              className="flex items-center gap-2 py-2 px-4 rounded-[12px] border border-[#E7E7E7] bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition cursor-pointer"
+            >
+              <FiFilter className="w-4 h-4 text-white" />
+              <span>Assign Agent Bulk ({selectedIds.length})</span>
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3">
+          {filterData && (
+            <button
+              onClick={handleClearFilter}
+              className="flex items-center gap-2 py-2 px-4 rounded-[12px] border border-red-500 text-red-500 hover:bg-red-500 hover:text-white text-sm font-medium transition cursor-pointer"
+            >
+              <IoCloseOutline className="w-4 h-4" />
+              <span>Clear Filter</span>
+            </button>
+          )}
           <button
-            onClick={handleClearFilter}
-            className="flex items-center gap-2 py-2 px-4 rounded-[12px] border border-red-500 text-red-500 hover:bg-red-500 hover:text-white text-sm font-medium transition cursor-pointer"
+            onClick={() => setFlyout("search")}
+            className="flex items-center gap-2 py-2 px-4 rounded-[12px] border border-[#E7E7E7] bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition cursor-pointer"
           >
-            <IoCloseOutline className="w-4 h-4" />
-            <span>Clear Filter</span>
+            <FaSearchPlus className="w-4 h-4" />
+            <span>Search Leads</span>
           </button>
-        )}
-        <button
-          onClick={() => setFlyout("search")}
-          className="flex items-center gap-2 py-2 px-4 rounded-[12px] border border-[#E7E7E7] bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition cursor-pointer"
-        >
-          <FaSearchPlus className="w-4 h-4" />
-          <span>Search Leads</span>
-        </button>
+        </div>
       </div>
 
       <table className="w-full text-sm text-left text-white whitespace-nowrap">
@@ -475,6 +503,62 @@ const UnassignedLeadsTable = ({
           flyout ? "translate-x-0" : "translate-x-full"
         }`}
       >
+        {/* --- BULK ASSIGN AGENT FORM --- */}
+        {flyout === "bulk_assign" && (
+          <div className="w-full min-h-auto p-6 sm:p-8 text-white">
+            <div className="flex justify-between items-center mb-6">
+              <p className="text-primary-600 text-2xl font-bold leading-9">
+                Assign to Agent Bulk ({selectedIds.length})
+              </p>
+              <IoCloseOutline
+                onClick={closeFlyout}
+                className="h-8 w-8 border border-[#E7E7E7] text-white rounded cursor-pointer"
+              />
+            </div>
+            <div className="w-full border-b border-gray-700 mb-6"></div>
+
+            <form onSubmit={handleBulkAssignAgent} className="w-full space-y-6">
+              <div className="w-full">
+                <p className="text-white text-base leading-6 mb-2">Select Agent *</p>
+                <Select
+                  value={selectedAgent}
+                  onChange={(selected: any) => setSelectedAgent(selected)}
+                  options={agentList}
+                  getOptionLabel={(opt: any) => opt.name}
+                  getOptionValue={(opt: any) => String(opt.id)}
+                  placeholder="Select Agent"
+                  isClearable
+                  classNames={{
+                    control: ({ isFocused }: any) =>
+                      `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
+                        isFocused ? "!border-primary-500" : "!border-gray-700"
+                      }`,
+                  }}
+                  styles={{
+                    menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
+                    option: (base, { isFocused, isSelected }) => ({
+                      ...base,
+                      backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
+                      color: "#fff",
+                      cursor: "pointer",
+                    }),
+                    singleValue: (base) => ({ ...base, color: "#fff" }),
+                    input: (base) => ({ ...base, color: "#fff" }),
+                    placeholder: (base) => ({ ...base, color: "#aaa" }),
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="py-[13px] px-[26px] bg-primary-600 rounded-[4px] text-base font-medium leading-6 text-white hover:bg-primary-700 w-full cursor-pointer"
+              >
+                Assign Selected Leads ({selectedIds.length})
+              </button>
+            </form>
+          </div>
+        )}
+
         {/* --- EDIT LEAD FORM (UNASSIGNED) --- */}
         {flyout === "edit" && (
           <div className="w-full min-h-auto p-6 sm:p-8 text-white">
@@ -783,8 +867,8 @@ const UnassignedLeadsTable = ({
                             }}
                           >
                             <option value="+91">+91</option>
-                            <option value="+1">+1</option>
                             <option value="+44">+44</option>
+                            <option value="+1">+1</option>
                           </select>
                           <input
                             type="text"
