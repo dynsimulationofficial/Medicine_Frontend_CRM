@@ -37,7 +37,8 @@ export default function Home() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // System states
-  const [hitApi, setHitApi] = useState<number>(0);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
+  const refreshData = () => setRefreshKey((k) => k + 1);
 
   const storage = new StorageManager();
   const userRole = storage.getUserRole();
@@ -46,7 +47,7 @@ export default function Home() {
     setFlyout("");
   };
 
-  const test = (id: string) => {
+  const handleViewLead = (id: string) => {
     window.open(`/leadsdetails?id=${id}`, "_blank");
   };
 
@@ -90,7 +91,7 @@ export default function Home() {
         agent_id: selectedAgent.id,
       });
       toast.success("Lead is assigned");
-      setHitApi((prev) => prev + 1);
+      refreshData();
       setSelectedAgent(null);
       setSelectedIds([]);
     } catch (error: any) {
@@ -105,8 +106,8 @@ export default function Home() {
       content: (
         <UnassignedLeadsTable
           userRole={userRole}
-          refreshTrigger={hitApi}
-          onViewLead={test}
+          refreshKey={refreshKey}
+          onViewLead={handleViewLead}
           onSelectionChange={(ids: string[]) => setSelectedIds(ids)}
           leadSourceData={leadSourceData}
           agentList={agentList}
@@ -118,8 +119,8 @@ export default function Home() {
       content: (
         <AssignedLeadsTable
           userRole={userRole}
-          refreshTrigger={hitApi}
-          onViewLead={test}
+          refreshKey={refreshKey}
+          onViewLead={handleViewLead}
           leadSourceData={leadSourceData}
           agentList={agentList}
         />
@@ -229,7 +230,7 @@ export default function Home() {
             <CreateLead
               closeFlyOut={() => {
                 closeFlyout();
-                setHitApi((prev) => prev + 1);
+                refreshData();
               }}
             />
           </div>
@@ -250,7 +251,7 @@ export default function Home() {
             <div className="w-full border-b border-gray-700 mb-6"></div>
             <BulkUploadLead
               closeFlyout={closeFlyout}
-              onSuccess={() => setHitApi((prev) => prev + 1)}
+              onSuccess={refreshData}
               leadSourceData={leadSourceData}
               agentList={agentList}
             />

@@ -49,7 +49,7 @@ const LeadSchema = Yup.object({
 
 const UnassignedLeadsTable = ({
   userRole = "",
-  refreshTrigger = 0,
+  refreshKey = 0,
   onViewLead,
   onSelectionChange,
   leadSourceData = [],
@@ -112,7 +112,7 @@ const UnassignedLeadsTable = ({
 
   useEffect(() => {
     fetchLeads(page, filterData);
-  }, [page, refreshTrigger, filterData]);
+  }, [page, refreshKey, filterData]);
 
   // Sync checkboxes
   useEffect(() => {

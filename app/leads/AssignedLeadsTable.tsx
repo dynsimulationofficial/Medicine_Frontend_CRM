@@ -49,7 +49,7 @@ const LeadSchema = Yup.object({
 
 const AssignedLeadsTable = ({
   userRole = "",
-  refreshTrigger = 0,
+  refreshKey = 0,
   onViewLead,
   leadSourceData = [],
   agentList = [],
@@ -106,7 +106,7 @@ const AssignedLeadsTable = ({
 
   useEffect(() => {
     fetchLeads(page, filterData);
-  }, [page, refreshTrigger, filterData]);
+  }, [page, refreshKey, filterData]);
 
   // --- Edit Lead Submit ---
   const handleUpdateLead = async (values: any) => {
