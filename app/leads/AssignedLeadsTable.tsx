@@ -51,9 +51,7 @@ const AssignedLeadsTable = ({
   userRole = "",
   refreshKey = 0,
   onViewLead,
-  leadSourceData = [],
-  agentList = [],
-}: any) => {
+  }: any) => {
   const [data, setData] = useState<any[]>([]);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -67,6 +65,26 @@ const AssignedLeadsTable = ({
   // ✅ Exact sample code formula: single flyout state
   const [flyout, setFlyout] = useState<"edit" | "search" | "">("");
   const [selectedData, setSelectedData] = useState<any | null>(null);
+  
+  // Local dropdown states
+  const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
+  const [agentList, setAgentList] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchDropdowns = async () => {
+      try {
+        const [srcRes, agentRes] = await Promise.all([
+          AxiosProvider.get("/leadsources"),
+          AxiosProvider.get("/allagents"),
+        ]);
+        setLeadSourceData(srcRes.data?.data?.data ?? []);
+        setAgentList(agentRes.data?.data?.data ?? []);
+      } catch (err) {
+        console.error("Error fetching dropdowns in AssignedLeadsTable:", err);
+      }
+    };
+    fetchDropdowns();
+  }, []);
 
   const closeFlyout = () => {
     setFlyout("");

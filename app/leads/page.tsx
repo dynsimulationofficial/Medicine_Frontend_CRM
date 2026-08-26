@@ -26,17 +26,14 @@ export default function Home() {
   // ✅ Exact sample code formula: single flyout state
   const [flyout, setFlyout] = useState<"create" | "bulk_lead" | "bulk_assign" | "">("");
 
-  // Dropdowns data
-  const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
+  // Agent list for Bulk Assign modal
   const [agentList, setAgentList] = useState<any[]>([]);
-
-  // Selected agent for bulk assign
   const [selectedAgent, setSelectedAgent] = useState<any | null>(null);
 
   // Selected IDs from Unassigned Table
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // System states
+  // Refresh Trigger
   const [refreshKey, setRefreshKey] = useState<number>(0);
   const refreshData = () => setRefreshKey((k) => k + 1);
 
@@ -51,17 +48,8 @@ export default function Home() {
     window.open(`/leadsdetails?id=${id}`, "_blank");
   };
 
-  // Fetch dropdown data on mount
+  // Fetch agents for top-level bulk assign
   useEffect(() => {
-    const fetchLeadSources = async () => {
-      try {
-        const response = await AxiosProvider.get("/leadsources");
-        setLeadSourceData(response.data.data.data);
-      } catch (error: any) {
-        console.log(error);
-      }
-    };
-
     const fetchAgents = async () => {
       try {
         const res = await AxiosProvider.get("/allagents");
@@ -71,8 +59,6 @@ export default function Home() {
         setAgentList([]);
       }
     };
-
-    fetchLeadSources();
     fetchAgents();
   }, []);
 
@@ -109,8 +95,6 @@ export default function Home() {
           refreshKey={refreshKey}
           onViewLead={handleViewLead}
           onSelectionChange={(ids: string[]) => setSelectedIds(ids)}
-          leadSourceData={leadSourceData}
-          agentList={agentList}
         />
       ),
     },
@@ -121,8 +105,6 @@ export default function Home() {
           userRole={userRole}
           refreshKey={refreshKey}
           onViewLead={handleViewLead}
-          leadSourceData={leadSourceData}
-          agentList={agentList}
         />
       ),
     },
@@ -151,7 +133,7 @@ export default function Home() {
 
           {/* ---------------- Table Container ----------------------- */}
           <div className="relative overflow-x-auto shadow-lastTransaction rounded-xl sm:rounded-3xl px-1 py-6 md:p-6 z-10 mainContainerBg">
-            {/* Search and filter table row */}
+            {/* Action Buttons Row */}
             <div className="flex justify-between items-center mb-6 w-full mx-auto">
               <div>
                 {selectedIds.length > 0 && (
@@ -252,8 +234,6 @@ export default function Home() {
             <BulkUploadLead
               closeFlyout={closeFlyout}
               onSuccess={refreshData}
-              leadSourceData={leadSourceData}
-              agentList={agentList}
             />
           </div>
         )}

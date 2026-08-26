@@ -52,9 +52,7 @@ const UnassignedLeadsTable = ({
   refreshKey = 0,
   onViewLead,
   onSelectionChange,
-  leadSourceData = [],
-  agentList = [],
-}: any) => {
+  }: any) => {
   const [data, setData] = useState<any[]>([]);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -72,6 +70,27 @@ const UnassignedLeadsTable = ({
   const [flyout, setFlyout] = useState<"edit" | "assign" | "search" | "">("");
   const [selectedData, setSelectedData] = useState<any | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<any | null>(null);
+
+  // Local dropdown states
+  const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
+  const [agentList, setAgentList] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchDropdowns = async () => {
+      try {
+        const [srcRes, agentRes] = await Promise.all([
+          AxiosProvider.get("/leadsources"),
+          AxiosProvider.get("/allagents"),
+        ]);
+        setLeadSourceData(srcRes.data?.data?.data ?? []);
+        setAgentList(agentRes.data?.data?.data ?? []);
+      } catch (err) {
+        console.error("Error fetching dropdowns in UnassignedLeadsTable:", err);
+      }
+    };
+    fetchDropdowns();
+  }, []);
+
 
   const closeFlyout = () => {
     setFlyout("");

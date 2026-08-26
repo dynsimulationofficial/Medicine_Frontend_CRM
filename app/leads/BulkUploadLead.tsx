@@ -1,27 +1,43 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { toast } from "react-toastify";
-import { getBaseURL } from "../../provider/AxiosProvider";
+import AxiosProvider, { getBaseURL } from "../../provider/AxiosProvider";
 
 interface BulkUploadLeadProps {
   closeFlyout: () => void;
   onSuccess: () => void;
-  leadSourceData?: any[];
-  agentList?: any[];
 }
 
 export default function BulkUploadLead({
   closeFlyout,
   onSuccess,
-  leadSourceData = [],
-  agentList = [],
 }: BulkUploadLeadProps) {
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const [leadSourceDisplay, setLeadSourceDisplay] = useState<any>(null);
   const [agentDisplay, setAgentDisplay] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Local dropdown states
+  const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
+  const [agentList, setAgentList] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchDropdowns = async () => {
+      try {
+        const [srcRes, agentRes] = await Promise.all([
+          AxiosProvider.get("/leadsources"),
+          AxiosProvider.get("/allagents"),
+        ]);
+        setLeadSourceData(srcRes.data?.data?.data ?? []);
+        setAgentList(agentRes.data?.data?.data ?? []);
+      } catch (err) {
+        console.error("Error fetching dropdowns in BulkUploadLead:", err);
+      }
+    };
+    fetchDropdowns();
+  }, []);
 
   const handleUploadFile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
