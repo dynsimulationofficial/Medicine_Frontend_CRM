@@ -132,27 +132,7 @@ export const leadStatusOptions = [
   { id: "Lost", name: "Lost" },
 ];
 
-export const paymentStatusOptions = [
-  { id: "Pending", name: "Pending" },
-  { id: "Paid", name: "Paid" },
-  { id: "Failed", name: "Failed" },
-  { id: "Refunded", name: "Refunded" },
-];
-
-export const deliveryStatusOptions = [
-  { id: "Pending", name: "Pending" },
-  { id: "Dispatched", name: "Dispatched" },
-  { id: "Delivered", name: "Delivered" },
-  { id: "Failed", name: "Failed" },
-];
-
-export const currencyOptions = [
-  { id: "USD", name: "USD ($)" },
-  { id: "INR", name: "INR (₹)" },
-  { id: "GBP", name: "GBP (£)" },
-];
-
-const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
+const CreateLead = ({ closeFlyOut }: any) => {
   const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
   const [agentList, setAgentList] = useState<any[]>([]);
 
@@ -216,12 +196,6 @@ const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
     state: Yup.string().nullable().notRequired(),
     postal_code: Yup.string().nullable().notRequired(),
     country: Yup.string().nullable().notRequired(),
-    lead_score: Yup.number()
-      .transform((v, o) => (o === "" ? undefined : v))
-      .typeError("Lead score must be a number")
-      .nullable()
-      .notRequired(),
-    lead_quality: Yup.string().nullable().notRequired(),
     best_time_to_call: Yup.string().nullable().notRequired(),
   });
 
@@ -255,8 +229,8 @@ const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
           const currentStates = statesByCountry[values.country] || Object.values(statesByCountry).flat();
 
           return (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Full Name */}
                 <div>
                   <p className="text-white mb-2">Full Name <span className="text-red-500">*</span></p>
@@ -264,7 +238,7 @@ const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
                     type="text"
                     name="full_name"
                     placeholder="Alexandre Dumas"
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                   />
                   <ErrorMessage name="full_name" component="div" className="text-red-500 text-xs mt-1" />
                 </div>
@@ -276,7 +250,7 @@ const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
                     type="email"
                     name="email"
                     placeholder="alexandre@example.com"
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                   />
                   <ErrorMessage name="email" component="div" className="text-red-500 text-xs mt-1" />
                 </div>
@@ -346,7 +320,7 @@ const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
                     type="text"
                     name="address_line1"
                     placeholder="Street, House no."
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                   />
                 </div>
 
@@ -357,7 +331,7 @@ const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
                     type="text"
                     name="address_line2"
                     placeholder="Apartment, suite, unit, etc."
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                   />
                 </div>
 
@@ -368,7 +342,7 @@ const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
                     type="text"
                     name="city"
                     placeholder="City / Town"
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                   />
                 </div>
 
@@ -451,7 +425,7 @@ const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
                     type="text"
                     name="postal_code"
                     placeholder="400071"
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                   />
                 </div>
 
@@ -462,7 +436,7 @@ const CreateLead: React.FC<any> = ({ closeFlyOut }) => {
                     type="text"
                     name="best_time_to_call"
                     placeholder="e.g., 3–5 PM"
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3"
+                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                   />
                 </div>
 

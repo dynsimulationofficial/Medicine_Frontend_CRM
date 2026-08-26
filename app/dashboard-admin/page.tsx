@@ -54,7 +54,7 @@ export default function AdminDashboardPage() {
       // 2. Fetch Unassigned Leads
       let unassignedCount = 0;
       try {
-        const unassignedRes = await AxiosProvider.get("/leads/notassigned?page=1&pageSize=10");
+        const unassignedRes = await AxiosProvider.get("/leads/unassigned?page=1&pageSize=10");
         const unassignedData = unassignedRes.data?.data;
         unassignedCount = unassignedData?.pagination?.total ?? (Array.isArray(unassignedData?.data) ? unassignedData.data.length : 0);
         setUnassignedLeads(unassignedCount);

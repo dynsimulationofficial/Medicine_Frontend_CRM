@@ -37,7 +37,7 @@ import { HiChevronDoubleLeft } from "react-icons/hi";
 import { HiChevronDoubleRight } from "react-icons/hi";
 import AxiosProvider from "../../provider/AxiosProvider";
 //import CustomerViewDetails from "../component/CustomerViewDetails";
-import { statesByCountry, countryOptions, leadStatusOptions, paymentStatusOptions, deliveryStatusOptions, currencyOptions } from "../leads/CreateLead";
+import { statesByCountry, countryOptions, leadStatusOptions } from "../leads/CreateLead";
 import ReactPlayer from "react-player";
 import DesktopHeader from "../component/DesktopHeader";
 import { Tooltip } from "react-tooltip";
@@ -182,14 +182,8 @@ export default function Home() {
     console.log("DISOSIOT NAME:", disposition);
   }, [disposition]);
 
-  const [agent, setAgent] = useState<any[]>([]);;
+  const [agent, setAgent] = useState<any[]>([]);
   const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
-  console.log("AGWNTTTTTTTTTTTTTTT", agent);
-  const [consolidationData, setConsolidationData] = useState<any[]>(
-    [],
-  );
-  const [debtConsolidation, setDebtConsolidation] = useState<any[]>([]);;
-
   const [activity, setActivity] = useState<boolean>(false);
   const [task, setTask] = useState<boolean>(false);
   const [document, setDocument] = useState<boolean>(false);
@@ -445,34 +439,6 @@ export default function Home() {
 
     fetchAgent();
   }, [loggedInUserRole, loggedInUserId, loggedInUserName]);
-
-  const consolidationStatus = async () => {
-    try {
-      const response = await AxiosProvider.get("/getconsolidation");
-      //  console.log("KKKKKKKKMMMMMMM", response.data.data.data);
-      setConsolidationData(response.data.data.data);
-
-      // const result = response.data.data.data;
-      // console.log("ALL CRM USER", result);
-    } catch (error: any) {
-      console.log(error);
-    }
-  };
-  useEffect(() => {
-    consolidationStatus();
-  }, []);
-
-  const debtConsolidationStatus = async () => {
-    try {
-      const response = await AxiosProvider.get("/leaddebtstatuses");
-      setDebtConsolidation(response.data?.data?.data || []);
-    } catch (error: any) {
-      console.log(error);
-    }
-  };
-  useEffect(() => {
-    debtConsolidationStatus();
-  }, []);
 
   const fetchLeadSource = async () => {
     try {
