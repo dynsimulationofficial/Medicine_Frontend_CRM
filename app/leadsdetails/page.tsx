@@ -1995,9 +1995,6 @@ export default function Home() {
                               { label: "Lead Source", value: data?.lead_source },
                               { label: "Best time to call", value: data?.best_time_to_call },
                               { label: "WhatsApp Number", value: data?.whatsapp_number },
-                              ...(userRole === "Admin"
-                                ? [{ label: "Lead Age", value: data?.lead_age_label || (data?.lead_age_days ? `${data?.lead_age_days} Days` : "-") }]
-                                : []),
                             ].map((row, idx) => (
                               <tr
                                 key={idx}
