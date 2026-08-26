@@ -24,7 +24,7 @@ export default function Home() {
   const checking = useAuthRedirect();
 
   // ✅ Exact sample code formula: single flyout state
-  const [flyout, setFlyout] = useState<"create" | "bulk" | "bulk_assign" | "">("");
+  const [flyout, setFlyout] = useState<"create" | "bulk_lead" | "bulk_assign" | "">("");
 
   // Dropdowns data
   const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
@@ -183,7 +183,7 @@ export default function Home() {
                 {userRole === "Admin" && (
                   <div
                     className="flex justify-center gap-2 py-3 px-6 rounded-[12px] border border-[#E7E7E7] cursor-pointer bg-primary-600 items-center hover:bg-primary-700 active:bg-primary-700 group"
-                    onClick={() => setFlyout("bulk")}
+                    onClick={() => setFlyout("bulk_lead")}
                   >
                     <MdOutlineDriveFolderUpload className="w-5 h-5 text-white group-hover:text-white" />
                     <p className="text-white text-base font-medium group-hover:text-white">
@@ -237,7 +237,7 @@ export default function Home() {
         )}
 
         {/* Bulk Upload Flyout */}
-        {flyout === "bulk" && (
+        {flyout === "bulk_lead" && (
           <div className="w-full min-h-auto p-6 sm:p-8 text-white">
             <div className="flex justify-between items-center mb-6">
               <p className="text-primary-600 text-2xl font-bold leading-9">
