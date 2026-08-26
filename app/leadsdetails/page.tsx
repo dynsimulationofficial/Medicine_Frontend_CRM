@@ -56,6 +56,7 @@ import { LuSquareActivity } from "react-icons/lu";
 import { IoCloseOutline } from "react-icons/io5";
 import LeadTasksTab, { TaskData } from "./LeadTasksTab";
 import LeadDocumentsTab from "./LeadDocumentsTab";
+import LeadOrdersTab from "./LeadOrdersTab";
 import { useSearchParams } from "next/navigation";
 import { AiOutlineSearch } from "react-icons/ai";
 import { tasks } from "firebase-functions/v2";
@@ -1142,115 +1143,13 @@ export default function Home() {
     {
       label: "Order",
       content: (
-        <div className="w-full">
-          {ordersList && ordersList.length > 0 ? (
-            <div className="w-full overflow-x-auto border border-gray-600 rounded-lg">
-              <table className="w-full text-left text-sm text-white">
-                <thead className="text-xs uppercase talbleheaderBg text-white border-b border-gray-600">
-                  <tr>
-                    <th className="py-3 px-4 w-12 text-center">#</th>
-                    <th className="py-3 px-4">Order Number</th>
-                    <th className="py-3 px-4">Date</th>
-                    <th className="py-3 px-4 text-center">Items</th>
-                    <th className="py-3 px-4 text-right">Grand Total</th>
-                    <th className="py-3 px-4 text-center">Order Status</th>
-                    <th className="py-3 px-4 text-center">Payment</th>
-                    <th className="py-3 px-4 text-center w-36">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-700/60">
-                  {ordersList.map((ord: any, idx: number) => {
-                    return (
-                      <React.Fragment key={ord.id || idx}>
-                        <tr className="odd:bg-[#404040] even:bg-[#2d2d2d] hover:bg-primary-700/80 transition-colors">
-                          <td className="py-3 px-4 text-center text-gray-300 font-medium">
-                            {idx + 1}
-                          </td>
-                          <td className="py-3 px-4 font-bold text-primary-300">
-                            {ord.order_number}
-                          </td>
-                          <td className="py-3 px-4 text-xs text-gray-200">
-                            {new Date(ord.created_at).toLocaleDateString()}{" "}
-                            {new Date(ord.created_at).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </td>
-                          <td className="py-3 px-4 text-center font-medium text-white">
-                            <span className="px-2 py-0.5 rounded bg-gray-700 text-xs font-semibold text-white">
-                              {ord.total_items} Items
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-right font-extrabold text-white text-base">
-                            {Number(ord.grand_total).toFixed(2)}
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <select
-                              value={ord.order_status || "Pending"}
-                              onChange={(e) =>
-                                handleQuickUpdateOrderStatus(
-                                  ord.id,
-                                  e.target.value,
-                                  ord.payment_status,
-                                )
-                              }
-                              className="bg-black/60 border border-gray-600 text-xs text-white rounded px-2 py-1 outline-none cursor-pointer"
-                            >
-                              <option value="Pending">Pending</option>
-                              <option value="Processing">Processing</option>
-                              <option value="Confirmed">Confirmed</option>
-                              <option value="Shipped">Shipped</option>
-                              <option value="Delivered">Delivered</option>
-                              <option value="Cancelled">Cancelled</option>
-                            </select>
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <select
-                              value={ord.payment_status || "Pending"}
-                              onChange={(e) =>
-                                handleQuickUpdateOrderStatus(
-                                  ord.id,
-                                  ord.order_status,
-                                  e.target.value,
-                                )
-                              }
-                              className="bg-black/60 border border-gray-600 text-xs text-white rounded px-2 py-1 outline-none cursor-pointer"
-                            >
-                              <option value="Pending">Pending</option>
-                              <option value="Paid">Paid</option>
-                              <option value="Failed">Failed</option>
-                              <option value="Refunded">Refunded</option>
-                            </select>
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <div className="flex gap-2 justify-center">
-                              <button
-                                onClick={() => openEditOrderFlyout(ord)}
-                                className="py-1 px-2.5 bg-primary-600 hover:bg-primary-700 rounded text-white text-sm cursor-pointer transition-colors"
-                                title="Edit Order"
-                              >
-                                <MdEdit />
-                              </button>
-                              <button
-                                onClick={() => deleteLeadOrder(ord)}
-                                className="py-1 px-2.5 bg-red-600 hover:bg-red-700 rounded text-white text-sm cursor-pointer transition-colors"
-                                title="Delete Order"
-                              >
-                                <RiDeleteBin6Line />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      </React.Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-center text-gray-400 py-12 text-base font-medium">No data found</p>
-          )}
-        </div>
+        <LeadOrdersTab
+          leadId={leadId}
+          hitApi={hitApi}
+          setHitApi={setHitApi}
+          isCreateOpen={isOrderFlyout}
+          onCloseCreate={() => setIsOrderFlyout(false)}
+        />
       ),
     },
   ];
