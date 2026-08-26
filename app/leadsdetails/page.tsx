@@ -1729,9 +1729,9 @@ export default function Home() {
                               toast.success("Lead contact updated successfully");
                               setIsEditFirstLead(true);
                               setHitApi(!hitApi);
-                            } catch (e) {
+                            } catch (e: any) {
                               console.error(e);
-                              toast.error("Failed to update lead");
+                              toast.error(e.response?.data?.msg || e.response?.data?.message || "Failed to update lead");
                             } finally {
                               setSubmitting(false);
                             }

@@ -293,7 +293,7 @@ export default function Home() {
       toast.success("Lead is Updated");
       setHitApi(!hitApi);
     } catch (error: any) {
-      toast.error("Lead is not Updated");
+      toast.error(error.response?.data?.msg || error.response?.data?.message || "Lead is not Updated");
     } finally {
       setIsLoading(false);
     }
