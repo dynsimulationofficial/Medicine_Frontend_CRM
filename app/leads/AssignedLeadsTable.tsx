@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FaRegCheckCircle, FaSearchPlus } from "react-icons/fa";
+import { FaRegCheckCircle, FaSearchPlus, FaBullhorn } from "react-icons/fa";
 import { RxAvatar } from "react-icons/rx";
 import { IoMailOpenOutline, IoCloseOutline } from "react-icons/io5";
 import { MdOutlinePhone, MdOutlineLocationCity, MdOutlineSettings, MdEdit } from "react-icons/md";
@@ -131,6 +131,7 @@ const AssignedLeadsTable = ({
 
   // Local dropdown states
   const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
+  const [campaignData, setCampaignData] = useState<any[]>([]);
   const [agentList, setAgentList] = useState<any[]>([]);
 
   // ✅ Exact sample code formula: single flyout state
@@ -222,6 +223,22 @@ const AssignedLeadsTable = ({
   const areAllSelected = !!data?.length && data.every((i: any) => selectedIds.includes(i.id));
 
   // --- Edit Lead Submit ---
+  
+  const fetchCampaigns = async (sourceId?: string) => {
+    try {
+      const url = sourceId ? `/campaigns/by-source?lead_source_id=${sourceId}` : `/campaigns?limit=100`;
+      const res = await AxiosProvider.get(url);
+      const campList = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data?.data?.data)
+        ? res.data.data.data
+        : [];
+      setCampaignData(campList);
+    } catch {
+      setCampaignData([]);
+    }
+  };
+
   const handleUpdateLead = async (values: any) => {
     try {
       await AxiosProvider.post("/leads/update", values);
@@ -385,6 +402,15 @@ const AssignedLeadsTable = ({
 
             <th scope="col" className="px-3 py-2 hidden md:table-cell">
               <div className="flex items-center gap-2">
+                <FaBullhorn className="w-3.5 h-3.5 text-white" />
+                <span className="font-bold text-white text-xs tracking-wide">
+                  Source / Campaign
+                </span>
+              </div>
+            </th>
+
+            <th scope="col" className="px-3 py-2 hidden md:table-cell">
+              <div className="flex items-center gap-2">
                 <ImUserTie className="w-4 h-4 text-white" />
                 <span className="font-bold text-white text-xs tracking-wide">
                   Agent
@@ -406,13 +432,13 @@ const AssignedLeadsTable = ({
         <tbody>
           {isLoading ? (
             <tr>
-              <td colSpan={7} className="text-center py-8 text-white">
+              <td colSpan={8} className="text-center py-8 text-white">
                 <div className="animate-pulse">Loading leads...</div>
               </td>
             </tr>
           ) : !data || data.length === 0 || isError ? (
             <tr>
-              <td colSpan={7} className="text-center text-xl py-8 text-white">
+              <td colSpan={8} className="text-center text-xl py-8 text-white">
                 <div>Data not found</div>
               </td>
             </tr>
@@ -479,6 +505,18 @@ const AssignedLeadsTable = ({
                   </span>
                 </td>
 
+                {/* Source / Campaign */}
+                <td className="px-3 py-2 hidden md:table-cell text-xs">
+                  <div className="flex flex-col">
+                    <span className="text-white font-medium">{item?.lead_source || "-"}</span>
+                    {item?.campaign_name && (
+                      <span className="text-[11px] text-primary-400 font-normal">
+                        {item.campaign_name}
+                      </span>
+                    )}
+                  </div>
+                </td>
+
                 {/* Agent */}
                 <td className="px-3 py-2 hidden md:table-cell">
                   <span className="text-white text-xs capitalize">
@@ -492,6 +530,7 @@ const AssignedLeadsTable = ({
                     <button
                       onClick={() => {
                         setSelectedData(item);
+                        fetchCampaigns(item?.lead_source_id);
                         setFlyout("edit");
                       }}
                       className="p-1.5 bg-black hover:bg-primary-800 active:bg-primary-800 flex items-center justify-center rounded-lg"
@@ -632,6 +671,7 @@ const AssignedLeadsTable = ({
                         : ""),
                   )?.id ||
                   "",
+                campaign_id: selectedData?.campaign_id ?? selectedData?.campaign?.id ?? "",
                 whatsapp_number: selectedData?.whatsapp_number ?? "",
                 agent_id: selectedData?.agent?.id || selectedData?.agent_id || "",
                 lead_status: selectedData?.lead_status ?? "New",
@@ -651,6 +691,7 @@ const AssignedLeadsTable = ({
                   postal_code: values.postal_code || undefined,
                   best_time_to_call: values.best_time_to_call || undefined,
                   lead_source_id: values.lead_source_id || undefined,
+        campaign_id: values.campaign_id || undefined,
                   whatsapp_number: values.whatsapp_number || undefined,
                   agent_id: values.agent_id || undefined,
                   lead_status: values.lead_status || undefined,

@@ -76,29 +76,95 @@ export default function BulkUploadLead({
   onSuccess,
 }: BulkUploadLeadProps) {
   const [excelFile, setExcelFile] = useState<File | null>(null);
-  const [leadSourceDisplay, setLeadSourceDisplay] = useState<any>(null);
-  const [agentDisplay, setAgentDisplay] = useState<any>(null);
+  const [selectedSource, setSelectedSource] = useState<any>(null);
+  const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
+  const [selectedAgent, setSelectedAgent] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Local dropdown states
-  const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
-  const [agentList, setAgentList] = useState<any[]>([]);
+  // Dropdown states
+  const [leadSourceOptions, setLeadSourceOptions] = useState<any[]>([]);
+  const [campaignOptions, setCampaignOptions] = useState<any[]>([]);
+  const [agentOptions, setAgentOptions] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
-        const [srcRes, agentRes] = await Promise.all([
-          AxiosProvider.get("/leadsources"),
-          AxiosProvider.get("/allagents"),
-        ]);
-        setLeadSourceData(srcRes.data?.data?.data ?? []);
-        setAgentList(agentRes.data?.data?.data ?? []);
+        let sourcesList: any[] = [];
+        try {
+          const srcRes = await AxiosProvider.get("/lead-sources?limit=100");
+          sourcesList = Array.isArray(srcRes.data?.data)
+            ? srcRes.data.data
+            : Array.isArray(srcRes.data?.data?.data)
+            ? srcRes.data.data.data
+            : [];
+        } catch {
+          const fallbackRes = await AxiosProvider.get("/leadsources");
+          sourcesList = Array.isArray(fallbackRes.data?.data?.data)
+            ? fallbackRes.data.data.data
+            : Array.isArray(fallbackRes.data?.data)
+            ? fallbackRes.data.data
+            : [];
+        }
+
+        setLeadSourceOptions(
+          sourcesList.map((s: any) => ({
+            value: s.id,
+            label: s.name,
+            id: s.id,
+            name: s.name,
+          }))
+        );
+
+        const agentRes = await AxiosProvider.get("/allagents");
+        const agentsList = Array.isArray(agentRes.data?.data?.data)
+          ? agentRes.data.data.data
+          : Array.isArray(agentRes.data?.data)
+          ? agentRes.data.data
+          : [];
+
+        setAgentOptions(
+          agentsList.map((a: any) => ({
+            value: a.id,
+            label: a.name,
+            id: a.id,
+            name: a.name,
+          }))
+        );
       } catch (err) {
         console.error("Error fetching dropdowns in BulkUploadLead:", err);
       }
     };
     fetchDropdowns();
   }, []);
+
+  // Fetch campaigns dynamically when lead source changes
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        const url = selectedSource?.value
+          ? `/campaigns/by-source?lead_source_id=${selectedSource.value}`
+          : "/campaigns?limit=100";
+        const res = await AxiosProvider.get(url);
+        const campList = Array.isArray(res.data?.data)
+          ? res.data.data
+          : Array.isArray(res.data?.data?.data)
+          ? res.data.data.data
+          : [];
+
+        setCampaignOptions(
+          campList.map((c: any) => ({
+            value: c.id,
+            label: c.name,
+            id: c.id,
+            name: c.name,
+          }))
+        );
+      } catch {
+        setCampaignOptions([]);
+      }
+    };
+    fetchCampaigns();
+  }, [selectedSource]);
 
   const handleUploadFile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -116,11 +182,14 @@ export default function BulkUploadLead({
       const fd = new FormData();
       fd.append("file", excelFile as File);
 
-      if (leadSourceDisplay?.id) {
-        fd.append("lead_source_id", String(leadSourceDisplay.id));
+      if (selectedSource?.value) {
+        fd.append("lead_source_id", String(selectedSource.value));
       }
-      if (agentDisplay?.id) {
-        fd.append("agent_id", String(agentDisplay.id));
+      if (selectedCampaign?.value) {
+        fd.append("campaign_id", String(selectedCampaign.value));
+      }
+      if (selectedAgent?.value) {
+        fd.append("agent_id", String(selectedAgent.value));
       }
 
       const res = await fetch(`${getBaseURL()}/leads/bulk/upload`, {
@@ -148,8 +217,9 @@ export default function BulkUploadLead({
       toast.success(successMessage);
 
       setExcelFile(null);
-      setLeadSourceDisplay(null);
-      setAgentDisplay(null);
+      setSelectedSource(null);
+      setSelectedCampaign(null);
+      setSelectedAgent(null);
       formEl.reset();
       closeFlyout();
       onSuccess();
@@ -181,12 +251,25 @@ export default function BulkUploadLead({
       <div>
         <p className="text-white text-xs font-medium mb-1.5">Lead Source</p>
         <Select
-          value={leadSourceDisplay}
-          onChange={(selected: any) => setLeadSourceDisplay(selected)}
-          options={leadSourceData}
-          getOptionLabel={(opt: any) => opt.name}
-          getOptionValue={(opt: any) => String(opt.id)}
-          placeholder="Select Lead Source"
+          value={selectedSource}
+          onChange={(opt: any) => {
+            setSelectedSource(opt);
+            setSelectedCampaign(null);
+          }}
+          options={leadSourceOptions}
+          placeholder="Select Lead Source (Optional)"
+          isClearable
+          styles={customSelectStyles}
+        />
+      </div>
+
+      <div>
+        <p className="text-white text-xs font-medium mb-1.5">Campaign</p>
+        <Select
+          value={selectedCampaign}
+          onChange={(opt: any) => setSelectedCampaign(opt)}
+          options={campaignOptions}
+          placeholder="Select Campaign (Optional)"
           isClearable
           styles={customSelectStyles}
         />
@@ -195,24 +278,24 @@ export default function BulkUploadLead({
       <div>
         <p className="text-white text-xs font-medium mb-1.5">Assign to Agent</p>
         <Select
-          value={agentDisplay}
-          onChange={(selected: any) => setAgentDisplay(selected)}
-          options={agentList}
-          getOptionLabel={(opt: any) => opt.name}
-          getOptionValue={(opt: any) => String(opt.id)}
-          placeholder="Select Agent"
+          value={selectedAgent}
+          onChange={(opt: any) => setSelectedAgent(opt)}
+          options={agentOptions}
+          placeholder="Select Agent (Optional)"
           isClearable
           styles={customSelectStyles}
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full h-[38px] bg-primary-600 rounded-[4px] text-xs font-medium text-white hover:bg-primary-700 cursor-pointer transition flex items-center justify-center"
-      >
-        {isLoading ? "Uploading..." : "Upload File"}
-      </button>
+      <div className="pt-3">
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full h-[38px] bg-primary-600 hover:bg-primary-700 rounded text-white text-xs font-semibold cursor-pointer transition flex items-center justify-center disabled:opacity-50"
+        >
+          {isLoading ? "Uploading..." : "Upload File"}
+        </button>
+      </div>
     </form>
   );
 }

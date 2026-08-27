@@ -31,14 +31,19 @@ export default function LeadProfileSidebar({
   // Dropdown states for Edit Lead Properties
   const [agentList, setAgentList] = useState<any[]>([]);
   const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
+  const [campaignData, setCampaignData] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
-        const [agentRes, srcRes] = await Promise.all([
+        const [agentRes, srcRes, campRes] = await Promise.all([
           AxiosProvider.get("/allagents"),
-          AxiosProvider.get("/leadsources"),
+          AxiosProvider.get("/lead-sources?limit=100"),
+          AxiosProvider.get("/campaigns?limit=100"),
         ]);
+        setAgentList(agentRes.data?.data?.data ?? agentRes.data?.data ?? []);
+        setLeadSourceData(srcRes.data?.data ?? srcRes.data?.data?.data ?? []);
+        setCampaignData(campRes.data?.data ?? campRes.data?.data?.data ?? []);
         setAgentList(agentRes.data?.data?.data ?? []);
         setLeadSourceData(srcRes.data?.data?.data ?? []);
       } catch (err) {
@@ -529,6 +534,7 @@ export default function LeadProfileSidebar({
                   value: data?.agent?.name || data?.owner_name || "Unassigned",
                 },
                 { label: "Lead Source", value: data?.lead_source },
+                { label: "Campaign", value: data?.campaign_name || data?.campaign?.name || "-" },
                 { label: "Best time to call", value: data?.best_time_to_call },
                 { label: "WhatsApp Number", value: data?.whatsapp_number },
               ].map((row, idx) => (
@@ -570,6 +576,7 @@ export default function LeadProfileSidebar({
                       : ""),
                 )?.id ||
                 "",
+              campaign_id: data?.campaign_id || data?.campaign?.id || "",
               best_time_to_call: data?.best_time_to_call ?? "",
               whatsapp_number: data?.whatsapp_number ?? "",
             }}
@@ -577,6 +584,7 @@ export default function LeadProfileSidebar({
               agent_id: Yup.string().nullable(),
               lead_status: Yup.string().nullable(),
               lead_source_id: Yup.string().nullable(),
+              campaign_id: Yup.string().nullable(),
               best_time_to_call: Yup.string().trim().nullable(),
               whatsapp_number: Yup.string().trim().nullable(),
             })}
@@ -587,6 +595,7 @@ export default function LeadProfileSidebar({
                   agent_id: values.agent_id || undefined,
                   lead_status: values.lead_status || undefined,
                   lead_source_id: values.lead_source_id || undefined,
+                  campaign_id: values.campaign_id || undefined,
                   best_time_to_call: values.best_time_to_call || undefined,
                   whatsapp_number: values.whatsapp_number || undefined,
                 };
@@ -725,6 +734,54 @@ export default function LeadProfileSidebar({
                     getOptionValue={(opt: any) => opt.id}
                     options={leadSourceData}
                     placeholder="Select Lead Source"
+                    isClearable
+                    classNames={{
+                      control: () =>
+                        "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
+                    }}
+                    styles={{
+                      menu: (base) => ({
+                        ...base,
+                        borderRadius: 4,
+                        backgroundColor: "#000",
+                      }),
+                      option: (base, { isFocused, isSelected }) => ({
+                        ...base,
+                        backgroundColor: isSelected
+                          ? "var(--primary-600)"
+                          : isFocused
+                          ? "#222"
+                          : "#000",
+                        color: "#fff",
+                      }),
+                      singleValue: (base) => ({ ...base, color: "#fff" }),
+                      input: (base) => ({ ...base, color: "#fff" }),
+                      placeholder: (base) => ({ ...base, color: "#888" }),
+                    }}
+                  />
+                </div>
+
+                {/* Campaign */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">
+                    Campaign
+                  </label>
+                  <Select
+                    value={
+                      campaignData.find((opt) => opt.id === values.campaign_id) || null
+                    }
+                    onChange={(selected: any) =>
+                      setFieldValue("campaign_id", selected ? selected.id : "")
+                    }
+                    onBlur={() => setFieldTouched("campaign_id", true)}
+                    getOptionLabel={(opt: any) => opt.name}
+                    getOptionValue={(opt: any) => opt.id}
+                    options={
+                      values.lead_source_id
+                        ? campaignData.filter((c) => !c.lead_source_id || c.lead_source_id === values.lead_source_id)
+                        : campaignData
+                    }
+                    placeholder="Select Campaign"
                     isClearable
                     classNames={{
                       control: () =>

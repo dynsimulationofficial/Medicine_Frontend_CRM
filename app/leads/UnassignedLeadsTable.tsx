@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FaRegCheckCircle, FaSearchPlus } from "react-icons/fa";
+import { FaRegCheckCircle, FaSearchPlus, FaBullhorn } from "react-icons/fa";
 import { RxAvatar } from "react-icons/rx";
 import { IoMailOpenOutline, IoCloseOutline } from "react-icons/io5";
 import { MdOutlinePhone, MdOutlineLocationCity, MdOutlineSettings, MdEdit } from "react-icons/md";
@@ -131,6 +131,7 @@ const UnassignedLeadsTable = ({
 
   // Local dropdown states
   const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
+  const [campaignData, setCampaignData] = useState<any[]>([]);
   const [agentList, setAgentList] = useState<any[]>([]);
 
   // ✅ Exact sample code formula: single flyout state
@@ -222,6 +223,22 @@ const UnassignedLeadsTable = ({
   const areAllSelected = !!data?.length && data.every((i: any) => selectedIds.includes(i.id));
 
   // --- Edit Lead Submit ---
+  
+  const fetchCampaigns = async (sourceId?: string) => {
+    try {
+      const url = sourceId ? `/campaigns/by-source?lead_source_id=${sourceId}` : `/campaigns?limit=100`;
+      const res = await AxiosProvider.get(url);
+      const campList = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data?.data?.data)
+        ? res.data.data.data
+        : [];
+      setCampaignData(campList);
+    } catch {
+      setCampaignData([]);
+    }
+  };
+
   const handleUpdateLead = async (values: any) => {
     try {
       await AxiosProvider.post("/leads/update", values);
@@ -404,6 +421,15 @@ const UnassignedLeadsTable = ({
               </div>
             </th>
 
+            <th scope="col" className="px-3 py-2 hidden md:table-cell">
+              <div className="flex items-center gap-2">
+                <FaBullhorn className="w-3.5 h-3.5 text-white" />
+                <span className="font-bold text-white text-xs tracking-wide">
+                  Source / Campaign
+                </span>
+              </div>
+            </th>
+
             <th scope="col" className="px-3 py-2 md:table-cell">
               <div className="flex items-center gap-2">
                 <MdOutlineSettings className="w-4 h-4 text-white" />
@@ -418,13 +444,13 @@ const UnassignedLeadsTable = ({
         <tbody>
           {isLoading ? (
             <tr>
-              <td colSpan={6} className="text-center py-8 text-white">
+              <td colSpan={7} className="text-center py-8 text-white">
                 <div className="animate-pulse">Loading leads...</div>
               </td>
             </tr>
           ) : !data || data.length === 0 || isError ? (
             <tr>
-              <td colSpan={6} className="text-center text-xl py-8 text-white">
+              <td colSpan={7} className="text-center text-xl py-8 text-white">
                 <div>Data not found</div>
               </td>
             </tr>
@@ -491,12 +517,25 @@ const UnassignedLeadsTable = ({
                   </span>
                 </td>
 
+                {/* Source / Campaign */}
+                <td className="px-3 py-2 hidden md:table-cell text-xs">
+                  <div className="flex flex-col">
+                    <span className="text-white font-medium">{item?.lead_source || "-"}</span>
+                    {item?.campaign_name && (
+                      <span className="text-[11px] text-primary-400 font-normal">
+                        {item.campaign_name}
+                      </span>
+                    )}
+                  </div>
+                </td>
+
                 {/* Action */}
                 <td className="px-3 py-2 md:table-cell">
                   <div className="flex gap-1 md:gap-2 justify-center md:justify-start">
                     <button
                       onClick={() => {
                         setSelectedData(item);
+                        fetchCampaigns(item?.lead_source_id);
                         setFlyout("edit");
                       }}
                       className="p-1.5 bg-black hover:bg-primary-800 active:bg-primary-800 flex items-center justify-center rounded-lg"
@@ -648,6 +687,7 @@ const UnassignedLeadsTable = ({
                         : ""),
                   )?.id ||
                   "",
+                campaign_id: selectedData?.campaign_id ?? selectedData?.campaign?.id ?? "",
                 whatsapp_number: selectedData?.whatsapp_number ?? "",
                 lead_status: selectedData?.lead_status ?? "New",
               }}
@@ -666,6 +706,7 @@ const UnassignedLeadsTable = ({
                   postal_code: values.postal_code || undefined,
                   best_time_to_call: values.best_time_to_call || undefined,
                   lead_source_id: values.lead_source_id || undefined,
+        campaign_id: values.campaign_id || undefined,
                   whatsapp_number: values.whatsapp_number || undefined,
                   lead_status: values.lead_status || undefined,
                 };
@@ -746,6 +787,85 @@ const UnassignedLeadsTable = ({
                         <ErrorMessage name="phone" component="div" className="text-red-500 text-xs mt-1" />
                       </div>
 
+                      {/* WhatsApp Number (Placed next to Phone) */}
+                      <div>
+                        <p className="text-white text-xs font-medium mb-1.5">WhatsApp Number</p>
+                        <div className="flex w-full h-[38px] border border-gray-700 rounded-[4px] bg-black overflow-hidden focus-within:border-primary-600">
+                          <select
+                            className="h-full bg-black text-white text-xs border-r border-gray-700 px-2 outline-none cursor-pointer"
+                            value={values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91"}
+                            onChange={(e) => {
+                              const currentCode = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
+                              const numberPart = (values.whatsapp_number || "").replace(currentCode, "");
+                              setFieldValue("whatsapp_number", e.target.value + numberPart);
+                            }}
+                          >
+                            <option value="+91">+91</option>
+                            <option value="+44">+44</option>
+                            <option value="+1">+1</option>
+                          </select>
+                          <input
+                            type="text"
+                            maxLength={15}
+                            className="h-full w-full bg-transparent text-white text-xs px-3 outline-none placeholder-gray-400"
+                            placeholder="Enter whatsapp number"
+                            value={(() => {
+                              const code = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
+                              return (values.whatsapp_number || "").substring(code.length);
+                            })()}
+                            onChange={(e) => {
+                              const code = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
+                              const digitsOnly = e.target.value.replace(/\D/g, "");
+                              setFieldValue("whatsapp_number", digitsOnly ? code + digitsOnly : "");
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Address Line 1 */}
+                      <div>
+                        <p className="text-white text-xs font-medium mb-1.5">Address Line 1</p>
+                        <Field
+                          type="text"
+                          name="address_line1"
+                          placeholder="Street, House no."
+                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                        />
+                      </div>
+
+                      {/* Address Line 2 */}
+                      <div>
+                        <p className="text-white text-xs font-medium mb-1.5">Address Line 2</p>
+                        <Field
+                          type="text"
+                          name="address_line2"
+                          placeholder="Apartment, suite, unit, etc."
+                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                        />
+                      </div>
+
+                      {/* City */}
+                      <div>
+                        <p className="text-white text-xs font-medium mb-1.5">City</p>
+                        <Field
+                          type="text"
+                          name="city"
+                          placeholder="City / Town"
+                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                        />
+                      </div>
+
+                      {/* Postal Code */}
+                      <div>
+                        <p className="text-white text-xs font-medium mb-1.5">Postal Code</p>
+                        <Field
+                          type="text"
+                          name="postal_code"
+                          placeholder="400071"
+                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                        />
+                      </div>
+
                       {/* Country */}
                       <div>
                         <p className="text-white text-xs font-medium mb-1.5">Country</p>
@@ -781,50 +901,6 @@ const UnassignedLeadsTable = ({
                         />
                       </div>
 
-                      {/* City */}
-                      <div>
-                        <p className="text-white text-xs font-medium mb-1.5">City</p>
-                        <Field
-                          type="text"
-                          name="city"
-                          placeholder="City / Town"
-                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
-                        />
-                      </div>
-
-                      {/* Address Line 1 */}
-                      <div>
-                        <p className="text-white text-xs font-medium mb-1.5">Address Line 1</p>
-                        <Field
-                          type="text"
-                          name="address_line1"
-                          placeholder="Street, House no."
-                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
-                        />
-                      </div>
-
-                      {/* Address Line 2 */}
-                      <div>
-                        <p className="text-white text-xs font-medium mb-1.5">Address Line 2</p>
-                        <Field
-                          type="text"
-                          name="address_line2"
-                          placeholder="Apartment, suite, unit, etc."
-                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
-                        />
-                      </div>
-
-                      {/* Postal Code */}
-                      <div>
-                        <p className="text-white text-xs font-medium mb-1.5">Postal Code</p>
-                        <Field
-                          type="text"
-                          name="postal_code"
-                          placeholder="400071"
-                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
-                        />
-                      </div>
-
                       {/* Best Time to Call */}
                       <div>
                         <p className="text-white text-xs font-medium mb-1.5">Best Time to Call</p>
@@ -834,57 +910,6 @@ const UnassignedLeadsTable = ({
                           placeholder="e.g., 3–5 PM"
                           className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                         />
-                      </div>
-
-                      {/* Lead Source */}
-                      <div>
-                        <p className="text-white text-xs font-medium mb-1.5">Lead Source</p>
-                        <Select
-                          value={leadSourceData.find((opt: any) => opt.id === values.lead_source_id) || null}
-                          onChange={(selected: any) => setFieldValue("lead_source_id", selected ? selected.id : "")}
-                          onBlur={() => setFieldTouched("lead_source_id", true)}
-                          getOptionLabel={(opt: any) => opt.name}
-                          getOptionValue={(opt: any) => opt.id}
-                          options={leadSourceData}
-                          placeholder="Select Lead Source"
-                          isClearable
-                          styles={customSelectStyles}
-                        />
-                      </div>
-
-                      {/* WhatsApp Number */}
-                      <div>
-                        <p className="text-white text-xs font-medium mb-1.5">WhatsApp Number</p>
-                        <div className="flex w-full h-[38px] border border-gray-700 rounded-[4px] bg-black overflow-hidden focus-within:border-primary-600">
-                          <select
-                            className="h-full bg-black text-white text-xs border-r border-gray-700 px-2 outline-none cursor-pointer"
-                            value={values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91"}
-                            onChange={(e) => {
-                              const currentCode = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
-                              const numberPart = (values.whatsapp_number || "").replace(currentCode, "");
-                              setFieldValue("whatsapp_number", e.target.value + numberPart);
-                            }}
-                          >
-                            <option value="+91">+91</option>
-                            <option value="+44">+44</option>
-                            <option value="+1">+1</option>
-                          </select>
-                          <input
-                            type="text"
-                            maxLength={10}
-                            className="h-full w-full bg-transparent text-white text-xs px-3 outline-none placeholder-gray-400"
-                            placeholder="Enter whatsapp number"
-                            value={(() => {
-                              const code = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
-                              return (values.whatsapp_number || "").substring(code.length);
-                            })()}
-                            onChange={(e) => {
-                              const code = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
-                              const digitsOnly = e.target.value.replace(/\D/g, "");
-                              setFieldValue("whatsapp_number", code + digitsOnly);
-                            }}
-                          />
-                        </div>
                       </div>
 
                       {/* Lead Status */}
@@ -900,6 +925,43 @@ const UnassignedLeadsTable = ({
                           getOptionValue={(opt: any) => opt.id}
                           options={leadStatusOptions}
                           placeholder="Select Lead Status"
+                          styles={customSelectStyles}
+                        />
+                      </div>
+
+                      {/* Lead Source */}
+                      <div>
+                        <p className="text-white text-xs font-medium mb-1.5">Lead Source</p>
+                        <Select
+                          value={leadSourceData.find((opt: any) => opt.id === values.lead_source_id) || null}
+                          onChange={(selected: any) => {
+                            const srcId = selected ? selected.id : "";
+                            setFieldValue("lead_source_id", srcId);
+                            setFieldValue("campaign_id", "");
+                            fetchCampaigns(srcId);
+                          }}
+                          onBlur={() => setFieldTouched("lead_source_id", true)}
+                          getOptionLabel={(opt: any) => opt.name}
+                          getOptionValue={(opt: any) => opt.id}
+                          options={leadSourceData}
+                          placeholder="Select Lead Source"
+                          isClearable
+                          styles={customSelectStyles}
+                        />
+                      </div>
+
+                      {/* Campaign (Right after Lead Source!) */}
+                      <div>
+                        <p className="text-white text-xs font-medium mb-1.5">Campaign</p>
+                        <Select
+                          value={campaignData.find((opt: any) => opt.id === values.campaign_id) || null}
+                          onChange={(selected: any) => setFieldValue("campaign_id", selected ? selected.id : "")}
+                          onBlur={() => setFieldTouched("campaign_id", true)}
+                          getOptionLabel={(opt: any) => opt.name}
+                          getOptionValue={(opt: any) => opt.id}
+                          options={campaignData}
+                          placeholder="Select Campaign"
+                          isClearable
                           styles={customSelectStyles}
                         />
                       </div>
