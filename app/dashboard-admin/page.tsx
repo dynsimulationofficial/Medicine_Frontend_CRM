@@ -309,7 +309,7 @@ export default function AdminDashboardPage() {
                                   <th className="py-2.5 px-3">Subject</th>
                                   <th className="py-2.5 px-3">Scheduled Time</th>
                                   <th className="py-2.5 px-3 text-center">Status</th>
-                                  <th className="py-2.5 px-3 text-center w-24">Action</th>
+                                  <th className="py-2.5 px-3 text-center w-28 whitespace-nowrap">Action</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-gray-800/60">
@@ -352,7 +352,7 @@ export default function AdminDashboardPage() {
                                       <button
                                         type="button"
                                         onClick={() => handleOpenLead(task.lead_id)}
-                                        className="px-2.5 py-1 bg-primary-600 hover:bg-primary-700 text-white rounded text-[11px] font-medium transition cursor-pointer"
+                                        className="px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white rounded text-xs font-semibold whitespace-nowrap inline-flex items-center gap-1 transition cursor-pointer"
                                       >
                                         View Lead
                                       </button>
@@ -400,7 +400,7 @@ export default function AdminDashboardPage() {
                           <span className="text-sm font-semibold text-white">
                             {grp.agent_name}
                           </span>
-                          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-red-900/40 text-red-300 border border-red-700/50">
+                          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-primary-600/30 text-primary-300 border border-primary-500/30">
                             {grp.tasks.length} {grp.tasks.length === 1 ? "Task" : "Tasks"} Overdue
                           </span>
                         </div>
@@ -421,7 +421,7 @@ export default function AdminDashboardPage() {
                                   <th className="py-2.5 px-3">Subject</th>
                                   <th className="py-2.5 px-3">Due Date / Time</th>
                                   <th className="py-2.5 px-3 text-center">Status</th>
-                                  <th className="py-2.5 px-3 text-center w-24">Action</th>
+                                  <th className="py-2.5 px-3 text-center w-28 whitespace-nowrap">Action</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-gray-800/60">
@@ -446,19 +446,25 @@ export default function AdminDashboardPage() {
                                     <td className="py-2 px-3 text-white">
                                       {task.subject || "Follow-up"}
                                     </td>
-                                    <td className="py-2 px-3 text-red-300 font-medium">
+                                    <td className="py-2 px-3 text-gray-300">
                                       {task.end_at_ca || task.due_date || task.start_at_ca || "-"}
                                     </td>
                                     <td className="py-2 px-3 text-center">
-                                      <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-red-900/40 text-red-300 border border-red-700">
-                                        Overdue
+                                      <span
+                                        className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
+                                          task.status === "done"
+                                            ? "bg-green-900/40 text-green-300 border-green-700"
+                                            : "bg-yellow-900/40 text-yellow-300 border-yellow-700"
+                                        }`}
+                                      >
+                                        {task.status === "done" ? "Done" : "Pending"}
                                       </span>
                                     </td>
                                     <td className="py-2 px-3 text-center">
                                       <button
                                         type="button"
                                         onClick={() => handleOpenLead(task.lead_id)}
-                                        className="px-2.5 py-1 bg-primary-600 hover:bg-primary-700 text-white rounded text-[11px] font-medium transition cursor-pointer"
+                                        className="px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white rounded text-xs font-semibold whitespace-nowrap inline-flex items-center gap-1 transition cursor-pointer"
                                       >
                                         View Lead
                                       </button>

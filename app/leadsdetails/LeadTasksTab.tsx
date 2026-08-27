@@ -5,12 +5,14 @@ import AxiosProvider from "../../provider/AxiosProvider";
 import { toast } from "react-toastify";
 import { MdEdit } from "react-icons/md";
 import { FaRegCheckCircle } from "react-icons/fa";
+import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoCloseOutline } from "react-icons/io5";
 import { FiPlusCircle } from "react-icons/fi";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import Swal from "sweetalert2";
 import StorageManager from "../../provider/StorageManager";
 
 const storage = new StorageManager();
@@ -146,7 +148,42 @@ export default function LeadTasksTab({
     if (onCloseCreate) onCloseCreate();
   };
 
-  const currentOwner = agentName || (storage.getUserRole() === "Agent" ? storage.getUserName() : "") || "Wasique80";
+  const handleDeleteTask = async (taskId: string, subject: string) => {
+    const res = await Swal.fire({
+      title: "Are you sure?",
+      text: `Do you really want to delete task "${subject || "Task"}"?`,
+      icon: "warning",
+      background: "#181818",
+      color: "#ffffff",
+      iconColor: "#eab308",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#374151",
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel",
+      customClass: {
+        popup: "border border-gray-700 rounded-2xl shadow-2xl",
+      },
+    });
+    if (res.isConfirmed) {
+      try {
+        await AxiosProvider.post("/leads/tasks/delete", { id: taskId, lead_id: leadId });
+        toast.success("Task deleted successfully");
+        setHitApi((prev) => !prev);
+        fetchTasks();
+      } catch (err: any) {
+        console.error("Error deleting task:", err);
+        toast.error(
+          err?.response?.data?.message ||
+            err?.response?.data?.msg ||
+            "Failed to delete task",
+        );
+      }
+    }
+  };
+
+  const userRole = storage.getUserRole();
+  const currentOwner = agentName || (userRole === "Agent" ? storage.getUserName() : "") || "Wasique80";
 
   return (
     <div className="w-full">
@@ -177,7 +214,7 @@ export default function LeadTasksTab({
                 <th className="py-2.5 px-3">Details</th>
                 <th className="py-2.5 px-3 text-center">Status</th>
                 <th className="py-2.5 px-3 text-center">Mark Done</th>
-                <th className="py-2.5 px-3 text-center w-20">Action</th>
+                <th className="py-2.5 px-3 text-center w-24">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700/60">
@@ -227,18 +264,30 @@ export default function LeadTasksTab({
                       </button>
                     </td>
                     <td className="py-2 px-3 text-center">
-                      <button
-                        onClick={() => setEditingTask(t)}
-                        disabled={locked}
-                        className={`p-1.5 rounded text-white text-xs transition-colors ${
-                          locked
-                            ? "bg-gray-600 opacity-40 cursor-not-allowed"
-                            : "bg-primary-600 hover:bg-primary-700 cursor-pointer"
-                        }`}
-                        title="Edit Task"
-                      >
-                        <MdEdit className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => setEditingTask(t)}
+                          disabled={locked}
+                          className={`p-1.5 rounded text-white text-xs transition-colors ${
+                            locked
+                              ? "bg-gray-600 opacity-40 cursor-not-allowed"
+                              : "bg-primary-600 hover:bg-primary-700 cursor-pointer"
+                          }`}
+                          title="Edit Task"
+                        >
+                          <MdEdit className="w-3.5 h-3.5" />
+                        </button>
+                        {userRole === "Admin" && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTask(t.id, t.subject)}
+                            className="p-1.5 bg-red-600 hover:bg-red-700 rounded text-white text-xs transition-colors cursor-pointer"
+                            title="Delete Task"
+                          >
+                            <RiDeleteBin6Line className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -279,14 +328,14 @@ export default function LeadTasksTab({
               subject: `Meeting: ${leadName || "Lead"}`,
               location: "online",
               description: "",
-              start_at: defaultStart,
-              end_at: defaultEnd,
+              start_at: null as Date | null,
+              end_at: null as Date | null,
             }}
             validationSchema={Yup.object({
               location: Yup.string().trim().required("Location is required"),
               description: Yup.string().trim().optional(),
-              start_at: Yup.date().required("Start date is required"),
-              end_at: Yup.date().required("End date is required"),
+              start_at: Yup.date().nullable().required("Start date is required"),
+              end_at: Yup.date().nullable().required("End date is required"),
             })}
             onSubmit={async (values, { setSubmitting }) => {
               const activeAgentId =
@@ -385,8 +434,16 @@ export default function LeadTasksTab({
                   <p className="text-white font-medium text-xs mb-1">From</p>
                   <DatePicker
                     selected={values.start_at}
+                    placeholderText="Select start date & time"
                     onChange={(date: Date | null) => {
-                      if (date) setFieldValue("start_at", date);
+                      if (date) {
+                        setFieldValue("start_at", date);
+                        const nextEnd = new Date(date.getTime() + 30 * 60 * 1000);
+                        setFieldValue("end_at", nextEnd);
+                      } else {
+                        setFieldValue("start_at", null);
+                        setFieldValue("end_at", null);
+                      }
                     }}
                     showTimeSelect
                     timeFormat="h:mma"
@@ -401,8 +458,9 @@ export default function LeadTasksTab({
                   <p className="text-white font-medium text-xs mb-1">To</p>
                   <DatePicker
                     selected={values.end_at}
+                    placeholderText="Select end date & time"
                     onChange={(date: Date | null) => {
-                      if (date) setFieldValue("end_at", date);
+                      setFieldValue("end_at", date);
                     }}
                     showTimeSelect
                     timeFormat="h:mma"
@@ -569,7 +627,11 @@ export default function LeadTasksTab({
                     <DatePicker
                       selected={values.start_at}
                       onChange={(date: Date | null) => {
-                        if (date) setFieldValue("start_at", date);
+                        if (date) {
+                          setFieldValue("start_at", date);
+                          const nextEnd = new Date(date.getTime() + 30 * 60 * 1000);
+                          setFieldValue("end_at", nextEnd);
+                        }
                       }}
                       showTimeSelect
                       timeFormat="h:mma"
