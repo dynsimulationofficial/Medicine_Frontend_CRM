@@ -46,6 +46,7 @@ export default function Home() {
         <UnassignedLeadsTable
           userRole={userRole}
           refreshKey={refreshKey}
+          onRefresh={refreshData}
           onViewLead={handleViewLead}
         />
       ),
@@ -56,6 +57,7 @@ export default function Home() {
         <AssignedLeadsTable
           userRole={userRole}
           refreshKey={refreshKey}
+          onRefresh={refreshData}
           onViewLead={handleViewLead}
         />
       ),

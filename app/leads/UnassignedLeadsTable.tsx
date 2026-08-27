@@ -51,6 +51,7 @@ const LeadSchema = Yup.object({
 const UnassignedLeadsTable = ({
   userRole = "",
   refreshKey = 0,
+  onRefresh,
   onViewLead,
 }: any) => {
   const [data, setData] = useState<any[]>([]);
@@ -164,7 +165,8 @@ const UnassignedLeadsTable = ({
       await AxiosProvider.post("/leads/update", values);
       toast.success("Lead is Updated");
       closeFlyout();
-      fetchLeads(page, filterData);
+      await fetchLeads(page, filterData);
+      if (onRefresh) onRefresh();
     } catch (error: any) {
       toast.error(
         error.response?.data?.msg ||
@@ -188,9 +190,10 @@ const UnassignedLeadsTable = ({
       });
       toast.success("Lead is assigned");
       closeFlyout();
-      fetchLeads(page, filterData);
+      await fetchLeads(page, filterData);
+      if (onRefresh) onRefresh();
     } catch (error: any) {
-      toast.error("Failed to assign lead");
+      toast.error(error?.response?.data?.msg || "Failed to assign lead");
     }
   };
 
@@ -210,9 +213,10 @@ const UnassignedLeadsTable = ({
       setSelectedIds([]);
       setSelectedAgent(null);
       closeFlyout();
-      fetchLeads(page, filterData);
+      await fetchLeads(page, filterData);
+      if (onRefresh) onRefresh();
     } catch (error: any) {
-      toast.error("Failed to assign leads");
+      toast.error(error?.response?.data?.msg || "Failed to assign leads");
     }
   };
 
@@ -233,7 +237,8 @@ const UnassignedLeadsTable = ({
       try {
         await AxiosProvider.post("/leads/soft-delete", { lead_id: leadId });
         toast.success("Successfully Deleted");
-        fetchLeads(page, filterData);
+        await fetchLeads(page, filterData);
+        if (onRefresh) onRefresh();
       } catch (error: any) {
         toast.error(error.response?.data?.msg || "Failed to delete lead");
       }
