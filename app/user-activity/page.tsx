@@ -72,7 +72,7 @@ export default function UserActivityPage() {
   const [isFlyoutFilterOpen, setFlyoutFilterOpen] = useState<boolean>(false);
   const [data, setData] = useState<UserActivity[]>([]);
   const [agentList, setAgentList] = useState<Agent[]>([]);
-  const [pageSize] = useState<number>(10);
+  const [pageSize] = useState<number>(50);
   const [page, setPage] = useState<number>(1);
   const [filterPage, setFilterPage] = useState<number>(1);
 
@@ -158,7 +158,7 @@ export default function UserActivityPage() {
     setIsLoading(true);
     try {
       const response = await AxiosProvider.post(
-        `/user-activity/filter?page=${targetPage}`,
+        `/user-activity/filter?page=${targetPage}&pageSize=${pageSize}`,
         values
       );
       setData(response.data?.data?.data ?? []);
