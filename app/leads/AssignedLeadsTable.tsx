@@ -434,7 +434,7 @@ const AssignedLeadsTable = ({
                 {/* Full name */}
                 <td
                   onClick={() => onViewLead && onViewLead(item.id)}
-                  className="px-1 py-2 md:px-3 md:py-3 flex items-center gap-2 text-primary-600 underline cursor-pointer"
+                  className="px-3 py-2 flex items-center gap-2 text-primary-600 underline cursor-pointer"
                 >
                   <div className="flex gap-2">
                     <div className="md:hidden">
@@ -451,7 +451,7 @@ const AssignedLeadsTable = ({
                       <Tooltip id="my-tooltip" place="right" float className="box" />
                     </div>
                     <div className="cursor-pointer">
-                      <p className="text-primary-600 text-sm sm:text-base font-medium leading-normal capitalize">
+                      <p className="text-primary-400 text-xs font-semibold leading-tight capitalize">
                         {item?.full_name ?? "-"}
                       </p>
                     </div>
@@ -460,28 +460,28 @@ const AssignedLeadsTable = ({
 
                 {/* Email */}
                 <td className="px-3 py-2 hidden md:table-cell">
-                  <span className="text-white text-sm sm:text-base">
+                  <span className="text-white text-xs">
                     {item?.email ?? "-"}
                   </span>
                 </td>
 
                 {/* Phone */}
                 <td className="px-3 py-2 hidden md:table-cell">
-                  <span className="text-white text-sm sm:text-base">
+                  <span className="text-white text-xs">
                     {item?.phone ?? "-"}
                   </span>
                 </td>
 
                 {/* Address */}
                 <td className="px-3 py-2 hidden md:table-cell">
-                  <span className="text-white text-sm sm:text-base capitalize">
+                  <span className="text-white text-xs capitalize">
                     {item?.address?.line1 ?? "-"}
                   </span>
                 </td>
 
                 {/* Agent */}
                 <td className="px-3 py-2 hidden md:table-cell">
-                  <span className="text-white text-sm sm:text-base capitalize">
+                  <span className="text-white text-xs capitalize">
                     {item?.agent?.name ?? item?.owner_name ?? "-"}
                   </span>
                 </td>
@@ -494,19 +494,19 @@ const AssignedLeadsTable = ({
                         setSelectedData(item);
                         setFlyout("edit");
                       }}
-                      className="py-1 px-3 bg-black hover:bg-primary-800 active:bg-primary-800 flex gap-2 items-center rounded-xl"
+                      className="p-1.5 bg-black hover:bg-primary-800 active:bg-primary-800 flex items-center justify-center rounded-lg"
                       title="Edit Lead"
                     >
-                      <MdEdit className="text-white w-4 h-4 hover:text-white" />
+                      <MdEdit className="text-white w-3.5 h-3.5" />
                     </button>
 
                     {userRole === "Admin" && (
                       <button
                         onClick={() => handleDeleteLead(item.id)}
-                        className="py-1 px-3 bg-black hover:bg-primary-800 active:bg-primary-800 flex gap-2 items-center rounded-xl"
+                        className="p-1.5 bg-black hover:bg-primary-800 active:bg-primary-800 flex items-center justify-center rounded-lg"
                         title="Delete Lead"
                       >
-                        <RiDeleteBin6Line className="text-white w-4 h-4 hover:text-white" />
+                        <RiDeleteBin6Line className="text-white w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
