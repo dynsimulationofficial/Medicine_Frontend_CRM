@@ -92,7 +92,11 @@ export default function MedicinesPage() {
         : await AxiosProvider.post("/medicines", values);
 
       if (res.data?.success) {
-        toast.success(isEdit ? "Medicine updated successfully" : "Medicine added successfully");
+        toast.success(
+          isEdit
+            ? "Medicine updated successfully"
+            : "Medicine added successfully",
+        );
         closeFlyout();
         fetchData();
       }
@@ -129,7 +133,7 @@ export default function MedicinesPage() {
             {/* Top Action Buttons */}
             <div className="flex justify-between items-center mb-5 w-full mx-auto gap-4">
               <h2 className="text-lg font-bold text-white tracking-wide">
-                Medicines
+                Item Master
               </h2>
 
               {/* Add Medicine Button */}
@@ -161,7 +165,10 @@ export default function MedicinesPage() {
                 <tbody className="divide-y divide-gray-700/60">
                   {data.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-gray-400 text-xs font-medium">
+                      <td
+                        colSpan={4}
+                        className="py-8 text-center text-gray-400 text-xs font-medium"
+                      >
                         No data found
                       </td>
                     </tr>
@@ -178,7 +185,9 @@ export default function MedicinesPage() {
                           {row.name}
                         </td>
                         <td className="py-2.5 px-3 text-xs text-gray-200 whitespace-nowrap">
-                          {row.created_at ? new Date(row.created_at).toLocaleDateString() : "-"}
+                          {row.created_at
+                            ? new Date(row.created_at).toLocaleDateString()
+                            : "-"}
                         </td>
                         <td className="py-2.5 px-3 text-center">
                           <div className="flex items-center justify-center gap-1.5">
@@ -239,7 +248,9 @@ export default function MedicinesPage() {
       {/* ---------------- Overlay Backdrop ---------------- */}
       <div
         className={`fixed inset-0 bg-black/60 backdrop-blur-[1px] z-40 transition-opacity duration-300 ease-in-out cursor-pointer ${
-          flyout ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          flyout
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
         onClick={closeFlyout}
       />
@@ -283,7 +294,11 @@ export default function MedicinesPage() {
                       autoFocus
                       className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black text-white outline-none focus:border-primary-500 hover:shadow-hoverInputShadow transition"
                     />
-                    <ErrorMessage name="name" component="div" className="text-red-500 text-xs mt-1" />
+                    <ErrorMessage
+                      name="name"
+                      component="div"
+                      className="text-red-500 text-xs mt-1"
+                    />
                   </div>
 
                   <button
@@ -291,7 +306,11 @@ export default function MedicinesPage() {
                     disabled={isSubmitting}
                     className="w-full h-[38px] bg-primary-600 rounded-[4px] text-white text-xs font-semibold hover:bg-primary-700 disabled:opacity-50 transition cursor-pointer flex items-center justify-center"
                   >
-                    {isSubmitting ? "Saving..." : flyout === "edit" ? "Update Medicine" : "Create Medicine"}
+                    {isSubmitting
+                      ? "Saving..."
+                      : flyout === "edit"
+                        ? "Update Medicine"
+                        : "Create Medicine"}
                   </button>
                 </Form>
               )}
