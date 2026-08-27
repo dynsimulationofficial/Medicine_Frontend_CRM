@@ -197,15 +197,15 @@ export default function LeadActivityTab({ leadId, hitApi, setHitApi }: Props) {
         </p>
       ) : (
         <div className="w-full overflow-x-auto border border-gray-600 rounded-lg">
-          <table className="w-full text-left text-sm text-white">
-            <thead className="text-xs uppercase talbleheaderBg text-white border-b border-gray-600">
+          <table className="w-full text-left text-xs text-white">
+            <thead className="text-[11px] uppercase talbleheaderBg text-white border-b border-gray-600">
               <tr>
-                <th className="py-3 px-4 w-12 text-center">#</th>
-                <th className="py-3 px-4">Date / Time</th>
-                <th className="py-3 px-4">Disposition</th>
-                <th className="py-3 px-4">Conversation</th>
-                <th className="py-3 px-4">Added By</th>
-                <th className="py-3 px-4 text-center w-28">Action</th>
+                <th className="py-2.5 px-3 w-10 text-center">#</th>
+                <th className="py-2.5 px-3">Date / Time</th>
+                <th className="py-2.5 px-3">Disposition</th>
+                <th className="py-2.5 px-3">Conversation</th>
+                <th className="py-2.5 px-3">Added By</th>
+                <th className="py-2.5 px-3 text-center w-24">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700/60">
@@ -223,16 +223,16 @@ export default function LeadActivityTab({ leadId, hitApi, setHitApi }: Props) {
                     key={act.id || idx}
                     className="odd:bg-[#404040] even:bg-[#2d2d2d] hover:bg-primary-700/80 transition-colors"
                   >
-                    <td className="py-3 px-4 text-center text-gray-300 font-medium">
+                    <td className="py-2 px-3 text-center text-gray-300 font-medium">
                       {(page - 1) * 10 + idx + 1}
                     </td>
-                    <td className="py-3 px-4 text-xs text-gray-200 whitespace-nowrap">
+                    <td className="py-2 px-3 text-[11px] text-gray-200 whitespace-nowrap">
                       {formattedDate}
                     </td>
-                    <td className="py-3 px-4 font-semibold text-primary-300">
+                    <td className="py-2 px-3 font-semibold text-primary-300 text-xs">
                       {act.disposition || "—"}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-100 max-w-md">
+                    <td className="py-2 px-3 text-xs text-gray-100 max-w-xs">
                       <p>
                         {isLong && !isExpanded
                           ? act.conversation.substring(0, 100) + "..."
@@ -242,17 +242,17 @@ export default function LeadActivityTab({ leadId, hitApi, setHitApi }: Props) {
                         <button
                           type="button"
                           onClick={() => toggleConversation(act.id)}
-                          className="text-primary-300 underline text-xs mt-1 cursor-pointer"
+                          className="text-primary-300 underline text-[11px] mt-0.5 cursor-pointer"
                         >
                           {isExpanded ? "Show less" : "Show more"}
                         </button>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-xs text-gray-300">
+                    <td className="py-2 px-3 text-[11px] text-gray-300">
                       {act.agent_name || "—"} {act.is_edited ? "(Edited)" : ""}
                     </td>
-                    <td className="py-3 px-4 text-center">
-                      <div className="flex gap-2 justify-center">
+                    <td className="py-2 px-3 text-center">
+                      <div className="flex gap-1.5 justify-center">
                         <button
                           type="button"
                           onClick={() => {
@@ -350,7 +350,7 @@ export default function LeadActivityTab({ leadId, hitApi, setHitApi }: Props) {
               <Form className="space-y-4">
                 {/* 1. Disposition (Searchable Select) */}
                 <div>
-                  <p className="text-white font-medium text-sm mb-1">
+                  <p className="text-white font-medium text-xs mb-1">
                     Disposition <span className="text-red-500">*</span>
                   </p>
                   <Select
@@ -435,7 +435,7 @@ export default function LeadActivityTab({ leadId, hitApi, setHitApi }: Props) {
 
                 {/* 2. Agent / Logged By */}
                 <div>
-                  <p className="text-white font-medium text-sm mb-1">
+                  <p className="text-white font-medium text-xs mb-1">
                     Agent / Logged By
                   </p>
                   {userRole === "Admin" ? (
@@ -493,7 +493,7 @@ export default function LeadActivityTab({ leadId, hitApi, setHitApi }: Props) {
 
                 {/* 3. Conversation Notes */}
                 <div>
-                  <p className="text-white font-medium text-sm mb-1">
+                  <p className="text-white font-medium text-xs mb-1">
                     Conversation Notes <span className="text-red-500">*</span>
                   </p>
                   <Field

@@ -55,16 +55,16 @@ export default function LeadProfileSidebar({
       {/* ========================================================================= */}
       {isEditFirstLead ? (
         /* ---------- VIEW MODE ---------- */
-        <div className="w-full rounded bg-primary-600 px-4 py-6 mb-6">
-          <div className="flex justify-between text-white mb-5 capitalize">
+        <div className="w-full rounded bg-primary-600 px-3.5 py-4 mb-5 shadow">
+          <div className="flex justify-between text-white mb-3.5 capitalize">
             <div className="flex gap-2 items-center">
-              <FaStar className="text-white text-base" />
+              <FaStar className="text-white text-sm" />
               <div>
-                <p className="text-base font-medium leading-none">
+                <p className="text-sm font-semibold leading-none">
                   {data?.full_name || "-"}
                 </p>
                 {data?.address?.country && (
-                  <p className="text-xs text-gray-200 mt-1">
+                  <p className="text-[11px] text-gray-200 mt-1">
                     {data?.address?.country}
                   </p>
                 )}
@@ -73,35 +73,35 @@ export default function LeadProfileSidebar({
             <button
               type="button"
               onClick={() => setIsEditFirstLead(false)}
-              className="px-4 py-2 rounded-[4px] bg-white text-secondBlack text-sm font-medium flex gap-1 items-center hover:bg-gray-100 cursor-pointer"
+              className="px-2.5 py-1 rounded-[4px] bg-white text-secondBlack text-xs font-semibold flex gap-1 items-center hover:bg-gray-100 cursor-pointer shadow-sm"
             >
               <span>
-                <MdEdit />
+                <MdEdit className="w-3 h-3" />
               </span>
               Edit
             </button>
           </div>
 
           {/* Email */}
-          <div className="flex text-white items-center gap-2 mb-3">
-            <IoIosMail className="text-lg flex-shrink-0" />
-            <p className="text-sm font-medium leading-none truncate">
+          <div className="flex text-white items-center gap-2 mb-2">
+            <IoIosMail className="text-base flex-shrink-0" />
+            <p className="text-xs font-medium leading-none truncate">
               {data?.email || "-"}
             </p>
           </div>
 
           {/* Phone / Mobile */}
-          <div className="flex text-white items-center gap-2 mb-3">
-            <IoIosCall className="text-lg flex-shrink-0" />
-            <p className="text-sm font-medium leading-none">
+          <div className="flex text-white items-center gap-2 mb-2">
+            <IoIosCall className="text-base flex-shrink-0" />
+            <p className="text-xs font-medium leading-none">
               {data?.phone || "-"}
             </p>
           </div>
 
           {/* Address */}
-          <div className="flex text-white items-start gap-2 mb-3">
-            <MdLocationPin className="text-lg flex-shrink-0 mt-0.5" />
-            <p className="text-sm font-medium leading-relaxed">
+          <div className="flex text-white items-start gap-2 mb-2">
+            <MdLocationPin className="text-base flex-shrink-0 mt-0.5" />
+            <p className="text-xs font-medium leading-relaxed">
               {[
                 data?.address?.line1,
                 data?.address?.line2,
@@ -117,11 +117,11 @@ export default function LeadProfileSidebar({
 
           {/* Note */}
           {data?.note && (
-            <div className="flex text-white items-start gap-2 mb-3 border-t border-white/20 pt-3">
-              <PiNotepadLight className="text-lg flex-shrink-0 mt-0.5" />
+            <div className="flex text-white items-start gap-2 mb-1 border-t border-white/20 pt-2">
+              <PiNotepadLight className="text-base flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs text-gray-200 font-medium">Note:</p>
-                <p className="text-sm font-medium leading-relaxed">
+                <p className="text-[11px] text-gray-200 font-medium">Note:</p>
+                <p className="text-xs font-medium leading-relaxed">
                   {data?.note}
                 </p>
               </div>
@@ -208,7 +208,7 @@ export default function LeadProfileSidebar({
                     <Field
                       name="full_name"
                       type="text"
-                      className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                      className="w-full h-[38px] border border-white/30 rounded-[4px] px-3 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
                       placeholder="Enter full name"
                     />
                     <ErrorMessage
@@ -226,7 +226,7 @@ export default function LeadProfileSidebar({
                     <Field
                       name="email"
                       type="email"
-                      className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                      className="w-full h-[38px] border border-white/30 rounded-[4px] px-3 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
                       placeholder="name@example.com"
                     />
                     <ErrorMessage
@@ -241,7 +241,7 @@ export default function LeadProfileSidebar({
                     <label className="block text-xs font-medium text-white mb-1">
                       Mobile <span className="text-red-300">*</span>
                     </label>
-                    <div className="flex w-full border border-white/30 rounded-[4px] bg-black/40 overflow-hidden focus-within:border-white">
+                    <div className="flex w-full h-[38px] border border-white/30 rounded-[4px] bg-black/40 overflow-hidden focus-within:border-white">
                       <select
                         className="bg-black text-white text-xs border-r border-white/30 px-2 py-2 outline-none cursor-pointer"
                         value={
@@ -274,7 +274,7 @@ export default function LeadProfileSidebar({
                       <input
                         type="text"
                         maxLength={10}
-                        className="w-full bg-transparent text-white text-sm px-3 py-2 outline-none placeholder-gray-300"
+                        className="h-full w-full bg-transparent text-white text-xs px-3 outline-none placeholder-gray-300"
                         placeholder="Enter mobile number"
                         value={(() => {
                           const code = values.phone?.startsWith("+1")
@@ -410,7 +410,7 @@ export default function LeadProfileSidebar({
                     <Field
                       name="city"
                       type="text"
-                      className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                      className="w-full h-[38px] border border-white/30 rounded-[4px] px-3 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
                       placeholder="Enter city"
                     />
                   </div>
@@ -423,7 +423,7 @@ export default function LeadProfileSidebar({
                     <Field
                       name="address_line1"
                       type="text"
-                      className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                      className="w-full h-[38px] border border-white/30 rounded-[4px] px-3 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
                       placeholder="House / Street / Area"
                     />
                   </div>
@@ -436,7 +436,7 @@ export default function LeadProfileSidebar({
                     <Field
                       name="address_line2"
                       type="text"
-                      className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                      className="w-full h-[38px] border border-white/30 rounded-[4px] px-3 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
                       placeholder="Apartment / Suite / Landmark"
                     />
                   </div>
@@ -449,7 +449,7 @@ export default function LeadProfileSidebar({
                     <Field
                       name="postal_code"
                       type="text"
-                      className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                      className="w-full h-[38px] border border-white/30 rounded-[4px] px-3 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
                       placeholder="Enter postal code"
                     />
                   </div>
@@ -463,7 +463,7 @@ export default function LeadProfileSidebar({
                       as="textarea"
                       name="note"
                       rows={2}
-                      className="w-full border border-white/30 rounded-[4px] px-3 py-2 text-sm bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                      className="w-full h-[38px] border border-white/30 rounded-[4px] px-3 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
                       placeholder="Enter notes..."
                     />
                   </div>
@@ -496,24 +496,25 @@ export default function LeadProfileSidebar({
       {/* 2. LEAD & ORDER PROPERTIES CARD */}
       {/* ========================================================================= */}
       {isleadPropertyEdit ? (
-        <div className="w-full border border-gray-700 rounded overflow-hidden mb-6">
-          <table className="w-full text-sm text-left text-white">
-            <thead className="text-xs">
+        <div className="w-full border border-gray-700 rounded overflow-hidden mb-5">
+          <table className="w-full text-xs text-left text-white">
+            <thead>
               <tr className="border border-gray-700 talbleheaderBg">
                 <th
                   scope="col"
                   colSpan={2}
-                  className="px-3 py-3 md:p-3 border border-gray-700 font-semibold text-white text-base"
+                  className="px-3 py-2.5 border border-gray-700 font-semibold text-white text-xs"
                 >
                   <div className="flex justify-between items-center">
                     <span>Lead & Order Properties</span>
-                    <span
-                      className="flex gap-1 items-center px-4 py-2 rounded-[4px] bg-primary-600 text-white text-sm font-medium cursor-pointer hover:bg-primary-700"
+                    <button
+                      type="button"
+                      className="flex gap-1 items-center px-2.5 py-1 rounded-[4px] bg-primary-600 text-white text-xs font-medium cursor-pointer hover:bg-primary-700"
                       onClick={() => setIsLeadPropertyEdit(!isleadPropertyEdit)}
                     >
-                      <MdEdit />
+                      <MdEdit className="w-3 h-3" />
                       <span>Edit</span>
-                    </span>
+                    </button>
                   </div>
                 </th>
               </tr>
@@ -535,10 +536,10 @@ export default function LeadProfileSidebar({
                   key={idx}
                   className="border transition-colors border-b border-gray-700 odd:bg-[#1E1E1E] even:bg-[#141414]"
                 >
-                  <td className="text-sm text-gray-400 py-3 px-4 font-medium w-1/3">
+                  <td className="text-xs text-gray-400 py-2 px-3 font-medium w-1/3">
                     {row.label}
                   </td>
-                  <td className="text-sm font-medium text-white py-3 px-4">
+                  <td className="text-xs font-medium text-white py-2 px-3">
                     {row.value || "-"}
                   </td>
                 </tr>
@@ -801,7 +802,7 @@ export default function LeadProfileSidebar({
                     <input
                       type="text"
                       maxLength={10}
-                      className="w-full bg-transparent text-white text-sm px-3 py-2 outline-none placeholder-gray-500"
+                      className="h-full w-full bg-transparent text-white text-xs px-3 outline-none placeholder-gray-500"
                       placeholder="Enter whatsapp number"
                       value={(() => {
                         const code = values.whatsapp_number?.startsWith("+1")

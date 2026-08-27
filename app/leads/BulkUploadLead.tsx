@@ -10,6 +10,67 @@ interface BulkUploadLeadProps {
   onSuccess: () => void;
 }
 
+const customSelectStyles = {
+  control: (base: any, { isFocused }: any) => ({
+    ...base,
+    height: "38px",
+    minHeight: "38px",
+    backgroundColor: "#000",
+    borderColor: isFocused ? "var(--primary-500, #0284c7)" : "#374151",
+    borderRadius: 4,
+    fontSize: "12px",
+    boxShadow: "none",
+    "&:hover": {
+      borderColor: isFocused ? "var(--primary-500, #0284c7)" : "#4b5563",
+    },
+  }),
+  valueContainer: (base: any) => ({
+    ...base,
+    height: "38px",
+    padding: "0 8px",
+  }),
+  input: (base: any) => ({
+    ...base,
+    margin: "0px",
+    padding: "0px",
+    color: "#fff",
+    fontSize: "12px",
+  }),
+  indicatorsContainer: (base: any) => ({
+    ...base,
+    height: "38px",
+  }),
+  singleValue: (base: any) => ({
+    ...base,
+    color: "#fff",
+    fontSize: "12px",
+  }),
+  placeholder: (base: any) => ({
+    ...base,
+    color: "#aaa",
+    fontSize: "12px",
+  }),
+  menu: (base: any) => ({
+    ...base,
+    borderRadius: 4,
+    backgroundColor: "#000",
+    border: "1px solid #374151",
+    zIndex: 9999,
+  }),
+  option: (base: any, { isFocused, isSelected }: any) => ({
+    ...base,
+    backgroundColor: isSelected
+      ? "var(--primary-600, #0284c7)"
+      : isFocused
+      ? "#222"
+      : "#000",
+    color: "#fff",
+    cursor: "pointer",
+    fontSize: "12px",
+    padding: "8px 12px",
+  }),
+};
+
 export default function BulkUploadLead({
   closeFlyout,
   onSuccess,
@@ -105,20 +166,20 @@ export default function BulkUploadLead({
   };
 
   return (
-    <form onSubmit={handleUploadFile} className="space-y-6">
+    <form onSubmit={handleUploadFile} className="space-y-4">
       <div>
-        <p className="text-white text-sm mb-2">CSV / Excel File *</p>
+        <p className="text-white text-xs font-medium mb-1.5">CSV / Excel File *</p>
         <input
           type="file"
           accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
           onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
-          className="w-full border border-gray-700 rounded p-2 bg-black text-white text-sm outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+          className="w-full h-[38px] border border-gray-700 rounded px-3 py-1.5 bg-black text-white text-xs outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow cursor-pointer"
           required
         />
       </div>
 
       <div>
-        <p className="text-white text-sm mb-2">Lead Source</p>
+        <p className="text-white text-xs font-medium mb-1.5">Lead Source</p>
         <Select
           value={leadSourceDisplay}
           onChange={(selected: any) => setLeadSourceDisplay(selected)}
@@ -127,29 +188,12 @@ export default function BulkUploadLead({
           getOptionValue={(opt: any) => String(opt.id)}
           placeholder="Select Lead Source"
           isClearable
-          classNames={{
-            control: ({ isFocused }: any) =>
-              `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                isFocused ? "!border-primary-500" : "!border-gray-700"
-              }`,
-          }}
-          styles={{
-            menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-            option: (base, { isFocused, isSelected }) => ({
-              ...base,
-              backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-              color: "#fff",
-              cursor: "pointer",
-            }),
-            singleValue: (base) => ({ ...base, color: "#fff" }),
-            input: (base) => ({ ...base, color: "#fff" }),
-            placeholder: (base) => ({ ...base, color: "#aaa" }),
-          }}
+          styles={customSelectStyles}
         />
       </div>
 
       <div>
-        <p className="text-white text-sm mb-2">Assign to Agent</p>
+        <p className="text-white text-xs font-medium mb-1.5">Assign to Agent</p>
         <Select
           value={agentDisplay}
           onChange={(selected: any) => setAgentDisplay(selected)}
@@ -158,31 +202,14 @@ export default function BulkUploadLead({
           getOptionValue={(opt: any) => String(opt.id)}
           placeholder="Select Agent"
           isClearable
-          classNames={{
-            control: ({ isFocused }: any) =>
-              `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                isFocused ? "!border-primary-500" : "!border-gray-700"
-              }`,
-          }}
-          styles={{
-            menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-            option: (base, { isFocused, isSelected }) => ({
-              ...base,
-              backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-              color: "#fff",
-              cursor: "pointer",
-            }),
-            singleValue: (base) => ({ ...base, color: "#fff" }),
-            input: (base) => ({ ...base, color: "#fff" }),
-            placeholder: (base) => ({ ...base, color: "#aaa" }),
-          }}
+          styles={customSelectStyles}
         />
       </div>
 
       <button
         type="submit"
         disabled={isLoading}
-        className="py-[13px] px-[26px] bg-primary-600 rounded-[4px] text-base font-medium leading-6 text-white hover:bg-primary-700 w-full"
+        className="w-full h-[38px] bg-primary-600 rounded-[4px] text-xs font-medium text-white hover:bg-primary-700 cursor-pointer transition flex items-center justify-center"
       >
         {isLoading ? "Uploading..." : "Upload File"}
       </button>

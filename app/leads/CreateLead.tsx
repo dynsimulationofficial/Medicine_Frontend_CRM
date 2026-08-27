@@ -132,6 +132,68 @@ export const leadStatusOptions = [
   { id: "Lost", name: "Lost" },
 ];
 
+const customSelectStyles = {
+  control: (base: any, { isFocused }: any) => ({
+    ...base,
+    height: "38px",
+    minHeight: "38px",
+    backgroundColor: "#000",
+    borderColor: isFocused ? "var(--primary-500, #0284c7)" : "#374151",
+    borderRadius: 4,
+    fontSize: "12px",
+    boxShadow: "none",
+    "&:hover": {
+      borderColor: isFocused ? "var(--primary-500, #0284c7)" : "#4b5563",
+    },
+  }),
+  valueContainer: (base: any) => ({
+    ...base,
+    height: "38px",
+    padding: "0 8px",
+  }),
+  input: (base: any) => ({
+    ...base,
+    margin: "0px",
+    padding: "0px",
+    color: "#fff",
+    fontSize: "12px",
+  }),
+  indicatorsContainer: (base: any) => ({
+    ...base,
+    height: "38px",
+  }),
+  singleValue: (base: any) => ({
+    ...base,
+    color: "#fff",
+    fontSize: "12px",
+  }),
+  placeholder: (base: any) => ({
+    ...base,
+    color: "#aaa",
+    fontSize: "12px",
+  }),
+  menu: (base: any) => ({
+    ...base,
+    borderRadius: 4,
+    backgroundColor: "#000",
+    border: "1px solid #374151",
+    zIndex: 9999,
+  }),
+  option: (base: any, { isFocused, isSelected }: any) => ({
+    ...base,
+    backgroundColor: isSelected
+      ? "var(--primary-600, #0284c7)"
+      : isFocused
+      ? "#222"
+      : "#000",
+    color: "#fff",
+    cursor: "pointer",
+    fontSize: "12px",
+    padding: "8px 12px",
+  }),
+};
+
+
 const CreateLead = ({ closeFlyOut }: any) => {
   const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
   const [agentList, setAgentList] = useState<any[]>([]);
@@ -233,34 +295,34 @@ const CreateLead = ({ closeFlyOut }: any) => {
               <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Full Name */}
                 <div>
-                  <p className="text-white mb-2">Full Name <span className="text-red-500">*</span></p>
+                  <p className="text-white text-xs font-medium mb-1.5">Full Name <span className="text-red-500">*</span></p>
                   <Field
                     type="text"
                     name="full_name"
                     placeholder="Alexandre Dumas"
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                    className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                   />
                   <ErrorMessage name="full_name" component="div" className="text-red-500 text-xs mt-1" />
                 </div>
 
                 {/* Email */}
                 <div>
-                  <p className="text-white mb-2">Email <span className="text-red-500">*</span></p>
+                  <p className="text-white text-xs font-medium mb-1.5">Email <span className="text-red-500">*</span></p>
                   <Field
                     type="email"
                     name="email"
                     placeholder="alexandre@example.com"
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                    className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                   />
                   <ErrorMessage name="email" component="div" className="text-red-500 text-xs mt-1" />
                 </div>
 
                 {/* Phone */}
                 <div>
-                  <p className="text-white mb-2">Phone <span className="text-red-500">*</span></p>
-                  <div className="flex w-full border border-gray-700 rounded-[4px] bg-black overflow-hidden hover:shadow-hoverInputShadow focus-within:border-primary-600">
+                  <p className="text-white text-xs font-medium mb-1.5">Phone <span className="text-red-500">*</span></p>
+                  <div className="flex w-full h-[38px] border border-gray-700 rounded-[4px] bg-black overflow-hidden hover:shadow-hoverInputShadow focus-within:border-primary-600">
                     <select 
-                      className="bg-black text-white text-sm border-r border-gray-700 px-2 py-3 outline-none cursor-pointer"
+                      className="h-full bg-black text-white text-xs border-r border-gray-700 px-2 outline-none cursor-pointer"
                       value={values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91"}
                       onChange={(e) => {
                         const newPrefix = e.target.value;
@@ -286,7 +348,7 @@ const CreateLead = ({ closeFlyOut }: any) => {
                     <input
                       type="text"
                       maxLength={15}
-                      className="w-full bg-transparent text-white text-sm px-3 py-3 outline-none placeholder-gray-400"
+                      className="h-full w-full bg-transparent text-white text-xs px-3 outline-none placeholder-gray-400"
                       placeholder="Enter phone number"
                       value={(() => {
                         const code = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
@@ -315,40 +377,40 @@ const CreateLead = ({ closeFlyOut }: any) => {
 
                 {/* Address Line 1 */}
                 <div>
-                  <p className="text-white mb-2">Address Line 1</p>
+                  <p className="text-white text-xs font-medium mb-1.5">Address Line 1</p>
                   <Field
                     type="text"
                     name="address_line1"
                     placeholder="Street, House no."
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                    className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                   />
                 </div>
 
                 {/* Address Line 2 */}
                 <div>
-                  <p className="text-white mb-2">Address Line 2</p>
+                  <p className="text-white text-xs font-medium mb-1.5">Address Line 2</p>
                   <Field
                     type="text"
                     name="address_line2"
                     placeholder="Apartment, suite, unit, etc."
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                    className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                   />
                 </div>
 
                 {/* City */}
                 <div>
-                  <p className="text-white mb-2">City</p>
+                  <p className="text-white text-xs font-medium mb-1.5">City</p>
                   <Field
                     type="text"
                     name="city"
                     placeholder="City / Town"
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                    className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                   />
                 </div>
 
                 {/* Country */}
                 <div>
-                  <p className="text-white mb-2">Country</p>
+                  <p className="text-white text-xs font-medium mb-1.5">Country</p>
                   <Select
                     value={countryOptions.find((opt) => opt.id === values.country) || null}
                     onChange={(selected: any) => {
@@ -364,30 +426,13 @@ const CreateLead = ({ closeFlyOut }: any) => {
                     getOptionValue={(opt: any) => opt.id}
                     options={countryOptions}
                     placeholder="Select Country"
-                    classNames={{
-                      control: ({ isFocused }: any) =>
-                        `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                          isFocused ? "!border-primary-500" : "!border-gray-700"
-                        }`,
-                    }}
-                    styles={{
-                      menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                      option: (base, { isFocused, isSelected }) => ({
-                        ...base,
-                        backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                        color: "#fff",
-                        cursor: "pointer",
-                      }),
-                      singleValue: (base) => ({ ...base, color: "#fff" }),
-                      input: (base) => ({ ...base, color: "#fff" }),
-                      placeholder: (base) => ({ ...base, color: "#aaa" }),
-                    }}
+                    styles={customSelectStyles}
                   />
                 </div>
 
                 {/* State / Region */}
                 <div>
-                  <p className="text-white mb-2">State / Region</p>
+                  <p className="text-white text-xs font-medium mb-1.5">State / Region</p>
                   <Select
                     value={currentStates.find((opt) => opt.id === values.state) || null}
                     onChange={(selected: any) => setFieldValue("state", selected ? selected.id : "")}
@@ -397,52 +442,35 @@ const CreateLead = ({ closeFlyOut }: any) => {
                     options={currentStates}
                     placeholder="Select State / Region"
                     isClearable
-                    classNames={{
-                      control: ({ isFocused }: any) =>
-                        `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                          isFocused ? "!border-primary-500" : "!border-gray-700"
-                        }`,
-                    }}
-                    styles={{
-                      menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                      option: (base, { isFocused, isSelected }) => ({
-                        ...base,
-                        backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                        color: "#fff",
-                        cursor: "pointer",
-                      }),
-                      singleValue: (base) => ({ ...base, color: "#fff" }),
-                      input: (base) => ({ ...base, color: "#fff" }),
-                      placeholder: (base) => ({ ...base, color: "#aaa" }),
-                    }}
+                    styles={customSelectStyles}
                   />
                 </div>
 
                 {/* Postal Code */}
                 <div>
-                  <p className="text-white mb-2">Postal Code</p>
+                  <p className="text-white text-xs font-medium mb-1.5">Postal Code</p>
                   <Field
                     type="text"
                     name="postal_code"
                     placeholder="400071"
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                    className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                   />
                 </div>
 
                 {/* Best Time to Call */}
                 <div>
-                  <p className="text-white mb-2">Best Time to Call</p>
+                  <p className="text-white text-xs font-medium mb-1.5">Best Time to Call</p>
                   <Field
                     type="text"
                     name="best_time_to_call"
                     placeholder="e.g., 3–5 PM"
-                    className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                    className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                   />
                 </div>
 
                 {/* Lead Source */}
                 <div>
-                  <p className="text-white mb-2">Lead Source</p>
+                  <p className="text-white text-xs font-medium mb-1.5">Lead Source</p>
                   <Select
                     value={leadSourceData.find((opt) => opt.id === values.lead_source_id) || null}
                     onChange={(selected: any) => setFieldValue("lead_source_id", selected ? selected.id : "")}
@@ -452,33 +480,16 @@ const CreateLead = ({ closeFlyOut }: any) => {
                     options={leadSourceData}
                     placeholder="Select Lead Source"
                     isClearable
-                    classNames={{
-                      control: ({ isFocused }: any) =>
-                        `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                          isFocused ? "!border-primary-500" : "!border-gray-700"
-                        }`,
-                    }}
-                    styles={{
-                      menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                      option: (base, { isFocused, isSelected }) => ({
-                        ...base,
-                        backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                        color: "#fff",
-                        cursor: "pointer",
-                      }),
-                      singleValue: (base) => ({ ...base, color: "#fff" }),
-                      input: (base) => ({ ...base, color: "#fff" }),
-                      placeholder: (base) => ({ ...base, color: "#aaa" }),
-                    }}
+                    styles={customSelectStyles}
                   />
                 </div>
 
                 {/* WhatsApp Number */}
                 <div>
-                                      <p className="text-white mb-2">WhatsApp Number</p>
-                    <div className="flex w-full border border-gray-700 rounded-[4px] bg-black overflow-hidden hover:shadow-hoverInputShadow focus-within:border-primary-600">
+                                      <p className="text-white text-xs font-medium mb-1.5">WhatsApp Number</p>
+                    <div className="flex w-full h-[38px] border border-gray-700 rounded-[4px] bg-black overflow-hidden hover:shadow-hoverInputShadow focus-within:border-primary-600">
                       <select 
-                        className="bg-black text-white text-sm border-r border-gray-700 px-2 py-3 outline-none cursor-pointer"
+                        className="h-full bg-black text-white text-xs border-r border-gray-700 px-2 outline-none cursor-pointer"
                         value={values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91'}
                         onChange={(e) => {
                           const currentCode = values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91';
@@ -493,7 +504,7 @@ const CreateLead = ({ closeFlyOut }: any) => {
                       <input
                         type="text"
                         maxLength={10}
-                        className="w-full bg-transparent text-white text-sm px-3 py-3 outline-none placeholder-gray-400"
+                        className="h-full w-full bg-transparent text-white text-xs px-3 outline-none placeholder-gray-400"
                         placeholder="Enter whatsapp number"
                         value={(() => {
                           const code = values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91';
@@ -511,7 +522,7 @@ const CreateLead = ({ closeFlyOut }: any) => {
 
                 {/* Assign to Agent */}
                 <div>
-                  <p className="text-white mb-2">Assign to Agent</p>
+                  <p className="text-white text-xs font-medium mb-1.5">Assign to Agent</p>
                   <Select
                     value={agentList.find((opt) => opt.id === values.agent_id) || null}
                     onChange={(selected: any) => setFieldValue("agent_id", selected ? selected.id : "")}
@@ -521,30 +532,13 @@ const CreateLead = ({ closeFlyOut }: any) => {
                     options={agentList}
                     placeholder="Select Agent"
                     isClearable
-                    classNames={{
-                      control: ({ isFocused }: any) =>
-                        `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                          isFocused ? "!border-primary-500" : "!border-gray-700"
-                        }`,
-                    }}
-                    styles={{
-                      menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                      option: (base, { isFocused, isSelected }) => ({
-                        ...base,
-                        backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                        color: "#fff",
-                        cursor: "pointer",
-                      }),
-                      singleValue: (base) => ({ ...base, color: "#fff" }),
-                      input: (base) => ({ ...base, color: "#fff" }),
-                      placeholder: (base) => ({ ...base, color: "#aaa" }),
-                    }}
+                    styles={customSelectStyles}
                   />
                 </div>
 
                 {/* Lead Status */}
                 <div>
-                  <p className="text-white mb-2">Lead Status</p>
+                  <p className="text-white text-xs font-medium mb-1.5">Lead Status</p>
                   <Select
                     value={leadStatusOptions.find((opt) => opt.id === values.lead_status) || null}
                     onChange={(selected: any) =>
@@ -555,24 +549,7 @@ const CreateLead = ({ closeFlyOut }: any) => {
                     getOptionValue={(opt: any) => opt.id}
                     options={leadStatusOptions}
                     placeholder="Select Lead Status"
-                    classNames={{
-                      control: ({ isFocused }: any) =>
-                        `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                          isFocused ? "!border-primary-500" : "!border-gray-700"
-                        }`,
-                    }}
-                    styles={{
-                      menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                      option: (base, { isFocused, isSelected }) => ({
-                        ...base,
-                        backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                        color: "#fff",
-                        cursor: "pointer",
-                      }),
-                      singleValue: (base) => ({ ...base, color: "#fff" }),
-                      input: (base) => ({ ...base, color: "#fff" }),
-                      placeholder: (base) => ({ ...base, color: "#aaa" }),
-                    }}
+                    styles={customSelectStyles}
                   />
                 </div>
 

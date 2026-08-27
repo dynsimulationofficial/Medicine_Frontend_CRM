@@ -144,16 +144,16 @@ export default function LeadDetailsPage() {
 
   return (
     <>
+      <LeftSideBar />
       <div className="flex justify-end min-h-screen">
         <div className="ml-[97px] w-full md:w-[90%] m-auto min-h-[500px] rounded p-4 mt-0">
-          <LeftSideBar />
           <DesktopHeader />
 
           <div className="w-full flex justify-center relative">
             <div className="w-full min-h-[600px] rounded-3xl mainContainerBg">
               <div className="py-4 px-2 md:p-6">
-                {/* Lead Profile Sidebar (30%) + Modular Tabs (70%) */}
-                <div className="grid grid-cols-1 lg:grid-cols-[30%_70%] gap-4">
+                {/* Lead Profile Sidebar (28%) + Modular Tabs (72%) */}
+                <div className="grid grid-cols-1 xl:grid-cols-[28%_72%] lg:grid-cols-[30%_70%] gap-4">
                   <LeadProfileSidebar
                     data={data}
                     leadId={leadId}

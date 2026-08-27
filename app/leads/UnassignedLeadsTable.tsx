@@ -20,6 +20,68 @@ import Select from "react-select";
 import AxiosProvider from "../../provider/AxiosProvider";
 import { statesByCountry, countryOptions, leadStatusOptions } from "./CreateLead";
 
+
+const customSelectStyles = {
+  control: (base: any, { isFocused }: any) => ({
+    ...base,
+    height: "38px",
+    minHeight: "38px",
+    backgroundColor: "#000",
+    borderColor: isFocused ? "var(--primary-500, #0284c7)" : "#374151",
+    borderRadius: 4,
+    fontSize: "12px",
+    boxShadow: "none",
+    "&:hover": {
+      borderColor: isFocused ? "var(--primary-500, #0284c7)" : "#4b5563",
+    },
+  }),
+  valueContainer: (base: any) => ({
+    ...base,
+    height: "38px",
+    padding: "0 8px",
+  }),
+  input: (base: any) => ({
+    ...base,
+    margin: "0px",
+    padding: "0px",
+    color: "#fff",
+    fontSize: "12px",
+  }),
+  indicatorsContainer: (base: any) => ({
+    ...base,
+    height: "38px",
+  }),
+  singleValue: (base: any) => ({
+    ...base,
+    color: "#fff",
+    fontSize: "12px",
+  }),
+  placeholder: (base: any) => ({
+    ...base,
+    color: "#aaa",
+    fontSize: "12px",
+  }),
+  menu: (base: any) => ({
+    ...base,
+    borderRadius: 4,
+    backgroundColor: "#000",
+    border: "1px solid #374151",
+    zIndex: 9999,
+  }),
+  option: (base: any, { isFocused, isSelected }: any) => ({
+    ...base,
+    backgroundColor: isSelected
+      ? "var(--primary-600, #0284c7)"
+      : isFocused
+      ? "#222"
+      : "#000",
+    color: "#fff",
+    cursor: "pointer",
+    fontSize: "12px",
+    padding: "8px 12px",
+  }),
+};
+
 const LeadSchema = Yup.object({
   full_name: Yup.string().trim().required("Full name is required"),
   email: Yup.string()
@@ -288,13 +350,13 @@ const UnassignedLeadsTable = ({
         </div>
       </div>
 
-      <table className="w-full text-sm text-left text-white whitespace-nowrap">
+      <table className="w-full text-xs text-left text-white whitespace-nowrap">
         <thead className="text-xs text-[#999999] talbleheaderBg">
           <tr>
-            <th scope="col" className="px-3 py-3 md:p-3">
+            <th scope="col" className="px-3 py-2.5">
               <div className="flex items-center gap-2">
-                <FaRegCheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                <span className="font-semibold text-white text-lg sm:text-base">
+                <FaRegCheckCircle className="w-4 h-4 text-white" />
+                <span className="font-bold text-white text-xs tracking-wide">
                   Select
                 </span>
                 <input
@@ -306,10 +368,10 @@ const UnassignedLeadsTable = ({
               </div>
             </th>
 
-            <th scope="col" className="px-3 py-3 md:p-3">
+            <th scope="col" className="px-3 py-2.5">
               <div className="flex items-center gap-2">
-                <RxAvatar className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                <span className="font-semibold text-white text-lg sm:text-base">
+                <RxAvatar className="w-4 h-4 text-white" />
+                <span className="font-bold text-white text-xs tracking-wide">
                   Full Name
                 </span>
               </div>
@@ -317,8 +379,8 @@ const UnassignedLeadsTable = ({
 
             <th scope="col" className="px-3 py-2 hidden md:table-cell">
               <div className="flex items-center gap-2">
-                <IoMailOpenOutline className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                <span className="font-semibold text-white text-lg sm:text-base">
+                <IoMailOpenOutline className="w-4 h-4 text-white" />
+                <span className="font-bold text-white text-xs tracking-wide">
                   Email
                 </span>
               </div>
@@ -326,8 +388,8 @@ const UnassignedLeadsTable = ({
 
             <th scope="col" className="px-3 py-2 hidden md:table-cell">
               <div className="flex items-center gap-2">
-                <MdOutlinePhone className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                <span className="font-semibold text-white text-lg sm:text-base">
+                <MdOutlinePhone className="w-4 h-4 text-white" />
+                <span className="font-bold text-white text-xs tracking-wide">
                   Phone
                 </span>
               </div>
@@ -335,8 +397,8 @@ const UnassignedLeadsTable = ({
 
             <th scope="col" className="px-3 py-2 hidden md:table-cell">
               <div className="flex items-center gap-2">
-                <MdOutlineLocationCity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                <span className="font-semibold text-white text-lg sm:text-base">
+                <MdOutlineLocationCity className="w-4 h-4 text-white" />
+                <span className="font-bold text-white text-xs tracking-wide">
                   Address
                 </span>
               </div>
@@ -344,8 +406,8 @@ const UnassignedLeadsTable = ({
 
             <th scope="col" className="px-3 py-2 md:table-cell">
               <div className="flex items-center gap-2">
-                <MdOutlineSettings className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                <span className="font-semibold text-white text-lg sm:text-base">
+                <MdOutlineSettings className="w-4 h-4 text-white" />
+                <span className="font-bold text-white text-xs tracking-wide">
                   Action
                 </span>
               </div>
@@ -524,7 +586,7 @@ const UnassignedLeadsTable = ({
 
             <form onSubmit={handleBulkAssignAgent} className="w-full space-y-6">
               <div className="w-full">
-                <p className="text-white text-base leading-6 mb-2">Select Agent *</p>
+                <p className="text-white text-xs font-medium mb-1.5">Select Agent *</p>
                 <Select
                   value={selectedAgent}
                   onChange={(selected: any) => setSelectedAgent(selected)}
@@ -533,24 +595,7 @@ const UnassignedLeadsTable = ({
                   getOptionValue={(opt: any) => String(opt.id)}
                   placeholder="Select Agent"
                   isClearable
-                  classNames={{
-                    control: ({ isFocused }: any) =>
-                      `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                        isFocused ? "!border-primary-500" : "!border-gray-700"
-                      }`,
-                  }}
-                  styles={{
-                    menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                    option: (base, { isFocused, isSelected }) => ({
-                      ...base,
-                      backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                      color: "#fff",
-                      cursor: "pointer",
-                    }),
-                    singleValue: (base) => ({ ...base, color: "#fff" }),
-                    input: (base) => ({ ...base, color: "#fff" }),
-                    placeholder: (base) => ({ ...base, color: "#aaa" }),
-                  }}
+                  styles={customSelectStyles}
                 />
               </div>
 
@@ -637,38 +682,38 @@ const UnassignedLeadsTable = ({
                     <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-5">
                       {/* Full Name */}
                       <div>
-                        <p className="text-white mb-2">
+                        <p className="text-white text-xs font-medium mb-1.5">
                           Full Name <span className="text-red-500">*</span>
                         </p>
                         <Field
                           type="text"
                           name="full_name"
-                          className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                         />
                         <ErrorMessage name="full_name" component="div" className="text-red-500 text-xs mt-1" />
                       </div>
 
                       {/* Email */}
                       <div>
-                        <p className="text-white mb-2">
+                        <p className="text-white text-xs font-medium mb-1.5">
                           Email <span className="text-red-500">*</span>
                         </p>
                         <Field
                           type="email"
                           name="email"
-                          className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                         />
                         <ErrorMessage name="email" component="div" className="text-red-500 text-xs mt-1" />
                       </div>
 
                       {/* Phone */}
                       <div>
-                        <p className="text-white mb-2">
+                        <p className="text-white text-xs font-medium mb-1.5">
                           Phone <span className="text-red-500">*</span>
                         </p>
-                        <div className="flex w-full border border-gray-700 rounded-[4px] bg-black overflow-hidden focus-within:border-primary-600">
+                        <div className="flex w-full h-[38px] border border-gray-700 rounded-[4px] bg-black overflow-hidden focus-within:border-primary-600">
                           <select
-                            className="bg-black text-white text-sm border-r border-gray-700 px-2 py-3 outline-none cursor-pointer"
+                            className="h-full bg-black text-white text-xs border-r border-gray-700 px-2 outline-none cursor-pointer"
                             value={values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91"}
                             onChange={(e) => {
                               const newPrefix = e.target.value;
@@ -684,7 +729,7 @@ const UnassignedLeadsTable = ({
                           <input
                             type="text"
                             maxLength={15}
-                            className="w-full bg-transparent text-white text-sm px-3 py-3 outline-none placeholder-gray-400"
+                            className="h-full w-full bg-transparent text-white text-xs px-3 outline-none placeholder-gray-400"
                             placeholder="Enter phone number"
                             value={(() => {
                               const code = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
@@ -703,7 +748,7 @@ const UnassignedLeadsTable = ({
 
                       {/* Country */}
                       <div>
-                        <p className="text-white mb-2">Country</p>
+                        <p className="text-white text-xs font-medium mb-1.5">Country</p>
                         <Select
                           value={countryOptions.find((opt) => opt.id === values.country) || null}
                           onChange={(selected: any) => {
@@ -716,30 +761,13 @@ const UnassignedLeadsTable = ({
                           getOptionValue={(opt: any) => opt.id}
                           options={countryOptions}
                           placeholder="Select Country"
-                          classNames={{
-                            control: ({ isFocused }: any) =>
-                              `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                isFocused ? "!border-primary-500" : "!border-gray-700"
-                              }`,
-                          }}
-                          styles={{
-                            menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                            option: (base, { isFocused, isSelected }) => ({
-                              ...base,
-                              backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                              color: "#fff",
-                              cursor: "pointer",
-                            }),
-                            singleValue: (base) => ({ ...base, color: "#fff" }),
-                            input: (base) => ({ ...base, color: "#fff" }),
-                            placeholder: (base) => ({ ...base, color: "#aaa" }),
-                          }}
+                          styles={customSelectStyles}
                         />
                       </div>
 
                       {/* State */}
                       <div>
-                        <p className="text-white mb-2">State / Region</p>
+                        <p className="text-white text-xs font-medium mb-1.5">State / Region</p>
                         <Select
                           value={currentStates.find((opt) => opt.id === values.state) || null}
                           onChange={(selected: any) => setFieldValue("state", selected ? selected.id : "")}
@@ -749,85 +777,68 @@ const UnassignedLeadsTable = ({
                           options={currentStates}
                           placeholder="Select State / Region"
                           isClearable
-                          classNames={{
-                            control: ({ isFocused }: any) =>
-                              `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                isFocused ? "!border-primary-500" : "!border-gray-700"
-                              }`,
-                          }}
-                          styles={{
-                            menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                            option: (base, { isFocused, isSelected }) => ({
-                              ...base,
-                              backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                              color: "#fff",
-                              cursor: "pointer",
-                            }),
-                            singleValue: (base) => ({ ...base, color: "#fff" }),
-                            input: (base) => ({ ...base, color: "#fff" }),
-                            placeholder: (base) => ({ ...base, color: "#aaa" }),
-                          }}
+                          styles={customSelectStyles}
                         />
                       </div>
 
                       {/* City */}
                       <div>
-                        <p className="text-white mb-2">City</p>
+                        <p className="text-white text-xs font-medium mb-1.5">City</p>
                         <Field
                           type="text"
                           name="city"
                           placeholder="City / Town"
-                          className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                         />
                       </div>
 
                       {/* Address Line 1 */}
                       <div>
-                        <p className="text-white mb-2">Address Line 1</p>
+                        <p className="text-white text-xs font-medium mb-1.5">Address Line 1</p>
                         <Field
                           type="text"
                           name="address_line1"
                           placeholder="Street, House no."
-                          className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                         />
                       </div>
 
                       {/* Address Line 2 */}
                       <div>
-                        <p className="text-white mb-2">Address Line 2</p>
+                        <p className="text-white text-xs font-medium mb-1.5">Address Line 2</p>
                         <Field
                           type="text"
                           name="address_line2"
                           placeholder="Apartment, suite, unit, etc."
-                          className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                         />
                       </div>
 
                       {/* Postal Code */}
                       <div>
-                        <p className="text-white mb-2">Postal Code</p>
+                        <p className="text-white text-xs font-medium mb-1.5">Postal Code</p>
                         <Field
                           type="text"
                           name="postal_code"
                           placeholder="400071"
-                          className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                         />
                       </div>
 
                       {/* Best Time to Call */}
                       <div>
-                        <p className="text-white mb-2">Best Time to Call</p>
+                        <p className="text-white text-xs font-medium mb-1.5">Best Time to Call</p>
                         <Field
                           type="text"
                           name="best_time_to_call"
                           placeholder="e.g., 3–5 PM"
-                          className="w-full border border-gray-700 rounded-[4px] bg-black text-white text-sm px-4 py-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
                         />
                       </div>
 
                       {/* Lead Source */}
                       <div>
-                        <p className="text-white mb-2">Lead Source</p>
+                        <p className="text-white text-xs font-medium mb-1.5">Lead Source</p>
                         <Select
                           value={leadSourceData.find((opt: any) => opt.id === values.lead_source_id) || null}
                           onChange={(selected: any) => setFieldValue("lead_source_id", selected ? selected.id : "")}
@@ -837,33 +848,16 @@ const UnassignedLeadsTable = ({
                           options={leadSourceData}
                           placeholder="Select Lead Source"
                           isClearable
-                          classNames={{
-                            control: ({ isFocused }: any) =>
-                              `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                isFocused ? "!border-primary-500" : "!border-gray-700"
-                              }`,
-                          }}
-                          styles={{
-                            menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                            option: (base, { isFocused, isSelected }) => ({
-                              ...base,
-                              backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                              color: "#fff",
-                              cursor: "pointer",
-                            }),
-                            singleValue: (base) => ({ ...base, color: "#fff" }),
-                            input: (base) => ({ ...base, color: "#fff" }),
-                            placeholder: (base) => ({ ...base, color: "#aaa" }),
-                          }}
+                          styles={customSelectStyles}
                         />
                       </div>
 
                       {/* WhatsApp Number */}
                       <div>
-                        <p className="text-white mb-2">WhatsApp Number</p>
-                        <div className="flex w-full border border-gray-700 rounded-[4px] bg-black overflow-hidden focus-within:border-primary-600">
+                        <p className="text-white text-xs font-medium mb-1.5">WhatsApp Number</p>
+                        <div className="flex w-full h-[38px] border border-gray-700 rounded-[4px] bg-black overflow-hidden focus-within:border-primary-600">
                           <select
-                            className="bg-black text-white text-sm border-r border-gray-700 px-2 py-3 outline-none cursor-pointer"
+                            className="h-full bg-black text-white text-xs border-r border-gray-700 px-2 outline-none cursor-pointer"
                             value={values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91"}
                             onChange={(e) => {
                               const currentCode = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
@@ -878,7 +872,7 @@ const UnassignedLeadsTable = ({
                           <input
                             type="text"
                             maxLength={10}
-                            className="w-full bg-transparent text-white text-sm px-3 py-3 outline-none placeholder-gray-400"
+                            className="h-full w-full bg-transparent text-white text-xs px-3 outline-none placeholder-gray-400"
                             placeholder="Enter whatsapp number"
                             value={(() => {
                               const code = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
@@ -895,7 +889,7 @@ const UnassignedLeadsTable = ({
 
                       {/* Lead Status */}
                       <div>
-                        <p className="text-white mb-2">Lead Status</p>
+                        <p className="text-white text-xs font-medium mb-1.5">Lead Status</p>
                         <Select
                           value={leadStatusOptions.find((opt) => opt.id === values.lead_status) || null}
                           onChange={(selected: any) =>
@@ -906,24 +900,7 @@ const UnassignedLeadsTable = ({
                           getOptionValue={(opt: any) => opt.id}
                           options={leadStatusOptions}
                           placeholder="Select Lead Status"
-                          classNames={{
-                            control: ({ isFocused }: any) =>
-                              `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                                isFocused ? "!border-primary-500" : "!border-gray-700"
-                              }`,
-                          }}
-                          styles={{
-                            menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                            option: (base, { isFocused, isSelected }) => ({
-                              ...base,
-                              backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                              color: "#fff",
-                              cursor: "pointer",
-                            }),
-                            singleValue: (base) => ({ ...base, color: "#fff" }),
-                            input: (base) => ({ ...base, color: "#fff" }),
-                            placeholder: (base) => ({ ...base, color: "#aaa" }),
-                          }}
+                          styles={customSelectStyles}
                         />
                       </div>
                     </div>
@@ -958,7 +935,7 @@ const UnassignedLeadsTable = ({
 
             <form onSubmit={handleSubmitAgent} className="w-full space-y-6">
               <div className="w-full">
-                <p className="text-white text-base leading-6 mb-2">
+                <p className="text-white text-xs font-medium mb-1.5">
                   Select Agent *
                 </p>
                 <Select
@@ -969,24 +946,7 @@ const UnassignedLeadsTable = ({
                   getOptionValue={(opt: any) => String(opt.id)}
                   placeholder="Select Agent"
                   isClearable
-                  classNames={{
-                    control: ({ isFocused }: any) =>
-                      `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                        isFocused ? "!border-primary-500" : "!border-gray-700"
-                      }`,
-                  }}
-                  styles={{
-                    menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                    option: (base, { isFocused, isSelected }) => ({
-                      ...base,
-                      backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                      color: "#fff",
-                      cursor: "pointer",
-                    }),
-                    singleValue: (base) => ({ ...base, color: "#fff" }),
-                    input: (base) => ({ ...base, color: "#fff" }),
-                    placeholder: (base) => ({ ...base, color: "#aaa" }),
-                  }}
+                  styles={customSelectStyles}
                 />
               </div>
 
@@ -1063,7 +1023,7 @@ const UnassignedLeadsTable = ({
                   <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
                     {/* Full Name */}
                     <div className="w-full">
-                      <p className="text-white text-base leading-6 mb-2">Full Name</p>
+                      <p className="text-white text-xs font-medium mb-1.5">Full Name</p>
                       <Field
                         type="text"
                         name="full_name"
@@ -1074,7 +1034,7 @@ const UnassignedLeadsTable = ({
 
                     {/* Email */}
                     <div className="w-full">
-                      <p className="text-white text-base leading-6 mb-2">Email</p>
+                      <p className="text-white text-xs font-medium mb-1.5">Email</p>
                       <Field
                         type="email"
                         name="email"
@@ -1085,7 +1045,7 @@ const UnassignedLeadsTable = ({
 
                     {/* Phone */}
                     <div className="w-full">
-                      <p className="text-white text-base leading-6 mb-2">Phone</p>
+                      <p className="text-white text-xs font-medium mb-1.5">Phone</p>
                       <Field
                         type="text"
                         name="phone"
@@ -1096,7 +1056,7 @@ const UnassignedLeadsTable = ({
 
                     {/* Lead Number */}
                     <div className="w-full">
-                      <p className="text-white text-base leading-6 mb-2">Lead Number</p>
+                      <p className="text-white text-xs font-medium mb-1.5">Lead Number</p>
                       <Field
                         type="text"
                         name="lead_number"
@@ -1107,7 +1067,7 @@ const UnassignedLeadsTable = ({
 
                     {/* City */}
                     <div className="w-full">
-                      <p className="text-white text-base leading-6 mb-2">City</p>
+                      <p className="text-white text-xs font-medium mb-1.5">City</p>
                       <Field
                         type="text"
                         name="city"
@@ -1118,7 +1078,7 @@ const UnassignedLeadsTable = ({
 
                     {/* Lead Source */}
                     <div className="w-full">
-                      <p className="text-white text-base leading-6 mb-2">Lead Source</p>
+                      <p className="text-white text-xs font-medium mb-1.5">Lead Source</p>
                       <Select
                         value={(leadSourceData || []).find((opt: any) => opt.id === values.lead_source_id) || null}
                         onChange={(selected: any) =>
@@ -1130,24 +1090,7 @@ const UnassignedLeadsTable = ({
                         options={leadSourceData}
                         placeholder="Select Lead Source"
                         isClearable
-                        classNames={{
-                          control: ({ isFocused }: any) =>
-                            `onHoverBoxShadow !w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !shadow-sm ${
-                              isFocused ? "!border-primary-500" : "!border-gray-700"
-                            }`,
-                        }}
-                        styles={{
-                          menu: (base) => ({ ...base, borderRadius: 4, backgroundColor: "#000" }),
-                          option: (base, { isFocused, isSelected }) => ({
-                            ...base,
-                            backgroundColor: isSelected ? "var(--primary-600)" : isFocused ? "#222" : "#000",
-                            color: "#fff",
-                            cursor: "pointer",
-                          }),
-                          singleValue: (base) => ({ ...base, color: "#fff" }),
-                          input: (base) => ({ ...base, color: "#fff" }),
-                          placeholder: (base) => ({ ...base, color: "#aaa" }),
-                        }}
+                        styles={customSelectStyles}
                       />
                     </div>
                   </div>

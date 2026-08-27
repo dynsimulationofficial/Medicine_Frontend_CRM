@@ -168,16 +168,16 @@ export default function LeadTasksTab({
         </p>
       ) : (
         <div className="w-full overflow-x-auto border border-gray-600 rounded-lg">
-          <table className="w-full text-left text-sm text-white">
-            <thead className="text-xs uppercase talbleheaderBg text-white border-b border-gray-600">
+          <table className="w-full text-left text-xs text-white">
+            <thead className="text-[11px] uppercase talbleheaderBg text-white border-b border-gray-600">
               <tr>
-                <th className="py-3 px-4 w-12 text-center">#</th>
-                <th className="py-3 px-4">Due Date</th>
-                <th className="py-3 px-4">Subject</th>
-                <th className="py-3 px-4">Details</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center">Mark Done</th>
-                <th className="py-3 px-4 text-center w-24">Action</th>
+                <th className="py-2.5 px-3 w-10 text-center">#</th>
+                <th className="py-2.5 px-3">Due Date</th>
+                <th className="py-2.5 px-3">Subject</th>
+                <th className="py-2.5 px-3">Details</th>
+                <th className="py-2.5 px-3 text-center">Status</th>
+                <th className="py-2.5 px-3 text-center">Mark Done</th>
+                <th className="py-2.5 px-3 text-center w-20">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700/60">
@@ -191,53 +191,53 @@ export default function LeadTasksTab({
                     key={t?.id ?? idx}
                     className="odd:bg-[#404040] even:bg-[#2d2d2d] hover:bg-primary-700/80 transition-colors"
                   >
-                    <td className="py-3 px-4 text-center text-gray-300 font-medium">
+                    <td className="py-2 px-3 text-center text-gray-300 font-medium">
                       {idx + 1}
                     </td>
-                    <td className="py-3 px-4 text-xs text-gray-200 whitespace-nowrap">
+                    <td className="py-2 px-3 text-[11px] text-gray-200 whitespace-nowrap">
                       {dueText}
                     </td>
-                    <td className="py-3 px-4 font-semibold text-white capitalize">
+                    <td className="py-2 px-3 font-semibold text-white capitalize text-xs">
                       {t?.subject || "-"}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-200 max-w-md">
+                    <td className="py-2 px-3 text-xs text-gray-200 max-w-xs">
                       {t?.details || "-"}
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-2 px-3 text-center">
                       <span
-                        className={`inline-block px-2.5 py-1 rounded text-xs font-semibold border ${statusBadge(
+                        className={`inline-block px-2 py-0.5 rounded text-[11px] font-semibold border ${statusBadge(
                           t?.status,
                         )}`}
                       >
                         {t?.status || "Pending"}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-2 px-3 text-center">
                       <button
                         onClick={() => !locked && completeTask(t.id)}
                         disabled={locked}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium border transition ${
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium border transition ${
                           locked
                             ? "bg-green-800/40 text-green-300 border-green-600 cursor-default"
                             : "bg-primary-600 text-white border-primary-500 hover:bg-primary-700 cursor-pointer"
                         }`}
                       >
-                        <FaRegCheckCircle className="w-3.5 h-3.5" />
+                        <FaRegCheckCircle className="w-3 h-3" />
                         {locked ? "Done" : "Mark Done"}
                       </button>
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-2 px-3 text-center">
                       <button
                         onClick={() => setEditingTask(t)}
                         disabled={locked}
-                        className={`py-1 px-2.5 rounded text-white text-sm transition-colors ${
+                        className={`p-1.5 rounded text-white text-xs transition-colors ${
                           locked
                             ? "bg-gray-600 opacity-40 cursor-not-allowed"
                             : "bg-primary-600 hover:bg-primary-700 cursor-pointer"
                         }`}
                         title="Edit Task"
                       >
-                        <MdEdit />
+                        <MdEdit className="w-3.5 h-3.5" />
                       </button>
                     </td>
                   </tr>
@@ -330,7 +330,7 @@ export default function LeadTasksTab({
                 {/* Row 1: Owner & Associated Lead */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-white font-medium text-sm mb-1">Owner</p>
+                    <p className="text-white font-medium text-xs mb-1">Owner</p>
                     <input
                       type="text"
                       value={values.owner}
@@ -339,7 +339,7 @@ export default function LeadTasksTab({
                     />
                   </div>
                   <div>
-                    <p className="text-white font-medium text-sm mb-1">Associated Lead</p>
+                    <p className="text-white font-medium text-xs mb-1">Associated Lead</p>
                     <input
                       type="text"
                       value={values.associated_lead}
@@ -352,7 +352,7 @@ export default function LeadTasksTab({
                 {/* Row 2: Subject & Location */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-white font-medium text-sm mb-1">Subject</p>
+                    <p className="text-white font-medium text-xs mb-1">Subject</p>
                     <input
                       type="text"
                       name="subject"
@@ -363,7 +363,7 @@ export default function LeadTasksTab({
                     />
                   </div>
                   <div>
-                    <p className="text-white font-medium text-sm mb-1">Location</p>
+                    <p className="text-white font-medium text-xs mb-1">Location</p>
                     <input
                       type="text"
                       name="location"
@@ -382,7 +382,7 @@ export default function LeadTasksTab({
 
                 {/* From Date */}
                 <div>
-                  <p className="text-white font-medium text-sm mb-1">From</p>
+                  <p className="text-white font-medium text-xs mb-1">From</p>
                   <DatePicker
                     selected={values.start_at}
                     onChange={(date: Date | null) => {
@@ -398,7 +398,7 @@ export default function LeadTasksTab({
 
                 {/* To Date */}
                 <div>
-                  <p className="text-white font-medium text-sm mb-1">To</p>
+                  <p className="text-white font-medium text-xs mb-1">To</p>
                   <DatePicker
                     selected={values.end_at}
                     onChange={(date: Date | null) => {
@@ -414,7 +414,7 @@ export default function LeadTasksTab({
 
                 {/* Description (optional) */}
                 <div>
-                  <p className="text-white font-medium text-sm mb-1">Description (optional)</p>
+                  <p className="text-white font-medium text-xs mb-1">Description (optional)</p>
                   <textarea
                     name="description"
                     value={values.description}
@@ -515,7 +515,7 @@ export default function LeadTasksTab({
                   {/* Row 1: Owner & Associated Lead */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-white font-medium text-sm mb-1">Owner</p>
+                      <p className="text-white font-medium text-xs mb-1">Owner</p>
                       <input
                         type="text"
                         value={values.owner}
@@ -524,7 +524,7 @@ export default function LeadTasksTab({
                       />
                     </div>
                     <div>
-                      <p className="text-white font-medium text-sm mb-1">Associated Lead</p>
+                      <p className="text-white font-medium text-xs mb-1">Associated Lead</p>
                       <input
                         type="text"
                         value={values.associated_lead}
@@ -537,7 +537,7 @@ export default function LeadTasksTab({
                   {/* Row 2: Subject & Location */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-white font-medium text-sm mb-1">Subject</p>
+                      <p className="text-white font-medium text-xs mb-1">Subject</p>
                       <input
                         type="text"
                         name="subject"
@@ -547,7 +547,7 @@ export default function LeadTasksTab({
                       />
                     </div>
                     <div>
-                      <p className="text-white font-medium text-sm mb-1">Location</p>
+                      <p className="text-white font-medium text-xs mb-1">Location</p>
                       <input
                         type="text"
                         name="location"
@@ -565,7 +565,7 @@ export default function LeadTasksTab({
 
                   {/* From Date */}
                   <div>
-                    <p className="text-white font-medium text-sm mb-1">From</p>
+                    <p className="text-white font-medium text-xs mb-1">From</p>
                     <DatePicker
                       selected={values.start_at}
                       onChange={(date: Date | null) => {
@@ -581,7 +581,7 @@ export default function LeadTasksTab({
 
                   {/* To Date */}
                   <div>
-                    <p className="text-white font-medium text-sm mb-1">To</p>
+                    <p className="text-white font-medium text-xs mb-1">To</p>
                     <DatePicker
                       selected={values.end_at}
                       onChange={(date: Date | null) => {
@@ -597,7 +597,7 @@ export default function LeadTasksTab({
 
                   {/* Description (optional) */}
                   <div>
-                    <p className="text-white font-medium text-sm mb-1">Description (optional)</p>
+                    <p className="text-white font-medium text-xs mb-1">Description (optional)</p>
                     <textarea
                       name="description"
                       value={values.description}

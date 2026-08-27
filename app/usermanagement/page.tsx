@@ -297,13 +297,13 @@ export default function Home() {
             </div>
             {/* ----------------Table----------------------- */}
             <div className="relative overflow-x-auto sm:rounded-lg">
-              <table className="w-full text-sm text-left text-white  whitespace-nowrap">
+              <table className="w-full text-xs text-left text-white  whitespace-nowrap">
                 <thead className="text-xs talbleheaderBg text-white">
                   <tr className="   ">
                     <th className="px-1 py-3 md:p-3    ">
                       <div className="flex items-center gap-2">
                         <RxAvatar className="w-5 h-5" />
-                        <div className="font-semibold text-white text-base leading-normal">
+                        <div className="font-bold text-white text-xs">
                           Name - Mail
                         </div>
                       </div>
@@ -311,7 +311,7 @@ export default function Home() {
                     <th className="px-2 py-1     hidden md:table-cell">
                       <div className="flex items-center gap-2">
                         <IoMailOpenOutline className="w-5 h-5" />
-                        <div className="font-semibold text-white text-base leading-normal">
+                        <div className="font-bold text-white text-xs">
                           Email
                         </div>
                       </div>
@@ -319,7 +319,7 @@ export default function Home() {
                     <th className="px-2 py-1     hidden md:table-cell">
                       <div className="flex items-center gap-2">
                         <MdOutlineCall className="w-5 h-5" />
-                        <div className="font-semibold text-white text-base leading-normal">
+                        <div className="font-bold text-white text-xs">
                           Phone
                         </div>
                       </div>
@@ -327,7 +327,7 @@ export default function Home() {
                     <th className="px-2 py-1     hidden md:table-cell">
                       <div className="flex items-center gap-2">
                         <LiaArrowCircleDownSolid className="w-5 h-5" />
-                        <div className="font-semibold text-white text-base leading-normal">
+                        <div className="font-bold text-white text-xs">
                           Role
                         </div>
                       </div>
@@ -335,7 +335,7 @@ export default function Home() {
                     <th className="px-2 py-1    ">
                       <div className="flex items-center gap-2">
                         <LiaArrowCircleDownSolid className="w-5 h-5" />
-                        <div className="font-semibold text-white text-base leading-normal">
+                        <div className="font-bold text-white text-xs">
                           Action
                         </div>
                       </div>
@@ -358,21 +358,21 @@ export default function Home() {
                       >
                         {/* Name */}
                         <td className="px-1 md:p-3 py-2 flex md:flex-row gap-2 ">
-                          <p className="text-white text-sm sm:text-base leading-normal capitalize truncate">
+                          <p className="text-white text-xs leading-normal capitalize truncate">
                             {item?.name ?? "-"}
                           </p>
                         </td>
 
                         {/* Email */}
                         <td className="px-2 py-1     hidden md:table-cell">
-                          <p className="text-white text-sm sm:text-base leading-normal truncate">
+                          <p className="text-white text-xs leading-normal truncate">
                             {item?.email ?? "-"}
                           </p>
                         </td>
 
                         {/* Phone */}
                         <td className="px-2 py-1     hidden md:table-cell">
-                          <p className="text-white text-sm sm:text-base leading-normal capitalize truncate">
+                          <p className="text-white text-xs leading-normal capitalize truncate">
                             {item?.mobile_number ?? "-"}
                           </p>
                         </td>
@@ -513,7 +513,7 @@ export default function Home() {
 
                   {/* Name */}
                   <div className="w-full relative mb-3">
-                    <p className="text-white text-base leading-normal mb-2">
+                    <p className="text-white text-xs font-medium mb-1.5">
                       Your Name
                     </p>
                     <input
@@ -522,11 +522,7 @@ export default function Home() {
                       value={values.name}
                       onChange={handleChange}
                       placeholder="Charlene Reed"
-                      className={`hover:shadow-hoverInputShadow focus-border-primary w-full h-[50px] border ${
-                        errors.name && touched.name
-                          ? "border-red-500"
-                          : "border-gray-700"
-                      } rounded-[4px] text-[15px] placeholder-gray-400 pl-4 mb-2 text-white bg-black`}
+                      className={`hover:shadow-hoverInputShadow focus-border-primary w-full h-[38px] border border-gray-700 rounded-[4px] text-xs placeholder-gray-400 px-3 text-white bg-black outline-none focus:border-primary-500`}
                     />
                     {errors.name &&
                       touched.name &&
@@ -539,7 +535,7 @@ export default function Home() {
 
                   {/* Mobile Number */}
                   <div className="w-full relative mb-3">
-                    <p className="text-white text-base leading-normal mb-2">
+                    <p className="text-white text-xs font-medium mb-1.5">
                       Mobile Number
                     </p>
                     <input
@@ -548,11 +544,7 @@ export default function Home() {
                       value={values.mobile_number}
                       onChange={handleChange}
                       placeholder="+91 9876543210"
-                      className={`hover:shadow-hoverInputShadow focus-border-primary w-full h-[50px] border ${
-                        errors.mobile_number && touched.mobile_number
-                          ? "border-red-500"
-                          : "border-gray-700"
-                      } rounded-[4px] text-[15px] placeholder-gray-400 pl-4 mb-2 text-white bg-black`}
+                      className={`hover:shadow-hoverInputShadow focus-border-primary w-full h-[38px] border border-gray-700 rounded-[4px] text-xs placeholder-gray-400 px-3 text-white bg-black outline-none focus:border-primary-500`}
                     />
                     {errors.mobile_number &&
                       touched.mobile_number &&
@@ -565,7 +557,7 @@ export default function Home() {
 
                   {/* Email */}
                   <div className="w-full relative mb-3">
-                    <p className="text-white text-base leading-normal mb-2">
+                    <p className="text-white text-xs font-medium mb-1.5">
                       Email
                     </p>
                     <input
@@ -574,11 +566,7 @@ export default function Home() {
                       value={values.email}
                       onChange={handleChange}
                       placeholder="youremail@example.com"
-                      className={`hover:shadow-hoverInputShadow focus-border-primary w-full h-[50px] border ${
-                        errors.email && touched.email
-                          ? "border-red-500"
-                          : "border-gray-700"
-                      } rounded-[4px] text-[15px] placeholder-gray-400 pl-4 mb-2 text-white bg-black`}
+                      className={`hover:shadow-hoverInputShadow focus-border-primary w-full h-[38px] border border-gray-700 rounded-[4px] text-xs placeholder-gray-400 px-3 text-white bg-black outline-none focus:border-primary-500`}
                     />
                     {errors.email &&
                       touched.email &&
@@ -591,14 +579,14 @@ export default function Home() {
 
                   {/* User Role (read-only) */}
                   <div className="w-full relative mb-3">
-                    <p className="text-white text-base leading-normal mb-2">
+                    <p className="text-white text-xs font-medium mb-1.5">
                       Role
                     </p>
                     <input
                       type="text"
                       value={values.role_name}
                       readOnly
-                      className="w-full h-[50px] border border-gray-700 rounded-[4px] text-[15px] placeholder-gray-400 pl-4 mb-2 text-white bg-black outline-none cursor-not-allowed"
+                      className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs placeholder-gray-400 px-3 text-white bg-black outline-none focus:border-primary-500 outline-none cursor-not-allowed"
                     />
                     {errors.role_name &&
                       touched.role_name &&
@@ -613,7 +601,7 @@ export default function Home() {
                   <div className="col-span-2">
                     <button
                       type="submit"
-                      className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded w-full"
+                      className="w-full h-[38px] bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-[4px] transition cursor-pointer flex items-center justify-center"
                     >
                       Save Changes
                     </button>

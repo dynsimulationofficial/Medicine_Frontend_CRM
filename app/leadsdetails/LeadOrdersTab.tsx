@@ -285,17 +285,17 @@ export default function LeadOrdersTab({
         </p>
       ) : (
         <div className="w-full overflow-x-auto border border-gray-600 rounded-lg">
-          <table className="w-full text-left text-sm text-white">
-            <thead className="text-xs uppercase talbleheaderBg text-white border-b border-gray-600">
+          <table className="w-full text-left text-xs text-white">
+            <thead className="text-[11px] uppercase talbleheaderBg text-white border-b border-gray-600">
               <tr>
-                <th className="py-3 px-4 w-12 text-center">#</th>
-                <th className="py-3 px-4">Order Number</th>
-                <th className="py-3 px-4">Date</th>
-                <th className="py-3 px-4 text-center">Items</th>
-                <th className="py-3 px-4 text-right">Grand Total</th>
-                <th className="py-3 px-4 text-center">Order Status</th>
-                <th className="py-3 px-4 text-center">Payment</th>
-                <th className="py-3 px-4 text-center w-28">Action</th>
+                <th className="py-2.5 px-3 w-10 text-center">#</th>
+                <th className="py-2.5 px-3">Order Number</th>
+                <th className="py-2.5 px-3">Date</th>
+                <th className="py-2.5 px-3 text-center">Items</th>
+                <th className="py-2.5 px-3 text-right">Grand Total</th>
+                <th className="py-2.5 px-3 text-center">Order Status</th>
+                <th className="py-2.5 px-3 text-center">Payment</th>
+                <th className="py-2.5 px-3 text-center w-24">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700/60">
@@ -304,30 +304,30 @@ export default function LeadOrdersTab({
                   key={ord.id || idx}
                   className="odd:bg-[#404040] even:bg-[#2d2d2d] hover:bg-primary-700/80 transition-colors"
                 >
-                  <td className="py-3 px-4 text-center text-gray-300 font-medium">
+                  <td className="py-2 px-3 text-center text-gray-300 font-medium">
                     {idx + 1}
                   </td>
-                  <td className="py-3 px-4 font-bold text-primary-300">
+                  <td className="py-2 px-3 font-bold text-primary-300 text-xs">
                     {ord.order_number}
                   </td>
-                  <td className="py-3 px-4 text-xs text-gray-200 whitespace-nowrap">
+                  <td className="py-2 px-3 text-[11px] text-gray-200 whitespace-nowrap">
                     {new Date(ord.created_at).toLocaleDateString()}{" "}
                     {new Date(ord.created_at).toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
                   </td>
-                  <td className="py-3 px-4 text-center font-medium text-white">
-                    <span className="px-2 py-0.5 rounded bg-gray-700 text-xs font-semibold text-white">
+                  <td className="py-2 px-3 text-center font-medium text-white">
+                    <span className="px-2 py-0.5 rounded bg-gray-700 text-[11px] font-semibold text-white">
                       {ord.total_items} Items
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-right font-extrabold text-white text-base">
+                  <td className="py-2 px-3 text-right font-bold text-white text-xs">
                     {Number(ord.grand_total).toFixed(2)}
                   </td>
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-2 px-3 text-center">
                     <span
-                      className={`px-2.5 py-0.5 rounded text-xs font-semibold border ${
+                      className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
                         ord.order_status === "Delivered"
                           ? "bg-green-900/40 text-green-300 border-green-700"
                           : ord.order_status === "Shipped" || ord.order_status === "Confirmed"
@@ -340,9 +340,9 @@ export default function LeadOrdersTab({
                       {ord.order_status || "Pending"}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-2 px-3 text-center">
                     <span
-                      className={`px-2 py-0.5 rounded text-xs font-semibold border ${
+                      className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
                         ord.payment_status === "Paid"
                           ? "bg-green-900/40 text-green-300 border-green-700"
                           : ord.payment_status === "Partial"
@@ -353,21 +353,21 @@ export default function LeadOrdersTab({
                       {ord.payment_status || "Pending"}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-center">
-                    <div className="flex gap-2 justify-center">
+                  <td className="py-2 px-3 text-center">
+                    <div className="flex gap-1.5 justify-center">
                       <button
                         onClick={() => openEdit(ord)}
-                        className="py-1 px-2.5 bg-primary-600 hover:bg-primary-700 rounded text-white text-sm cursor-pointer transition-colors"
+                        className="p-1.5 bg-primary-600 hover:bg-primary-700 rounded text-white text-xs cursor-pointer transition-colors"
                         title="Edit Order"
                       >
-                        <MdEdit />
+                        <MdEdit className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteOrder(ord)}
-                        className="py-1 px-2.5 bg-red-600 hover:bg-red-700 rounded text-white text-sm cursor-pointer transition-colors"
+                        className="p-1.5 bg-red-600 hover:bg-red-700 rounded text-white text-xs cursor-pointer transition-colors"
                         title="Delete Order"
                       >
-                        <RiDeleteBin6Line />
+                        <RiDeleteBin6Line className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </td>

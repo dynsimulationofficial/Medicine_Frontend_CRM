@@ -1,34 +1,23 @@
 "use client";
 import Image from "next/image";
 import Tabs from "../component/Tabs";
-import { CiSettings } from "react-icons/ci";
-import { IoIosNotificationsOutline } from "react-icons/io";
-import { useEffect, useState } from "react";
-//import { appCheck } from "../firebase-config";
-import { getToken } from "firebase/app-check";
+import { useState } from "react";
 import {
   Formik,
   Form,
   Field,
   ErrorMessage,
   FormikHelpers,
-  useFormik,
 } from "formik";
 import * as Yup from "yup";
 import AxiosProvider from "../../provider/AxiosProvider";
-import { useContext } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FaRegEye } from "react-icons/fa";
-import { FaRegEyeSlash } from "react-icons/fa";
-import { AppContext } from "../AppContext";
+import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 import LeftSideBar from "../component/LeftSideBar";
-import UserActivityLogger from "../../provider/UserActivityLogger";
-import Select, { SingleValue } from "react-select";
+import Select from "react-select";
 import DesktopHeader from "../component/DesktopHeader";
 import { useAuthRedirect } from "../component/hooks/useAuthRedirect";
-
-const axiosProvider = new AxiosProvider();
 
 interface FormValues {
   name: string;
@@ -37,6 +26,68 @@ interface FormValues {
   password: string;
   roleLevel: string;
 }
+
+const customSelectStyles = {
+  control: (base: any, { isFocused }: any) => ({
+    ...base,
+    height: "38px",
+    minHeight: "38px",
+    backgroundColor: "#000",
+    borderColor: isFocused ? "var(--primary-500, #0284c7)" : "#374151",
+    borderRadius: 4,
+    fontSize: "12px",
+    boxShadow: "none",
+    "&:hover": {
+      borderColor: isFocused ? "var(--primary-500, #0284c7)" : "#4b5563",
+    },
+  }),
+  valueContainer: (base: any) => ({
+    ...base,
+    height: "38px",
+    padding: "0 8px",
+  }),
+  input: (base: any) => ({
+    ...base,
+    margin: "0px",
+    padding: "0px",
+    color: "#fff",
+    fontSize: "12px",
+  }),
+  indicatorsContainer: (base: any) => ({
+    ...base,
+    height: "38px",
+  }),
+  singleValue: (base: any) => ({
+    ...base,
+    color: "#fff",
+    fontSize: "12px",
+  }),
+  placeholder: (base: any) => ({
+    ...base,
+    color: "#aaa",
+    fontSize: "12px",
+  }),
+  menu: (base: any) => ({
+    ...base,
+    borderRadius: 4,
+    backgroundColor: "#000",
+    border: "1px solid #374151",
+    zIndex: 9999,
+  }),
+  option: (base: any, { isFocused, isSelected }: any) => ({
+    ...base,
+    backgroundColor: isSelected
+      ? "var(--primary-600, #0284c7)"
+      : isFocused
+      ? "#222"
+      : "#000",
+    color: "#fff",
+    cursor: "pointer",
+    fontSize: "12px",
+    padding: "8px 12px",
+  }),
+};
+
 const roleOptions = [
   { value: "1", label: "Admin" },
   { value: "2", label: "Agent" },
@@ -44,7 +95,9 @@ const roleOptions = [
 
 const validationSchema = Yup.object().shape({
   name: Yup.string().required("Your name is required"),
-  mobile_number: Yup.string().matches(/^(\+91|\+1|\+44)\d{10}$/, "Mobile number must be exactly 10 digits").required("Mobile number is required"),
+  mobile_number: Yup.string()
+    .matches(/^(\+91|\+1|\+44)\d{10}$/, "Mobile number must be exactly 10 digits")
+    .required("Mobile number is required"),
   email: Yup.string()
     .email("Invalid email address")
     .required("Email is required"),
@@ -65,19 +118,17 @@ export default function Home() {
     values: FormValues,
     { resetForm }: FormikHelpers<FormValues>,
   ) => {
-    console.log("admin values", values);
-
     try {
-      const res = await AxiosProvider.post("/register", values);
+      await AxiosProvider.post("/register", values);
       toast.success("Form submitted successfully!");
       resetForm();
-      //console.log('user register',res.data.data.userId)
-      // Create instance and log activity
-      // const activityLogger = new UserActivityLogger();
-      //  await activityLogger.userRegister(res.data.data.userId);
     } catch (error: any) {
       if (error.response && error.response.status === 409) {
-        toast.error(error.response?.data?.message || error.response?.data?.msg || "Conflict error occurred.");
+        toast.error(
+          error.response?.data?.message ||
+            error.response?.data?.msg ||
+            "Conflict error occurred.",
+        );
       } else {
         console.error("Error during registration:", error);
         toast.error("Failed to submit the form.");
@@ -107,117 +158,153 @@ export default function Home() {
                 <Form className="w-full md:w-9/12">
                   <div className="w-full">
                     {/* Name & Mobile Number */}
-                    <div className="w-full flex flex-col md:flex-row gap-6">
-                      <div className="w-full relative mb-3">
-                        <p className="text-white text-base leading-normal mb-2">
+                    <div className="w-full flex flex-col md:flex-row gap-6 mb-4">
+                      <div className="w-full relative">
+                        <p className="text-white text-xs font-medium mb-1.5">
                           Your Name
                         </p>
                         <Field
                           type="text"
                           name="name"
                           placeholder="Charlene Reed"
-                          className="hover:shadow-hoverInputShadow focus:border-primary-600 w-full h-[50px] border border-gray-700 rounded-[4px] text-white placeholder-gray-400 pl-4 mb-2 bg-black"
+                          className="hover:shadow-hoverInputShadow focus:border-primary-600 w-full h-[38px] border border-gray-700 rounded-[4px] text-white text-xs placeholder-gray-400 px-3 bg-black outline-none"
                         />
                         <ErrorMessage
                           name="name"
                           component="div"
-                          className="text-red-500 absolute top-[90px] text-xs"
+                          className="text-red-500 absolute top-[62px] text-xs"
                         />
                       </div>
 
-                      <div className="w-full relative mb-3">
-                        <p className="text-white text-base leading-normal mb-2">
+                      <div className="w-full relative">
+                        <p className="text-white text-xs font-medium mb-1.5">
                           Mobile Number
                         </p>
-                        <div className="flex w-full h-[50px] border border-gray-700 rounded-[4px] bg-black overflow-hidden hover:shadow-hoverInputShadow focus-within:border-primary-600">
-                            <select 
-                              className="bg-black text-white text-sm border-r border-gray-700 px-2 py-3 outline-none cursor-pointer"
-                              value={values.mobile_number.startsWith('+1') ? '+1' : values.mobile_number.startsWith('+44') ? '+44' : '+91'}
-                              onChange={(e) => {
-                                const currentCode = values.mobile_number.startsWith('+1') ? '+1' : values.mobile_number.startsWith('+44') ? '+44' : '+91';
-                                const numberPart = values.mobile_number.replace(currentCode, '');
-                                setFieldValue('mobile_number', e.target.value + numberPart);
-                              }}
-                            >
-                              <option value="+91">+91</option>
-                              <option value="+1">+1</option>
-                              <option value="+44">+44</option>
-                            </select>
-                            <input
-                              type="text"
-                              maxLength={10}
-                              className="w-full bg-black text-white pl-4 outline-none placeholder-gray-400"
-                              placeholder="Enter mobile number"
-                              value={(() => {
-                                const code = values.mobile_number.startsWith('+1') ? '+1' : values.mobile_number.startsWith('+44') ? '+44' : '+91';
-                                return values.mobile_number.substring(code.length);
-                              })()}
-                              onChange={(e) => {
-                                const code = values.mobile_number.startsWith('+1') ? '+1' : values.mobile_number.startsWith('+44') ? '+44' : '+91';
-                                const digitsOnly = e.target.value.replace(/\D/g, '');
-                                setFieldValue('mobile_number', code + digitsOnly);
-                              }}
-                            />
-                          </div>
+                        <div className="flex w-full h-[38px] border border-gray-700 rounded-[4px] bg-black overflow-hidden hover:shadow-hoverInputShadow focus-within:border-primary-600">
+                          <select
+                            className="h-full bg-black text-white text-xs border-r border-gray-700 px-2 outline-none cursor-pointer"
+                            value={
+                              values.mobile_number.startsWith("+1")
+                                ? "+1"
+                                : values.mobile_number.startsWith("+44")
+                                ? "+44"
+                                : "+91"
+                            }
+                            onChange={(e) => {
+                              const currentCode = values.mobile_number.startsWith(
+                                "+1",
+                              )
+                                ? "+1"
+                                : values.mobile_number.startsWith("+44")
+                                ? "+44"
+                                : "+91";
+                              const numberPart = values.mobile_number.replace(
+                                currentCode,
+                                "",
+                              );
+                              setFieldValue(
+                                "mobile_number",
+                                e.target.value + numberPart,
+                              );
+                            }}
+                          >
+                            <option value="+91">+91</option>
+                            <option value="+1">+1</option>
+                            <option value="+44">+44</option>
+                          </select>
+                          <input
+                            type="text"
+                            maxLength={10}
+                            className="h-full w-full bg-black text-white text-xs px-3 outline-none placeholder-gray-400"
+                            placeholder="Enter mobile number"
+                            value={(() => {
+                              const code = values.mobile_number.startsWith("+1")
+                                ? "+1"
+                                : values.mobile_number.startsWith("+44")
+                                ? "+44"
+                                : "+91";
+                              return values.mobile_number.substring(
+                                code.length,
+                              );
+                            })()}
+                            onChange={(e) => {
+                              const code = values.mobile_number.startsWith(
+                                "+1",
+                              )
+                                ? "+1"
+                                : values.mobile_number.startsWith("+44")
+                                ? "+44"
+                                : "+91";
+                              const digitsOnly = e.target.value.replace(
+                                /\D/g,
+                                "",
+                              );
+                              setFieldValue(
+                                "mobile_number",
+                                code + digitsOnly,
+                              );
+                            }}
+                          />
+                        </div>
                         <ErrorMessage
                           name="mobile_number"
                           component="div"
-                          className="text-red-500 absolute top-[90px] text-xs"
+                          className="text-red-500 absolute top-[62px] text-xs"
                         />
                       </div>
                     </div>
 
                     {/* Email & Password */}
-                    <div className="w-full flex flex-col md:flex-row gap-6">
-                      <div className="w-full relative mb-3">
-                        <p className="text-white text-base leading-normal mb-2">
+                    <div className="w-full flex flex-col md:flex-row gap-6 mb-4">
+                      <div className="w-full relative">
+                        <p className="text-white text-xs font-medium mb-1.5">
                           Email
                         </p>
                         <Field
                           type="email"
                           name="email"
                           placeholder="Janedoe@gmail.com"
-                          className="hover:shadow-hoverInputShadow focus:border-primary-600 w-full h-[50px] border border-gray-700 rounded-[4px] text-white placeholder-gray-400 pl-4 mb-2 bg-black"
+                          className="hover:shadow-hoverInputShadow focus:border-primary-600 w-full h-[38px] border border-gray-700 rounded-[4px] text-white text-xs placeholder-gray-400 px-3 bg-black outline-none"
                         />
                         <ErrorMessage
                           name="email"
                           component="div"
-                          className="text-red-500 absolute top-[90px] text-xs"
+                          className="text-red-500 absolute top-[62px] text-xs"
                         />
                       </div>
 
-                      <div className="w-full relative mb-3">
-                        <p className="text-white text-base leading-normal mb-2">
+                      <div className="w-full relative">
+                        <p className="text-white text-xs font-medium mb-1.5">
                           Password
                         </p>
                         <Field
                           type={showPassword ? "text" : "password"}
                           name="password"
                           placeholder="********"
-                          className="hover:shadow-hoverInputShadow focus:border-primary-600 w-full h-[50px] border border-gray-700 rounded-[4px] text-white placeholder-gray-400 pl-4 mb-2 bg-black"
+                          className="hover:shadow-hoverInputShadow focus:border-primary-600 w-full h-[38px] border border-gray-700 rounded-[4px] text-white text-xs placeholder-gray-400 px-3 bg-black outline-none"
                         />
                         {showPassword ? (
                           <FaRegEye
                             onClick={togglePasswordVisibility}
-                            className="absolute top-12 right-4 text-gray-400 text-[15px] cursor-pointer"
+                            className="absolute top-8 right-3 text-gray-400 text-[15px] cursor-pointer"
                           />
                         ) : (
                           <FaRegEyeSlash
                             onClick={togglePasswordVisibility}
-                            className="absolute top-12 right-4 text-gray-400 text-[15px] cursor-pointer"
+                            className="absolute top-8 right-3 text-gray-400 text-[15px] cursor-pointer"
                           />
                         )}
                         <ErrorMessage
                           name="password"
                           component="div"
-                          className="text-red-500 absolute top-[90px] text-xs"
+                          className="text-red-500 absolute top-[62px] text-xs"
                         />
                       </div>
                     </div>
 
                     {/* Role Dropdown */}
-                    <div className="w-full md:w-[49%] relative mb-8">
-                      <p className="text-white text-base leading-normal mb-2">
+                    <div className="w-full md:w-[49%] relative mb-6">
+                      <p className="text-white text-xs font-medium mb-1.5">
                         Role
                       </p>
                       <Select
@@ -239,39 +326,7 @@ export default function Home() {
                         isSearchable={false}
                         isClearable
                         placeholder="Select Role"
-                        classNames={{
-                          control: ({ isFocused }) =>
-                            `!w-full !border-[0.4px] !rounded-[4px] !text-sm !leading-4 !font-medium !py-1.5 !px-1 !bg-black !text-white !shadow-sm ${
-                              isFocused
-                                ? "!border-primary-600"
-                                : "!border-gray-700"
-                            }`,
-                          singleValue: () => "!text-white", // selected text
-                          input: () => "text-white", // typed text
-                          placeholder: () => "text-gray-400", // placeholder text
-                        }}
-                        styles={{
-                          menu: (base) => ({
-                            ...base,
-                            borderRadius: "4px",
-                            boxShadow: "0px 4px 10px rgba(0,0,0,0.1)",
-                            backgroundColor: "#000", // dropdown background
-                          }),
-                          option: (base, { isFocused, isSelected }) => ({
-                            ...base,
-                            backgroundColor: isSelected
-                              ? "var(--primary-600)" // selected option bg
-                              : isFocused
-                                ? "var(--primary-100)" // hovered option bg
-                                : "#000", // default bg
-                            color: isSelected
-                              ? "#fff" // selected text
-                              : isFocused
-                                ? "#000" // hovered text
-                                : "#fff", // default text
-                            cursor: "pointer",
-                          }),
-                        }}
+                        styles={customSelectStyles}
                       />
                     </div>
 
@@ -282,7 +337,7 @@ export default function Home() {
                           <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full h-[50px] bg-primary-600 rounded-[4px] text-white text-lg font-medium hover:bg-primary-700"
+                            className="w-full h-[38px] bg-primary-600 rounded-[4px] text-white text-xs font-semibold hover:bg-primary-700 cursor-pointer transition flex items-center justify-center"
                           >
                             {isSubmitting ? "Submitting..." : "Submit"}
                           </button>
@@ -300,6 +355,7 @@ export default function Home() {
       ),
     },
   ];
+
   if (isChecking) {
     return (
       <div className="h-screen flex flex-col gap-5 justify-center items-center bg-white">
@@ -313,17 +369,16 @@ export default function Home() {
       </div>
     );
   }
+
   return (
     <>
-      <div className=" flex justify-end  min-h-screen">
+      <div className="flex justify-end min-h-screen">
         <LeftSideBar />
         {/* Main content right section */}
-        <div className="ml-[97px] w-full md:w-[90%] m-auto min-h-[500px]  rounded p-4 mt-0 ">
-          {/* left section top row */}
+        <div className="ml-[97px] w-full md:w-[90%] m-auto min-h-[500px] rounded p-4 mt-0">
           <DesktopHeader />
-          {/* </div> */}
-          <div className=" w-full    flex justify-center relative ">
-            <div className=" w-full min-h-[600px]  rounded-[25px]">
+          <div className="w-full flex justify-center relative">
+            <div className="w-full min-h-[600px] rounded-[25px]">
               <div className="p-2 md:p-0">
                 <Tabs tabs={tabs} />
               </div>

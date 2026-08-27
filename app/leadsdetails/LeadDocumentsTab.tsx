@@ -216,16 +216,16 @@ export default function LeadDocumentsTab({
         </p>
       ) : (
         <div className="w-full overflow-x-auto border border-gray-600 rounded-lg">
-          <table className="w-full text-left text-sm text-white">
-            <thead className="text-xs uppercase talbleheaderBg text-white border-b border-gray-600">
+          <table className="w-full text-left text-xs text-white">
+            <thead className="text-[11px] uppercase talbleheaderBg text-white border-b border-gray-600">
               <tr>
-                <th className="py-3 px-4 w-12 text-center">#</th>
-                <th className="py-3 px-4">File Name</th>
-                <th className="py-3 px-4">Type</th>
-                <th className="py-3 px-4">Size</th>
-                <th className="py-3 px-4">Uploaded On</th>
-                <th className="py-3 px-4">Notes</th>
-                <th className="py-3 px-4 text-center w-36">Action</th>
+                <th className="py-2.5 px-3 w-10 text-center">#</th>
+                <th className="py-2.5 px-3">File Name</th>
+                <th className="py-2.5 px-3">Type</th>
+                <th className="py-2.5 px-3">Size</th>
+                <th className="py-2.5 px-3">Uploaded On</th>
+                <th className="py-2.5 px-3">Notes</th>
+                <th className="py-2.5 px-3 text-center w-28">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700/60">
@@ -234,29 +234,29 @@ export default function LeadDocumentsTab({
                   key={d.id || idx}
                   className="odd:bg-[#404040] even:bg-[#2d2d2d] hover:bg-primary-700/80 transition-colors"
                 >
-                  <td className="py-3 px-4 text-center text-gray-300 font-medium">
+                  <td className="py-2 px-3 text-center text-gray-300 font-medium">
                     {idx + 1}
                   </td>
-                  <td className="py-3 px-4 font-semibold text-white truncate max-w-xs">
+                  <td className="py-2 px-3 font-semibold text-white truncate max-w-[160px] text-xs">
                     {d.file_name}
                   </td>
-                  <td className="py-3 px-4 text-xs text-gray-300">
+                  <td className="py-2 px-3 text-[11px] text-gray-300">
                     {d.mime_type || "-"}
                   </td>
-                  <td className="py-3 px-4 text-xs text-gray-200">
+                  <td className="py-2 px-3 text-[11px] text-gray-200">
                     {fmtSize(d.file_size)}
                   </td>
-                  <td className="py-3 px-4 text-xs text-gray-200 whitespace-nowrap">
+                  <td className="py-2 px-3 text-[11px] text-gray-200 whitespace-nowrap">
                     {d.created_at ? new Date(d.created_at).toLocaleString() : "-"}
                   </td>
-                  <td className="py-3 px-4 text-sm text-gray-200">
+                  <td className="py-2 px-3 text-xs text-gray-200 max-w-xs truncate">
                     {d.notes || "—"}
                   </td>
-                  <td className="py-3 px-4 text-center">
-                    <div className="flex gap-2 justify-center">
+                  <td className="py-2 px-3 text-center">
+                    <div className="flex gap-1.5 justify-center">
                       <button
                         onClick={() => handleDownload(d)}
-                        className="py-1 px-2.5 bg-primary-600 hover:bg-primary-700 rounded text-xs text-white cursor-pointer transition-colors"
+                        className="py-1 px-2 bg-primary-600 hover:bg-primary-700 rounded text-[11px] text-white cursor-pointer transition-colors"
                       >
                         Download
                       </button>
@@ -312,7 +312,7 @@ export default function LeadDocumentsTab({
 
           <form onSubmit={handleCreateSubmit} className="space-y-5">
             <div>
-              <p className="text-white font-medium text-sm mb-1">
+              <p className="text-white font-medium text-xs mb-1">
                 Document Notes / Name
               </p>
               <input
@@ -325,7 +325,7 @@ export default function LeadDocumentsTab({
             </div>
 
             <div>
-              <p className="text-white font-medium text-sm mb-1">
+              <p className="text-white font-medium text-xs mb-1">
                 Select File <span className="text-red-400">*</span>
               </p>
               <input
@@ -388,7 +388,7 @@ export default function LeadDocumentsTab({
           {editingDoc && (
             <form onSubmit={handleEditSubmit} className="space-y-5">
               <div>
-                <p className="text-white font-medium text-sm mb-1">Current File</p>
+                <p className="text-white font-medium text-xs mb-1">Current File</p>
                 <input
                   type="text"
                   value={editingDoc.file_name}
@@ -398,7 +398,7 @@ export default function LeadDocumentsTab({
               </div>
 
               <div>
-                <p className="text-white font-medium text-sm mb-1">
+                <p className="text-white font-medium text-xs mb-1">
                   Choose New File <span className="text-gray-400 font-normal text-xs">(optional - to replace existing file)</span>
                 </p>
                 <input
@@ -412,7 +412,7 @@ export default function LeadDocumentsTab({
               </div>
 
               <div>
-                <p className="text-white font-medium text-sm mb-1">Document Notes</p>
+                <p className="text-white font-medium text-xs mb-1">Document Notes</p>
                 <textarea
                   rows={4}
                   value={editNotes}

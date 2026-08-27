@@ -10,7 +10,7 @@ interface TabProps {
 
 const Tab: React.FC<TabProps> = ({ label, isActive, onClick }) => (
   <button
-    className={`py-2 px-4 text-base font-medium transition-colors duration-200  w-full md:w-auto text-left md:text-center border-b-[3px] md:border-l-0 md:border-b-[3px] border-transparent hover:text-primary-600 hover:!border-primary-600 active:text-primary-700 active:!border-primary-700 ${
+    className={`py-2 px-4 text-sm font-medium transition-colors duration-200 w-full md:w-auto text-left md:text-center border-b-[3px] md:border-l-0 md:border-b-[3px] border-transparent hover:text-primary-600 hover:!border-primary-600 active:text-primary-700 active:!border-primary-700 cursor-pointer ${
       isActive
         ? "text-primary-500 border-b-[3px] md:border-l-0 md:border-b-[3px] !border-primary-500"
         : "text-white"
@@ -42,7 +42,7 @@ const Tabs: React.FC<TabsProps> = ({ tabs }) => {
 
   return (
     <div className="w-full">
-      <div className="flex border-b-[2px] border-[#F4F5F7]  overflow-x-auto md:overflow-visible">
+      <div className="flex border-b-[2px] border-[#F4F5F7] overflow-x-auto md:overflow-visible">
         <div className="flex flex-row md:flex-row md:space-x-4 whitespace-nowrap">
           {tabs.map((tab) => (
             <Tab
