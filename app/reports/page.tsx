@@ -442,7 +442,6 @@ export default function ReportsPage() {
           {/* Lead Source & Campaign Percentage Distribution Analysis */}
           <div className="mb-8">
             <SourceCampaignDistribution
-              sources={reportData?.source_breakdown || []}
               campaignsRanking={reportData?.campaign_ranking || []}
               totalLeads={Number(summary.total_leads || 0)}
               title="Campaign Ranking & Lead Source Performance"

@@ -56,7 +56,6 @@ export default function AdminDashboardPage() {
   const [agentStats, setAgentStats] = useState<any[]>([]);
   const [todayTasksByAgent, setTodayTasksByAgent] = useState<AgentTasksGroup[]>([]);
   const [overdueTasksByAgent, setOverdueTasksByAgent] = useState<AgentTasksGroup[]>([]);
-  const [sourceBreakdown, setSourceBreakdown] = useState<any[]>([]);
   const [campaignsRanking, setCampaignsRanking] = useState<any[]>([]);
   const [totalLeadsCount, setTotalLeadsCount] = useState<number>(0);
 
@@ -110,7 +109,6 @@ export default function AdminDashboardPage() {
       }
 
       if (kpiData) {
-        setSourceBreakdown(kpiData.source_breakdown || []);
         setCampaignsRanking(kpiData.campaign_ranking || []);
         setTotalLeadsCount(Number(kpiData.summary?.total_leads || 0));
       }
@@ -219,7 +217,6 @@ export default function AdminDashboardPage() {
           {/* Lead Source & Campaign Percentage Distribution Analysis */}
           <div className="mb-10">
             <SourceCampaignDistribution
-              sources={sourceBreakdown}
               campaignsRanking={campaignsRanking}
               totalLeads={totalLeadsCount}
               title="Campaign Ranking & Lead Source Performance (This Month)"

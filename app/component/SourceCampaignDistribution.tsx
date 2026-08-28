@@ -4,7 +4,7 @@ import React from "react";
 
 export interface CampaignRankingItem {
   rank?: number;
-  campaign_id: string;
+  campaign_id?: string;
   campaign_name: string;
   source_name: string;
   leads_count: number;
@@ -13,55 +13,18 @@ export interface CampaignRankingItem {
   conversion_rate: number;
 }
 
-export interface SourceDistributionItem {
-  source_id: string;
-  source_name: string;
-  leads_count: number;
-  converted_count: number;
-  percentage: number;
-  conversion_rate: number;
-  campaigns?: Array<{
-    campaign_id: string;
-    campaign_name: string;
-    leads_count: number;
-    converted_count: number;
-    source_percentage: number;
-    total_percentage: number;
-    conversion_rate: number;
-  }>;
-}
-
 interface SourceCampaignDistributionProps {
-  sources?: SourceDistributionItem[];
   campaignsRanking?: CampaignRankingItem[];
   totalLeads: number;
   title?: string;
 }
 
 export default function SourceCampaignDistribution({
-  sources = [],
   campaignsRanking = [],
   totalLeads = 0,
   title = "Leads by Campaign",
 }: SourceCampaignDistributionProps) {
-  // Compute flat campaigns list sorted by highest leads
-  const campaignsList: CampaignRankingItem[] =
-    campaignsRanking && campaignsRanking.length > 0
-      ? campaignsRanking
-      : sources
-          .flatMap((s) =>
-            (s.campaigns || []).map((c) => ({
-              campaign_id: c.campaign_id,
-              campaign_name: c.campaign_name,
-              source_name: s.source_name,
-              leads_count: c.leads_count,
-              converted_count: c.converted_count,
-              percentage: c.total_percentage,
-              conversion_rate: c.conversion_rate,
-            }))
-          )
-          .sort((a, b) => b.leads_count - a.leads_count)
-          .map((c, i) => ({ rank: i + 1, ...c }));
+  const campaignsList = campaignsRanking;
 
   return (
     <div className="bg-[#1e1e1e] border border-gray-800 rounded-xl p-5 shadow-sm text-white">
