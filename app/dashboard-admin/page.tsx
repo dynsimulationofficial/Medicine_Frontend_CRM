@@ -18,6 +18,7 @@ import DesktopHeader from "../component/DesktopHeader";
 import { useAuthRedirect } from "../component/hooks/useAuthRedirect";
 import AxiosProvider from "../../provider/AxiosProvider";
 import StorageManager from "../../provider/StorageManager";
+import SourceCampaignDistribution from "../component/SourceCampaignDistribution";
 
 interface TaskItem {
   task_id: string;
@@ -55,6 +56,9 @@ export default function AdminDashboardPage() {
   const [agentStats, setAgentStats] = useState<any[]>([]);
   const [todayTasksByAgent, setTodayTasksByAgent] = useState<AgentTasksGroup[]>([]);
   const [overdueTasksByAgent, setOverdueTasksByAgent] = useState<AgentTasksGroup[]>([]);
+  const [sourceBreakdown, setSourceBreakdown] = useState<any[]>([]);
+  const [campaignsRanking, setCampaignsRanking] = useState<any[]>([]);
+  const [totalLeadsCount, setTotalLeadsCount] = useState<number>(0);
 
   // Accordion open states
   const [openTodayAccordions, setOpenTodayAccordions] = useState<Record<string, boolean>>({});
@@ -84,8 +88,12 @@ export default function AdminDashboardPage() {
   const fetchAdminStats = async () => {
     setIsLoading(true);
     try {
-      const statsRes = await AxiosProvider.post("/leads/admin/dashboard");
+      const [statsRes, kpiRes] = await Promise.all([
+        AxiosProvider.post("/leads/admin/dashboard"),
+        AxiosProvider.post("/reports/kpi", {}).catch(() => ({ data: { data: {} } })),
+      ]);
       const data = statsRes.data?.data;
+      const kpiData = kpiRes.data?.data;
 
       if (data) {
         const teamTasks = data.cards?.team_tasks || {};
@@ -99,6 +107,12 @@ export default function AdminDashboardPage() {
         setAgentStats(data.tables?.team_tasks_by_agent || []);
         setTodayTasksByAgent(data.lists?.today_tasks_by_agent || []);
         setOverdueTasksByAgent(data.lists?.overdue_tasks_by_agent || []);
+      }
+
+      if (kpiData) {
+        setSourceBreakdown(kpiData.source_breakdown || []);
+        setCampaignsRanking(kpiData.campaign_ranking || []);
+        setTotalLeadsCount(Number(kpiData.summary?.total_leads || 0));
       }
     } catch (err) {
       console.error("Error fetching admin dashboard data:", err);
@@ -200,6 +214,16 @@ export default function AdminDashboardPage() {
                 {cardsData.pending_today}
               </p>
             </div>
+          </div>
+
+          {/* Lead Source & Campaign Percentage Distribution Analysis */}
+          <div className="mb-10">
+            <SourceCampaignDistribution
+              sources={sourceBreakdown}
+              campaignsRanking={campaignsRanking}
+              totalLeads={totalLeadsCount}
+              title="Campaign Ranking & Lead Source Performance (This Month)"
+            />
           </div>
 
           {/* 2. TEAM TASKS BY AGENT TABLE */}

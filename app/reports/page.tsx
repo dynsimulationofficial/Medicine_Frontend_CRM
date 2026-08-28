@@ -21,6 +21,7 @@ import {
 } from "react-icons/fi";
 import { TbReportAnalytics } from "react-icons/tb";
 import { FaBoxes, FaTruck, FaClock, FaTimesCircle } from "react-icons/fa";
+import SourceCampaignDistribution from "../component/SourceCampaignDistribution";
 
 export default function ReportsPage() {
   const router = useRouter();
@@ -436,6 +437,16 @@ export default function ReportsPage() {
                 Success Rate: <span className="text-green-400 font-medium">{summary.delivery_success_rate || 0}%</span>
               </p>
             </div>
+          </div>
+
+          {/* Lead Source & Campaign Percentage Distribution Analysis */}
+          <div className="mb-8">
+            <SourceCampaignDistribution
+              sources={reportData?.source_breakdown || []}
+              campaignsRanking={reportData?.campaign_ranking || []}
+              totalLeads={Number(summary.total_leads || 0)}
+              title="Campaign Ranking & Lead Source Performance"
+            />
           </div>
 
           {/* Agent Performance Table */}
