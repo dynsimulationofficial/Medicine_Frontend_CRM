@@ -322,30 +322,30 @@ export default function LeadOrdersTab({
                   key={ord.id || idx}
                   className="odd:bg-[#404040] even:bg-[#2d2d2d] hover:bg-primary-700/80 transition-colors"
                 >
-                  <td className="py-2 px-3 text-center text-gray-300 font-medium">
+                  <td className="py-2 px-3 text-center text-gray-300 font-medium align-middle whitespace-nowrap">
                     {idx + 1}
                   </td>
-                  <td className="py-2 px-3 font-bold text-primary-300 text-xs">
+                  <td className="py-2 px-3 font-bold text-primary-300 text-xs align-middle whitespace-nowrap">
                     {ord.order_number}
                   </td>
-                  <td className="py-2 px-3 text-[11px] text-gray-200 whitespace-nowrap">
+                  <td className="py-2 px-3 text-[11px] text-gray-200 align-middle whitespace-nowrap">
                     {new Date(ord.created_at).toLocaleDateString()}{" "}
                     {new Date(ord.created_at).toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
                   </td>
-                  <td className="py-2 px-3 text-center font-medium text-white">
-                    <span className="px-2 py-0.5 rounded bg-gray-700 text-[11px] font-semibold text-white">
+                  <td className="py-2 px-3 text-center align-middle whitespace-nowrap">
+                    <span className="inline-block px-2.5 py-0.5 rounded bg-gray-700 text-[11px] font-semibold text-white whitespace-nowrap">
                       {ord.total_items} Items
                     </span>
                   </td>
-                  <td className="py-2 px-3 text-right font-bold text-white text-xs">
+                  <td className="py-2 px-3 text-right font-bold text-white text-xs align-middle whitespace-nowrap">
                     {Number(ord.grand_total).toFixed(2)}
                   </td>
-                  <td className="py-2 px-3 text-center">
+                  <td className="py-2 px-3 text-center align-middle whitespace-nowrap">
                     <span
-                      className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
+                      className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-semibold whitespace-nowrap border ${
                         ord.order_status === "Delivered"
                           ? "bg-green-900/40 text-green-300 border-green-700"
                           : ord.order_status === "Shipped" || ord.order_status === "Confirmed"
@@ -358,9 +358,9 @@ export default function LeadOrdersTab({
                       {ord.order_status || "Pending"}
                     </span>
                   </td>
-                  <td className="py-2 px-3 text-center">
+                  <td className="py-2 px-3 text-center align-middle whitespace-nowrap">
                     <span
-                      className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
+                      className={`inline-block px-2.5 py-0.5 rounded text-[11px] font-semibold whitespace-nowrap border ${
                         ord.payment_status === "Paid"
                           ? "bg-green-900/40 text-green-300 border-green-700"
                           : ord.payment_status === "Partial"
@@ -371,7 +371,7 @@ export default function LeadOrdersTab({
                       {ord.payment_status || "Pending"}
                     </span>
                   </td>
-                  <td className="py-2 px-3 text-center">
+                  <td className="py-2 px-3 text-center align-middle whitespace-nowrap">
                     <div className="flex gap-1.5 justify-center items-center">
                       {ord.tracking_number && (
                         <button
@@ -379,11 +379,10 @@ export default function LeadOrdersTab({
                             setTrackingOrder(ord);
                             setIsTrackingOpen(true);
                           }}
-                          className="px-2 py-1 bg-cyan-600 hover:bg-cyan-700 rounded text-white text-xs cursor-pointer transition-colors flex items-center gap-1 shadow"
+                          className="p-1.5 bg-cyan-600 hover:bg-cyan-700 rounded text-white text-xs cursor-pointer transition-colors"
                           title="Track Parcel Journey"
                         >
-                          <FaMapMarkerAlt className="w-3 h-3 text-white" />
-                          <span className="text-[11px] font-bold">Track</span>
+                          <FaMapMarkerAlt className="w-3.5 h-3.5" />
                         </button>
                       )}
                       <button

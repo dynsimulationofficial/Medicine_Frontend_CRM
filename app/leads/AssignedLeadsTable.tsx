@@ -868,12 +868,37 @@ const AssignedLeadsTable = ({
                         <p className="text-white text-xs font-medium mb-1.5">Lead Source</p>
                         <Select
                           value={leadSourceData.find((opt: any) => opt.id === values.lead_source_id) || null}
-                          onChange={(selected: any) => setFieldValue("lead_source_id", selected ? selected.id : "")}
+                          onChange={(selected: any) => {
+                            const srcId = selected ? selected.id : "";
+                            setFieldValue("lead_source_id", srcId);
+                            setFieldValue("campaign_id", "");
+                            fetchCampaigns(srcId);
+                          }}
                           onBlur={() => setFieldTouched("lead_source_id", true)}
                           getOptionLabel={(opt: any) => opt.name}
                           getOptionValue={(opt: any) => opt.id}
                           options={leadSourceData}
                           placeholder="Select Lead Source"
+                          isClearable
+                          styles={customSelectStyles}
+                        />
+                      </div>
+
+                      {/* Campaign */}
+                      <div>
+                        <p className="text-white text-xs font-medium mb-1.5">Campaign</p>
+                        <Select
+                          value={campaignData.find((opt: any) => opt.id === values.campaign_id) || null}
+                          onChange={(selected: any) => setFieldValue("campaign_id", selected ? selected.id : "")}
+                          onBlur={() => setFieldTouched("campaign_id", true)}
+                          getOptionLabel={(opt: any) => opt.name}
+                          getOptionValue={(opt: any) => opt.id}
+                          options={
+                            values.lead_source_id
+                              ? campaignData.filter((c: any) => !c.lead_source_id || c.lead_source_id === values.lead_source_id)
+                              : campaignData
+                          }
+                          placeholder="Select Campaign"
                           isClearable
                           styles={customSelectStyles}
                         />

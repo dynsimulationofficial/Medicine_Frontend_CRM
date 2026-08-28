@@ -36,16 +36,54 @@ export default function LeadProfileSidebar({
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
-        const [agentRes, srcRes, campRes] = await Promise.all([
-          AxiosProvider.get("/allagents"),
-          AxiosProvider.get("/lead-sources?limit=100"),
-          AxiosProvider.get("/campaigns?limit=100"),
-        ]);
-        setAgentList(agentRes.data?.data?.data ?? agentRes.data?.data ?? []);
-        setLeadSourceData(srcRes.data?.data ?? srcRes.data?.data?.data ?? []);
-        setCampaignData(campRes.data?.data ?? campRes.data?.data?.data ?? []);
-        setAgentList(agentRes.data?.data?.data ?? []);
-        setLeadSourceData(srcRes.data?.data?.data ?? []);
+        // 1. Fetch Agents
+        try {
+          const agentRes = await AxiosProvider.get("/allagents");
+          const aList = Array.isArray(agentRes.data?.data?.data)
+            ? agentRes.data.data.data
+            : Array.isArray(agentRes.data?.data)
+            ? agentRes.data.data
+            : [];
+          setAgentList(aList);
+        } catch (e) {
+          console.error("Error loading agents:", e);
+        }
+
+        // 2. Fetch Lead Sources
+        try {
+          let sList: any[] = [];
+          try {
+            const srcRes = await AxiosProvider.get("/lead-sources?limit=100");
+            sList = Array.isArray(srcRes.data?.data)
+              ? srcRes.data.data
+              : Array.isArray(srcRes.data?.data?.data)
+              ? srcRes.data.data.data
+              : [];
+          } catch {
+            const fallback = await AxiosProvider.get("/leadsources");
+            sList = Array.isArray(fallback.data?.data?.data)
+              ? fallback.data.data.data
+              : Array.isArray(fallback.data?.data)
+              ? fallback.data.data
+              : [];
+          }
+          setLeadSourceData(sList);
+        } catch (e) {
+          console.error("Error loading lead sources:", e);
+        }
+
+        // 3. Fetch Campaigns
+        try {
+          const campRes = await AxiosProvider.get("/campaigns?limit=100");
+          const cList = Array.isArray(campRes.data?.data)
+            ? campRes.data.data
+            : Array.isArray(campRes.data?.data?.data)
+            ? campRes.data.data.data
+            : [];
+          setCampaignData(cList);
+        } catch (e) {
+          console.error("Error loading campaigns:", e);
+        }
       } catch (err) {
         console.error("Error fetching dropdowns in LeadProfileSidebar:", err);
       }
@@ -334,15 +372,44 @@ export default function LeadProfileSidebar({
                       getOptionValue={(opt: any) => opt.id}
                       options={countryOptions}
                       placeholder="Select Country"
-                      classNames={{
-                        control: () =>
-                          "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black/40 !border-white/30",
-                      }}
                       styles={{
+                        control: (base) => ({
+                          ...base,
+                          minHeight: "38px",
+                          height: "38px",
+                          backgroundColor: "rgba(0, 0, 0, 0.4)",
+                          borderColor: "rgba(255, 255, 255, 0.3)",
+                          borderRadius: "4px",
+                          boxShadow: "none",
+                          fontSize: "0.75rem",
+                          "&:hover": {
+                            borderColor: "rgba(255, 255, 255, 0.6)",
+                          },
+                        }),
+                        valueContainer: (base) => ({
+                          ...base,
+                          height: "38px",
+                          padding: "0 12px",
+                          fontSize: "0.75rem",
+                        }),
+                        indicatorsContainer: (base) => ({
+                          ...base,
+                          height: "38px",
+                        }),
+                        dropdownIndicator: (base) => ({
+                          ...base,
+                          padding: "4px 8px",
+                          color: "rgba(255, 255, 255, 0.6)",
+                        }),
+                        clearIndicator: (base) => ({
+                          ...base,
+                          padding: "4px 8px",
+                        }),
                         menu: (base) => ({
                           ...base,
                           borderRadius: 4,
                           backgroundColor: "#000",
+                          fontSize: "0.75rem",
                         }),
                         option: (base, { isFocused, isSelected }) => ({
                           ...base,
@@ -354,7 +421,7 @@ export default function LeadProfileSidebar({
                           color: "#fff",
                         }),
                         singleValue: (base) => ({ ...base, color: "#fff" }),
-                        input: (base) => ({ ...base, color: "#fff" }),
+                        input: (base) => ({ ...base, color: "#fff", margin: 0, padding: 0 }),
                         placeholder: (base) => ({ ...base, color: "#ccc" }),
                       }}
                     />
@@ -381,15 +448,44 @@ export default function LeadProfileSidebar({
                       options={currentStates}
                       placeholder="Select State / Region"
                       isClearable
-                      classNames={{
-                        control: () =>
-                          "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black/40 !border-white/30",
-                      }}
                       styles={{
+                        control: (base) => ({
+                          ...base,
+                          minHeight: "38px",
+                          height: "38px",
+                          backgroundColor: "rgba(0, 0, 0, 0.4)",
+                          borderColor: "rgba(255, 255, 255, 0.3)",
+                          borderRadius: "4px",
+                          boxShadow: "none",
+                          fontSize: "0.75rem",
+                          "&:hover": {
+                            borderColor: "rgba(255, 255, 255, 0.6)",
+                          },
+                        }),
+                        valueContainer: (base) => ({
+                          ...base,
+                          height: "38px",
+                          padding: "0 12px",
+                          fontSize: "0.75rem",
+                        }),
+                        indicatorsContainer: (base) => ({
+                          ...base,
+                          height: "38px",
+                        }),
+                        dropdownIndicator: (base) => ({
+                          ...base,
+                          padding: "4px 8px",
+                          color: "rgba(255, 255, 255, 0.6)",
+                        }),
+                        clearIndicator: (base) => ({
+                          ...base,
+                          padding: "4px 8px",
+                        }),
                         menu: (base) => ({
                           ...base,
                           borderRadius: 4,
                           backgroundColor: "#000",
+                          fontSize: "0.75rem",
                         }),
                         option: (base, { isFocused, isSelected }) => ({
                           ...base,
@@ -401,7 +497,7 @@ export default function LeadProfileSidebar({
                           color: "#fff",
                         }),
                         singleValue: (base) => ({ ...base, color: "#fff" }),
-                        input: (base) => ({ ...base, color: "#fff" }),
+                        input: (base) => ({ ...base, color: "#fff", margin: 0, padding: 0 }),
                         placeholder: (base) => ({ ...base, color: "#ccc" }),
                       }}
                     />
@@ -468,7 +564,7 @@ export default function LeadProfileSidebar({
                       as="textarea"
                       name="note"
                       rows={2}
-                      className="w-full h-[38px] border border-white/30 rounded-[4px] px-3 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                      className="w-full h-[60px] border border-white/30 rounded-[4px] p-2.5 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white resize-none"
                       placeholder="Enter notes..."
                     />
                   </div>
@@ -630,15 +726,42 @@ export default function LeadProfileSidebar({
                     options={agentList}
                     placeholder="Select Agent"
                     isClearable
-                    classNames={{
-                      control: () =>
-                        "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
-                    }}
                     styles={{
+                      control: (base) => ({
+                        ...base,
+                        minHeight: "38px",
+                        height: "38px",
+                        backgroundColor: "#000",
+                        borderColor: "#374151",
+                        borderRadius: "4px",
+                        boxShadow: "none",
+                        fontSize: "0.75rem",
+                        "&:hover": { borderColor: "var(--primary-500)" },
+                      }),
+                      valueContainer: (base) => ({
+                        ...base,
+                        height: "38px",
+                        padding: "0 12px",
+                        fontSize: "0.75rem",
+                      }),
+                      indicatorsContainer: (base) => ({
+                        ...base,
+                        height: "38px",
+                      }),
+                      dropdownIndicator: (base) => ({
+                        ...base,
+                        padding: "4px 8px",
+                        color: "#9ca3af",
+                      }),
+                      clearIndicator: (base) => ({
+                        ...base,
+                        padding: "4px 8px",
+                      }),
                       menu: (base) => ({
                         ...base,
                         borderRadius: 4,
                         backgroundColor: "#000",
+                        fontSize: "0.75rem",
                       }),
                       option: (base, { isFocused, isSelected }) => ({
                         ...base,
@@ -650,7 +773,7 @@ export default function LeadProfileSidebar({
                         color: "#fff",
                       }),
                       singleValue: (base) => ({ ...base, color: "#fff" }),
-                      input: (base) => ({ ...base, color: "#fff" }),
+                      input: (base) => ({ ...base, color: "#fff", margin: 0, padding: 0 }),
                       placeholder: (base) => ({ ...base, color: "#888" }),
                     }}
                   />
@@ -678,15 +801,42 @@ export default function LeadProfileSidebar({
                     getOptionValue={(opt: any) => opt.id}
                     options={leadStatusOptions}
                     placeholder="Select Lead Status"
-                    classNames={{
-                      control: () =>
-                        "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
-                    }}
                     styles={{
+                      control: (base) => ({
+                        ...base,
+                        minHeight: "38px",
+                        height: "38px",
+                        backgroundColor: "#000",
+                        borderColor: "#374151",
+                        borderRadius: "4px",
+                        boxShadow: "none",
+                        fontSize: "0.75rem",
+                        "&:hover": { borderColor: "var(--primary-500)" },
+                      }),
+                      valueContainer: (base) => ({
+                        ...base,
+                        height: "38px",
+                        padding: "0 12px",
+                        fontSize: "0.75rem",
+                      }),
+                      indicatorsContainer: (base) => ({
+                        ...base,
+                        height: "38px",
+                      }),
+                      dropdownIndicator: (base) => ({
+                        ...base,
+                        padding: "4px 8px",
+                        color: "#9ca3af",
+                      }),
+                      clearIndicator: (base) => ({
+                        ...base,
+                        padding: "4px 8px",
+                      }),
                       menu: (base) => ({
                         ...base,
                         borderRadius: 4,
                         backgroundColor: "#000",
+                        fontSize: "0.75rem",
                       }),
                       option: (base, { isFocused, isSelected }) => ({
                         ...base,
@@ -698,7 +848,7 @@ export default function LeadProfileSidebar({
                         color: "#fff",
                       }),
                       singleValue: (base) => ({ ...base, color: "#fff" }),
-                      input: (base) => ({ ...base, color: "#fff" }),
+                      input: (base) => ({ ...base, color: "#fff", margin: 0, padding: 0 }),
                       placeholder: (base) => ({ ...base, color: "#888" }),
                     }}
                   />
@@ -735,15 +885,42 @@ export default function LeadProfileSidebar({
                     options={leadSourceData}
                     placeholder="Select Lead Source"
                     isClearable
-                    classNames={{
-                      control: () =>
-                        "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
-                    }}
                     styles={{
+                      control: (base) => ({
+                        ...base,
+                        minHeight: "38px",
+                        height: "38px",
+                        backgroundColor: "#000",
+                        borderColor: "#374151",
+                        borderRadius: "4px",
+                        boxShadow: "none",
+                        fontSize: "0.75rem",
+                        "&:hover": { borderColor: "var(--primary-500)" },
+                      }),
+                      valueContainer: (base) => ({
+                        ...base,
+                        height: "38px",
+                        padding: "0 12px",
+                        fontSize: "0.75rem",
+                      }),
+                      indicatorsContainer: (base) => ({
+                        ...base,
+                        height: "38px",
+                      }),
+                      dropdownIndicator: (base) => ({
+                        ...base,
+                        padding: "4px 8px",
+                        color: "#9ca3af",
+                      }),
+                      clearIndicator: (base) => ({
+                        ...base,
+                        padding: "4px 8px",
+                      }),
                       menu: (base) => ({
                         ...base,
                         borderRadius: 4,
                         backgroundColor: "#000",
+                        fontSize: "0.75rem",
                       }),
                       option: (base, { isFocused, isSelected }) => ({
                         ...base,
@@ -755,7 +932,7 @@ export default function LeadProfileSidebar({
                         color: "#fff",
                       }),
                       singleValue: (base) => ({ ...base, color: "#fff" }),
-                      input: (base) => ({ ...base, color: "#fff" }),
+                      input: (base) => ({ ...base, color: "#fff", margin: 0, padding: 0 }),
                       placeholder: (base) => ({ ...base, color: "#888" }),
                     }}
                   />
@@ -783,15 +960,42 @@ export default function LeadProfileSidebar({
                     }
                     placeholder="Select Campaign"
                     isClearable
-                    classNames={{
-                      control: () =>
-                        "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black !border-gray-700",
-                    }}
                     styles={{
+                      control: (base) => ({
+                        ...base,
+                        minHeight: "38px",
+                        height: "38px",
+                        backgroundColor: "#000",
+                        borderColor: "#374151",
+                        borderRadius: "4px",
+                        boxShadow: "none",
+                        fontSize: "0.75rem",
+                        "&:hover": { borderColor: "var(--primary-500)" },
+                      }),
+                      valueContainer: (base) => ({
+                        ...base,
+                        height: "38px",
+                        padding: "0 12px",
+                        fontSize: "0.75rem",
+                      }),
+                      indicatorsContainer: (base) => ({
+                        ...base,
+                        height: "38px",
+                      }),
+                      dropdownIndicator: (base) => ({
+                        ...base,
+                        padding: "4px 8px",
+                        color: "#9ca3af",
+                      }),
+                      clearIndicator: (base) => ({
+                        ...base,
+                        padding: "4px 8px",
+                      }),
                       menu: (base) => ({
                         ...base,
                         borderRadius: 4,
                         backgroundColor: "#000",
+                        fontSize: "0.75rem",
                       }),
                       option: (base, { isFocused, isSelected }) => ({
                         ...base,
@@ -803,7 +1007,7 @@ export default function LeadProfileSidebar({
                         color: "#fff",
                       }),
                       singleValue: (base) => ({ ...base, color: "#fff" }),
-                      input: (base) => ({ ...base, color: "#fff" }),
+                      input: (base) => ({ ...base, color: "#fff", margin: 0, padding: 0 }),
                       placeholder: (base) => ({ ...base, color: "#888" }),
                     }}
                   />
@@ -817,7 +1021,7 @@ export default function LeadProfileSidebar({
                   <Field
                     name="best_time_to_call"
                     type="text"
-                    className="w-full border border-gray-700 rounded-[4px] text-white bg-black text-sm px-3 py-2 focus:outline-none focus:border-primary-500"
+                    className="w-full h-[38px] border border-gray-700 rounded-[4px] text-white bg-black text-xs px-3 focus:outline-none focus:border-primary-500"
                     placeholder="e.g. 3-5 PM"
                   />
                 </div>
@@ -827,7 +1031,7 @@ export default function LeadProfileSidebar({
                   <label className="block text-xs font-medium text-gray-300 mb-1">
                     WhatsApp Number
                   </label>
-                  <div className="flex w-full border border-gray-700 rounded-[4px] bg-black overflow-hidden focus-within:border-primary-500">
+                  <div className="flex w-full h-[38px] border border-gray-700 rounded-[4px] bg-black overflow-hidden focus-within:border-primary-500">
                     <select
                       className="bg-black text-white text-xs border-r border-gray-700 px-2 py-2 outline-none cursor-pointer"
                       value={
@@ -859,8 +1063,8 @@ export default function LeadProfileSidebar({
                     <input
                       type="text"
                       maxLength={10}
-                      className="h-full w-full bg-transparent text-white text-xs px-3 outline-none placeholder-gray-500"
-                      placeholder="Enter whatsapp number"
+                      className="h-full w-full bg-transparent text-white text-xs px-3 outline-none"
+                      placeholder="Enter WhatsApp number"
                       value={(() => {
                         const code = values.whatsapp_number?.startsWith("+1")
                           ? "+1"
@@ -880,9 +1084,10 @@ export default function LeadProfileSidebar({
                         const digitsOnly = e.target.value.replace(/\D/g, "");
                         setFieldValue(
                           "whatsapp_number",
-                          code + digitsOnly,
+                          digitsOnly ? code + digitsOnly : "",
                         );
                       }}
+                      onBlur={() => setFieldTouched("whatsapp_number", true)}
                     />
                   </div>
                 </div>
