@@ -235,20 +235,20 @@ export default function CampaignsPage() {
                     </div>
                   </th>
 
-                  <th scope="col" className="px-3 py-2.5">
-                    <div className="flex items-center gap-2">
-                      <RxAvatar className="w-4 h-4 text-white" />
-                      <span className="font-bold text-white text-xs tracking-wide">
-                        Campaign Name
-                      </span>
-                    </div>
-                  </th>
-
                   <th scope="col" className="px-3 py-2 hidden md:table-cell">
                     <div className="flex items-center gap-2">
                       <MdShareLocation className="w-4 h-4 text-white" />
                       <span className="font-bold text-white text-xs tracking-wide">
                         Lead Source
+                      </span>
+                    </div>
+                  </th>
+
+                  <th scope="col" className="px-3 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <RxAvatar className="w-4 h-4 text-white" />
+                      <span className="font-bold text-white text-xs tracking-wide">
+                        Campaign Name
                       </span>
                     </div>
                   </th>
@@ -295,11 +295,11 @@ export default function CampaignsPage() {
                       <td className="px-3 py-2 text-center text-gray-300 font-medium">
                         {(page - 1) * 20 + idx + 1}
                       </td>
+                      <td className="px-3 py-2 hidden md:table-cell text-white font-medium">
+                        {row.lead_source_name || "-"}
+                      </td>
                       <td className="px-3 py-2 font-semibold text-white">
                         {row.name}
-                      </td>
-                      <td className="px-3 py-2 hidden md:table-cell text-white">
-                        {row.lead_source_name || "-"}
                       </td>
                       <td className="px-3 py-2 hidden md:table-cell text-white">
                         {row.created_at ? new Date(row.created_at).toLocaleDateString() : "-"}
@@ -404,18 +404,6 @@ export default function CampaignsPage() {
                 <Form className="space-y-4">
                   <div>
                     <p className="text-white text-xs mb-1.5 font-medium">
-                      Campaign Name <span className="text-red-500">*</span>
-                    </p>
-                    <Field
-                      name="name"
-                      placeholder="e.g. Diabetes Care Aug Promo"
-                      className="hover:shadow-hoverInputShadow focus:border-primary-600 w-full h-[38px] border border-gray-700 rounded-[4px] text-white text-xs placeholder-gray-400 px-3 bg-black outline-none"
-                    />
-                    <ErrorMessage name="name" component="div" className="text-red-500 text-xs mt-1" />
-                  </div>
-
-                  <div>
-                    <p className="text-white text-xs mb-1.5 font-medium">
                       Lead Source (Platform)
                     </p>
                     <Select
@@ -427,6 +415,18 @@ export default function CampaignsPage() {
                       styles={customSelectStyles}
                     />
                     <ErrorMessage name="lead_source_id" component="div" className="text-red-500 text-xs mt-1" />
+                  </div>
+
+                  <div>
+                    <p className="text-white text-xs mb-1.5 font-medium">
+                      Campaign Name <span className="text-red-500">*</span>
+                    </p>
+                    <Field
+                      name="name"
+                      placeholder="e.g. Diabetes Care Aug Promo"
+                      className="hover:shadow-hoverInputShadow focus:border-primary-600 w-full h-[38px] border border-gray-700 rounded-[4px] text-white text-xs placeholder-gray-400 px-3 bg-black outline-none"
+                    />
+                    <ErrorMessage name="name" component="div" className="text-red-500 text-xs mt-1" />
                   </div>
 
                   <div className="pt-4">
@@ -460,12 +460,12 @@ export default function CampaignsPage() {
               <h3 className="text-sm font-semibold text-primary-400 border-b border-gray-800 pb-2">Campaign Information</h3>
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <p className="text-xs text-gray-400">Campaign Name</p>
-                  <p className="text-sm font-semibold text-white mt-0.5">{selectedData.name}</p>
-                </div>
-                <div>
                   <p className="text-xs text-gray-400">Linked Lead Source</p>
                   <p className="text-sm font-medium text-gray-200 mt-0.5">{selectedData.lead_source_name || "None"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Campaign Name</p>
+                  <p className="text-sm font-semibold text-white mt-0.5">{selectedData.name}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-400">Created At</p>
