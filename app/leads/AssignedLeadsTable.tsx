@@ -448,7 +448,7 @@ const AssignedLeadsTable = ({
                 key={item?.id ?? index}
                 className="odd:bg-[#404040] hover:bg-primary-700 py-3 border-b border-[#E7E7E7]"
               >
-                <td className="px-3 py-2 text-center">
+                <td className="px-3 py-2 text-center align-middle">
                   <input
                     type="checkbox"
                     className="accent-primary-600"
@@ -460,9 +460,9 @@ const AssignedLeadsTable = ({
                 {/* Full name */}
                 <td
                   onClick={() => onViewLead && onViewLead(item.id)}
-                  className="px-3 py-2 flex items-center gap-2 text-primary-600 underline cursor-pointer"
+                  className="px-3 py-2 align-middle cursor-pointer"
                 >
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <div className="md:hidden">
                       <FaEllipsisVertical
                         data-tooltip-id="my-tooltip"
@@ -477,7 +477,7 @@ const AssignedLeadsTable = ({
                       <Tooltip id="my-tooltip" place="right" float className="box" />
                     </div>
                     <div className="cursor-pointer">
-                      <p className="text-primary-400 text-xs font-semibold leading-tight capitalize">
+                      <p className="text-primary-400 text-xs font-semibold leading-tight capitalize hover:underline">
                         {item?.full_name ?? "-"}
                       </p>
                     </div>
@@ -485,29 +485,29 @@ const AssignedLeadsTable = ({
                 </td>
 
                 {/* Email */}
-                <td className="px-3 py-2 hidden md:table-cell">
+                <td className="px-3 py-2 hidden md:table-cell align-middle">
                   <span className="text-white text-xs">
                     {item?.email ?? "-"}
                   </span>
                 </td>
 
                 {/* Phone */}
-                <td className="px-3 py-2 hidden md:table-cell">
+                <td className="px-3 py-2 hidden md:table-cell align-middle">
                   <span className="text-white text-xs">
                     {item?.phone ?? "-"}
                   </span>
                 </td>
 
                 {/* Address */}
-                <td className="px-3 py-2 hidden md:table-cell">
+                <td className="px-3 py-2 hidden md:table-cell align-middle">
                   <span className="text-white text-xs capitalize">
                     {item?.address?.line1 ?? "-"}
                   </span>
                 </td>
 
                 {/* Source / Campaign */}
-                <td className="px-3 py-2 hidden md:table-cell text-xs">
-                  <div className="flex flex-col">
+                <td className="px-3 py-2 hidden md:table-cell text-xs align-middle">
+                  <div className="flex flex-col justify-center">
                     <span className="text-white font-medium">{item?.lead_source || "-"}</span>
                     {item?.campaign_name && (
                       <span className="text-[11px] text-primary-400 font-normal">
@@ -518,14 +518,14 @@ const AssignedLeadsTable = ({
                 </td>
 
                 {/* Agent */}
-                <td className="px-3 py-2 hidden md:table-cell">
+                <td className="px-3 py-2 hidden md:table-cell align-middle">
                   <span className="text-white text-xs capitalize">
                     {item?.agent?.name ?? item?.owner_name ?? "-"}
                   </span>
                 </td>
 
                 {/* Action */}
-                <td className="px-3 py-2 md:table-cell">
+                <td className="px-3 py-2 md:table-cell align-middle">
                   <div className="flex gap-1 md:gap-2 justify-center md:justify-start">
                     <button
                       onClick={() => {

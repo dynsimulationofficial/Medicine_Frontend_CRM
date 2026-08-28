@@ -63,6 +63,8 @@ export default function LeadOrdersTab({
   const [paymentStatus, setPaymentStatus] = useState<string>("Pending");
   const [paymentMode, setPaymentMode] = useState<string>("COD");
   const [orderStatus, setOrderStatus] = useState<string>("Pending");
+  const [courierName, setCourierName] = useState<string>("India Post");
+  const [trackingNumber, setTrackingNumber] = useState<string>("");
   const [orderNotes, setOrderNotes] = useState<string>("");
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
@@ -90,6 +92,8 @@ export default function LeadOrdersTab({
     setPaymentStatus(ord.payment_status || "Pending");
     setPaymentMode(ord.payment_mode || "COD");
     setOrderStatus(ord.order_status || "Pending");
+    setCourierName(ord.courier_name || "India Post");
+    setTrackingNumber(ord.tracking_number || "");
     setOrderNotes(ord.order_notes || "");
     if (ord.items && ord.items.length > 0) {
       setOrderItems(
@@ -113,7 +117,9 @@ export default function LeadOrdersTab({
   ) => {
     try {
       await AxiosProvider.post("/leads/orders/update-status", {
+        id: orderId,
         order_id: orderId,
+        lead_id: leadId,
         order_status: newOrderStatus,
         payment_status: newPaymentStatus,
       });
@@ -132,7 +138,7 @@ export default function LeadOrdersTab({
       icon: "warning",
       background: "#181818",
       color: "#ffffff",
-      iconColor: "#eab308",
+      iconColor: "#ef4444",
       showCancelButton: true,
       confirmButtonColor: "#ef4444",
       cancelButtonColor: "#374151",
@@ -144,7 +150,11 @@ export default function LeadOrdersTab({
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await AxiosProvider.post("/leads/orders/delete", { id: ord.id });
+          await AxiosProvider.post("/leads/orders/delete", {
+            id: ord.id,
+            order_id: ord.id,
+            lead_id: ord.lead_id || leadId,
+          });
           toast.success("Order deleted successfully");
           setHitApi((prev) => !prev);
           fetchOrders();
@@ -223,11 +233,14 @@ export default function LeadOrdersTab({
     setIsSaving(true);
     try {
       const payload = {
+        id: editingOrder?.id || undefined,
         order_id: editingOrder?.id || undefined,
         lead_id: leadId,
         order_status: orderStatus,
         payment_status: paymentStatus,
         payment_mode: paymentMode,
+        courier_name: courierName,
+        tracking_number: trackingNumber.trim(),
         order_notes: orderNotes,
         items: validItems.map((it) => ({
           id: it.id || undefined,
@@ -269,6 +282,8 @@ export default function LeadOrdersTab({
             setPaymentStatus("Pending");
             setPaymentMode("COD");
             setOrderStatus("Pending");
+            setCourierName("India Post");
+            setTrackingNumber("");
             setOrderNotes("");
             setIsLocalCreateOpen(true);
           }}
@@ -566,6 +581,42 @@ export default function LeadOrdersTab({
                     </div>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* Shipping / Courier & Tracking Details */}
+            <div className="p-3 bg-black/50 border border-gray-700 rounded-lg">
+              <p className="text-xs text-primary-400 font-bold mb-2">
+                Shipping & Courier Details
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs text-gray-300 mb-1 font-medium">Courier Partner</p>
+                  <select
+                    value={courierName}
+                    onChange={(e) => setCourierName(e.target.value)}
+                    className="w-full bg-black border border-gray-700 rounded text-xs p-2 text-white outline-none focus:border-primary-500"
+                  >
+                    <option value="India Post">India Post (Speed Post / EMS)</option>
+                    <option value="UAE Post (Emirates Post)">UAE Post (Emirates Post)</option>
+                    <option value="DHL Express">DHL Express</option>
+                    <option value="FedEx">FedEx</option>
+                    <option value="Aramex">Aramex</option>
+                    <option value="Blue Dart">Blue Dart</option>
+                    <option value="Other">Other Courier</option>
+                  </select>
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-300 mb-1 font-medium">Tracking / Consignment Number</p>
+                  <input
+                    type="text"
+                    value={trackingNumber}
+                    onChange={(e) => setTrackingNumber(e.target.value)}
+                    placeholder="e.g., EM123456789IN or EE...AE"
+                    className="w-full bg-black border border-gray-700 rounded text-xs p-2 text-white outline-none focus:border-primary-500 uppercase"
+                  />
+                </div>
               </div>
             </div>
 
