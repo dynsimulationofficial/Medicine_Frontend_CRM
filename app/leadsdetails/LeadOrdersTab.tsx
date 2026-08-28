@@ -6,8 +6,9 @@ import { toast } from "react-toastify";
 import { MdEdit } from "react-icons/md";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoCloseOutline } from "react-icons/io5";
-import { FaPills, FaTrash, FaPlus } from "react-icons/fa";
+import { FaPills, FaTrash, FaPlus, FaMapMarkerAlt } from "react-icons/fa";
 import Swal from "sweetalert2";
+import TrackingTimelineDrawer from "./TrackingTimelineDrawer";
 
 export interface OrderItem {
   id?: string;
@@ -55,6 +56,8 @@ export default function LeadOrdersTab({
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [editingOrder, setEditingOrder] = useState<OrderData | null>(null);
   const [isLocalCreateOpen, setIsLocalCreateOpen] = useState(false);
+  const [trackingOrder, setTrackingOrder] = useState<OrderData | null>(null);
+  const [isTrackingOpen, setIsTrackingOpen] = useState<boolean>(false);
 
   // Form state for Create / Edit
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
@@ -369,7 +372,20 @@ export default function LeadOrdersTab({
                     </span>
                   </td>
                   <td className="py-2 px-3 text-center">
-                    <div className="flex gap-1.5 justify-center">
+                    <div className="flex gap-1.5 justify-center items-center">
+                      {ord.tracking_number && (
+                        <button
+                          onClick={() => {
+                            setTrackingOrder(ord);
+                            setIsTrackingOpen(true);
+                          }}
+                          className="px-2 py-1 bg-cyan-600 hover:bg-cyan-700 rounded text-white text-xs cursor-pointer transition-colors flex items-center gap-1 shadow"
+                          title="Track Parcel Journey"
+                        >
+                          <FaMapMarkerAlt className="w-3 h-3 text-white" />
+                          <span className="text-[11px] font-bold">Track</span>
+                        </button>
+                      )}
                       <button
                         onClick={() => openEdit(ord)}
                         className="p-1.5 bg-primary-600 hover:bg-primary-700 rounded text-white text-xs cursor-pointer transition-colors"
@@ -658,6 +674,14 @@ export default function LeadOrdersTab({
           </form>
         </div>
       </div>
+
+      {/* 3. TRACKING TIMELINE DRAWER */}
+      <TrackingTimelineDrawer
+        isOpen={isTrackingOpen}
+        onClose={() => setIsTrackingOpen(false)}
+        order={trackingOrder}
+        onStatusUpdated={fetchOrders}
+      />
     </div>
   );
 }
