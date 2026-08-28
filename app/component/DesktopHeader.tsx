@@ -76,59 +76,57 @@ const DesktopHeader = () => {
   };
   return (
     <>
-      <div className=" w-full flex justify-between  items-center gap-7 md:mb-14">
-        <div className="w-full h-24 bg-[linear-gradient(206deg,#21abd6_28.85%,rgba(33,171,214,0)_89.55%)] p-6 rounded-lg text-white opacity-20 absolute top-0 left-0 right-0 "></div>
+      <div className="w-full flex justify-between items-center gap-4 md:mb-8">
+        <div className="w-full h-24 bg-[linear-gradient(206deg,#21abd6_28.85%,rgba(33,171,214,0)_89.55%)] p-6 rounded-lg text-white opacity-20 absolute top-0 left-0 right-0 pointer-events-none"></div>
         {/* SEARCH INPUT WITH ICON */}
-        <div className=" hidden md:block md:w-auto">
+        <div className="hidden md:block md:w-auto">
           <DynamicBreadCrum />
         </div>
-        <div className=" hidden md:w-auto md:flex md:justify-end md:items-center md:gap-7 w-auto z-10">
-          <div className="flex gap-2">
+        <div className="hidden md:w-auto md:flex md:justify-end md:items-center md:gap-3 w-auto z-10">
+          {/* Seamless Search Bar */}
+          <div className="flex items-center h-[36px] bg-black border border-gray-700 rounded-[8px] overflow-hidden focus-within:border-primary-500 hover:shadow-hoverInputShadow">
             <input
               type="text"
               placeholder="Search for email, mobile"
-              className="bg-black w-64 h-[50px] rounded-[4px] px-6 border border-gray-700 hover:shadow-hoverInputShadow focus:border-primary placeholder-gray-400 text-white text-[15px] leading-normal outline-none"
+              className="bg-transparent w-56 sm:w-64 h-full px-3.5 placeholder-gray-400 text-white text-xs outline-none"
               value={query}
               onChange={(e) => setQuery(e.target.value.trim())}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             />
-
             <button
               type="button"
-              className="bg-primary text-white px-4 rounded bg-primary-600 hover:bg-primary-700"
+              className="h-full px-3.5 bg-primary-600 hover:bg-primary-700 text-white flex items-center justify-center text-xs transition cursor-pointer"
               onClick={handleSearch}
+              title="Search"
             >
-              <FaSearch />
+              <FaSearch className="w-3.5 h-3.5" />
             </button>
           </div>
-          {/* <div className=" w-[50px] h-[50px] bg-white rounded-full flex justify-center items-center">
-            <CiSettings className=" text-[#718EBF] w-[25px] h-[25px]" />
-          </div> */}
-          {/* BELL ICON */}
 
+          {/* Bell icon */}
           <div
-            className="relative inline-block hover:cursor-pointer"
+            className="relative flex items-center cursor-pointer"
             onClick={() => {
               setIsLeftSideBar(true);
               fetchNotification();
             }}
           >
-            {/* Bell icon */}
-            <div className="w-[50px] h-[50px] bg-primary-600 hover:bg-primary-700 rounded-full flex justify-center items-center">
-              <IoIosNotificationsOutline className="text-white w-[25px] h-[25px]" />
+            <div className="w-[36px] h-[36px] bg-primary-600 hover:bg-primary-700 rounded-full flex items-center justify-center transition shrink-0 relative">
+              <IoIosNotificationsOutline className="text-white w-[20px] h-[20px]" />
               {notificationData.length > 0 && (
-                <div className="absolute top-0 right-0 w-[10px] h-[10px] bg-red-600 rounded-full border-2 border-white"></div>
+                <div className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-600 rounded-full border border-black"></div>
               )}
             </div>
 
             {/* Notification list */}
             {isHovered && notificationData.length > 0 && (
-              <div className="absolute top-[50px] right-0 w-96   shadow-lg rounded-md z-50 bg-[#171717]  ">
+              <div className="absolute top-[42px] right-0 w-96 shadow-lg rounded-md z-50 bg-[#171717]">
                 <ul className="divide-y divide-gray-200">
                   {notificationData.map((notification, index) => (
                     <li
                       onClick={() => navigateLeadDetails(notification.lead_id)}
                       key={index}
-                      className="px-3 py-3 text-sm  hover:cursor-pointer  hover:bg-primary-800"
+                      className="px-3 py-3 text-sm hover:cursor-pointer hover:bg-primary-800"
                     >
                       {notification.body}
                     </li>
@@ -137,7 +135,6 @@ const DesktopHeader = () => {
               </div>
             )}
           </div>
-
           {/* END BELL ICON */}
           {/* <div className=" w-[50px] h-[50px]  rounded-full flex justify-center items-center z-10">
             <Image
