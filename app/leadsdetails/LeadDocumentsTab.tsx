@@ -204,9 +204,10 @@ export default function LeadDocumentsTab({
         <button
           type="button"
           onClick={() => setIsLocalCreateOpen(true)}
-          className="flex items-center gap-2 py-2 px-4 rounded bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium cursor-pointer transition shadow"
+          className="flex items-center justify-center gap-2 h-[38px] px-4 rounded-[4px] border border-[#E7E7E7] bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs font-semibold tracking-wide cursor-pointer transition shadow-sm"
         >
-          <FiPlusCircle className="w-4 h-4" /> Upload Document
+          <FiPlusCircle className="w-4 h-4 text-white" />
+          <span>Upload Document</span>
         </button>
       </div>
 

@@ -221,51 +221,52 @@ export default function Home() {
 
           <div className="rounded-3xl   py-6 px-1  md:p-6 z-10 relative mainContainerBg">
             {/* Main content middle section */}
-            <div className="w-full gap-4 flex justify-end items-center mt-0 mb-8 flex-wrap sm:flex-nowrap">
-              <div className=" sm:w-auto">
+            <div className="w-full gap-3 flex justify-end items-center mt-0 mb-6 flex-wrap sm:flex-nowrap">
+              <div className="sm:w-auto">
                 <Link href="/useradd">
-                  <button className="flex items-center gap-[10px]  h-12 px-3 py-[6px] rounded-[12px] shadow-borderShadow w-full sm:w-auto bg-primary-600 group hover:bg-primary-7  00">
-                    <FaRegAddressCard className="h-[20px] w-[20px] text-white group-hover:text-white" />
-                    <p className="text-white text-base leading-normal group-hover:text-white">
-                      Create User
-                    </p>
+                  <button
+                    type="button"
+                    className="flex items-center justify-center gap-2 h-[38px] px-4 rounded-[4px] border border-[#E7E7E7] w-full sm:w-auto bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs font-semibold tracking-wide cursor-pointer transition shadow-sm"
+                  >
+                    <FaRegAddressCard className="h-4 w-4 text-white" />
+                    <span>Create User</span>
                   </button>
                 </Link>
               </div>
             </div>
             {/* ----------------Table----------------------- */}
             <div className="relative overflow-x-auto sm:rounded-lg">
-              <table className="w-full text-sm text-left text-white bg-black">
+              <table className="w-full text-xs text-left text-white whitespace-nowrap">
                 <thead className="text-xs talbleheaderBg text-white">
-                  <tr className="  ">
-                    <th className="px-1 p-3 md:p-3    font-semibold text-white text-base">
+                  <tr>
+                    <th className="px-3 py-2.5">
                       <div className="flex items-center gap-2">
-                        <RxAvatar className="w-5 h-5" />
-                        <span className="font-semibold text-white text-sm sm:text-base">
+                        <RxAvatar className="w-4 h-4 text-white" />
+                        <span className="font-bold text-white text-xs tracking-wide">
                           Name
                         </span>
                       </div>
                     </th>
-                    <th className="px-2 py-1    hidden md:table-cell">
+                    <th className="px-3 py-2 hidden md:table-cell">
                       <div className="flex items-center gap-2">
-                        <MdOutlineCall className="w-5 h-5" />
-                        <span className="font-semibold text-white text-sm sm:text-base">
+                        <MdOutlineCall className="w-4 h-4 text-white" />
+                        <span className="font-bold text-white text-xs tracking-wide">
                           Email
                         </span>
                       </div>
                     </th>
-                    <th className="px-2 py-1    hidden md:table-cell">
+                    <th className="px-3 py-2 hidden md:table-cell">
                       <div className="flex items-center gap-2">
-                        <MdOutlineCall className="w-5 h-5" />
-                        <span className="font-semibold text-white text-sm sm:text-base">
+                        <MdOutlineCall className="w-4 h-4 text-white" />
+                        <span className="font-bold text-white text-xs tracking-wide">
                           Phone
                         </span>
                       </div>
                     </th>
-                    <th className="px-2 py-1   ">
+                    <th className="px-3 py-2">
                       <div className="flex items-center gap-2">
-                        <LiaArrowCircleDownSolid className="w-5 h-5" />
-                        <span className="font-semibold text-white text-sm sm:text-base">
+                        <LiaArrowCircleDownSolid className="w-4 h-4 text-white" />
+                        <span className="font-bold text-white text-xs tracking-wide">
                           Action
                         </span>
                       </div>
@@ -278,7 +279,7 @@ export default function Home() {
                     <tr>
                       <td
                         colSpan={4}
-                        className="text-center text-xl py-6 text-white"
+                        className="text-center text-base py-8 text-white"
                       >
                         Data not found
                       </td>
@@ -287,33 +288,32 @@ export default function Home() {
                     data.map((item: any, index: number) => (
                       <tr
                         key={item?.id ?? index}
-                        className="   hover:bg-primary-600 border-b border-[#E7E7E7] odd:bg-[#404040]"
+                        className="hover:bg-primary-700 border-b border-[#E7E7E7] odd:bg-[#404040]"
                       >
-                        <td className="px-1 md:p-3 py-2 flex md:flex-row gap-2">
-                          <p className="text-white text-sm sm:text-base font-medium leading-normal capitalize truncate">
+                        <td className="px-3 py-2 flex md:flex-row gap-2 font-semibold text-white">
+                          <p className="capitalize truncate">
                             {item?.name ?? "-"}
                           </p>
                         </td>
-                        <td className="px-2 py-1    hidden md:table-cell">
-                          <p className="text-white text-sm sm:text-base font-medium leading-normal truncate">
+                        <td className="px-3 py-2 hidden md:table-cell text-white">
+                          <p className="truncate">
                             {item?.email ?? "-"}
                           </p>
                         </td>
-                        <td className="px-2 py-1    hidden md:table-cell">
-                          <p className="text-white text-sm sm:text-base font-medium leading-normal truncate">
+                        <td className="px-3 py-2 hidden md:table-cell text-white">
+                          <p className="truncate">
                             {item?.mobile_number ?? "-"}
                           </p>
                         </td>
-                        <td className="px-2 py-1   ">
-                          <div className="flex gap-1 md:gap-2 justify-center md:justify-start">
+                        <td className="px-3 py-2">
+                          <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1 shadow-sm">
                             <button
                               onClick={() => unBlockUserData(item.id)}
-                              className="py-[4px] px-3 bg-primary-600 hover:bg-primary-700 flex gap-1 items-center rounded-full text-xs md:text-sm group"
+                              className="px-2.5 py-1 hover:bg-primary-700 rounded-md text-white text-xs font-medium transition cursor-pointer flex items-center gap-1.5"
+                              title="Unblock User"
                             >
-                              <ImBlocked className="text-white w-4 h-4" />
-                              <p className="text-white hidden md:block">
-                                Unblock user
-                              </p>
+                              <ImBlocked className="text-white w-3.5 h-3.5" />
+                              <span>Unblock</span>
                             </button>
                           </div>
                         </td>

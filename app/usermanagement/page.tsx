@@ -273,24 +273,26 @@ export default function Home() {
 
           <div className="rounded-3xl   py-6 px-1  md:p-6 z-10 relative mainContainerBg">
             {/* Main content middle section */}
-            <div className="w-full gap-4 flex justify-end items-center mt-0 mb-8 flex-wrap sm:flex-nowrap">
-              <div className=" sm:w-auto">
+            <div className="w-full gap-3 flex justify-end items-center mt-0 mb-6 flex-wrap sm:flex-nowrap">
+              <div className="sm:w-auto">
                 <Link href="/blocked_user">
-                  <button className="flex items-center gap-[10px]  h-12 px-3 py-[6px] rounded-[12px] shadow-borderShadow w-full sm:w-auto bg-primary-600 group hover:bg-primary-7  00">
-                    <TbLockOpenOff className="h-[20px] w-[20px] text-white group-hover:text-white" />
-                    <p className="text-white text-base leading-normal group-hover:text-white">
-                      Blocked user
-                    </p>
+                  <button
+                    type="button"
+                    className="flex items-center justify-center gap-2 h-[38px] px-4 rounded-[4px] border border-[#E7E7E7] w-full sm:w-auto bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs font-semibold tracking-wide cursor-pointer transition shadow-sm"
+                  >
+                    <TbLockOpenOff className="h-4 w-4 text-white" />
+                    <span>Blocked User</span>
                   </button>
                 </Link>
               </div>
-              <div className=" sm:w-auto">
+              <div className="sm:w-auto">
                 <Link href="/useradd">
-                  <button className="flex items-center gap-[10px]  h-12 px-3 py-[6px] rounded-[12px] shadow-borderShadow w-full sm:w-auto bg-primary-600 group hover:bg-primary-7  00">
-                    <FaRegAddressCard className="h-[20px] w-[20px] text-white group-hover:text-white" />
-                    <p className="text-white text-base leading-normal group-hover:text-white">
-                      Create User
-                    </p>
+                  <button
+                    type="button"
+                    className="flex items-center justify-center gap-2 h-[38px] px-4 rounded-[4px] border border-[#E7E7E7] w-full sm:w-auto bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs font-semibold tracking-wide cursor-pointer transition shadow-sm"
+                  >
+                    <FaRegAddressCard className="h-4 w-4 text-white" />
+                    <span>Create User</span>
                   </button>
                 </Link>
               </div>

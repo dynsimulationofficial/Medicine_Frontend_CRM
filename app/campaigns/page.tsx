@@ -209,18 +209,17 @@ export default function CampaignsPage() {
           <div className="relative overflow-x-auto shadow-lastTransaction rounded-xl sm:rounded-3xl px-1 py-6 md:p-6 z-10 mainContainerBg">
             {/* Top Action Button (Create Campaign) */}
             <div className="flex justify-end items-center mb-6 w-full mx-auto gap-4">
-              <div
-                className="flex justify-center gap-2 py-3 px-6 rounded-[12px] border border-[#E7E7E7] cursor-pointer bg-primary-600 items-center hover:bg-primary-700 active:bg-primary-700 group"
+              <button
+                type="button"
+                className="flex items-center justify-center gap-2 h-[38px] px-4 rounded-[4px] border border-[#E7E7E7] bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs font-semibold tracking-wide cursor-pointer transition shadow-sm"
                 onClick={() => {
                   setSelectedData(null);
                   setFlyout("add");
                 }}
               >
-                <FiPlusCircle className="w-5 h-5 text-white group-hover:text-white" />
-                <p className="text-white text-base font-medium group-hover:text-white">
-                  Add Campaign
-                </p>
-              </div>
+                <FiPlusCircle className="w-4 h-4 text-white" />
+                <span>Add Campaign</span>
+              </button>
             </div>
 
             {/* Table */}

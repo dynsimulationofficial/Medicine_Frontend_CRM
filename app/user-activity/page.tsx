@@ -221,7 +221,7 @@ export default function UserActivityPage() {
                   <button
                     type="button"
                     onClick={clickedFilterClear}
-                    className="flex items-center gap-2 py-2.5 px-4 rounded-[12px] border border-red-500 text-red-400 hover:bg-red-500 hover:text-white text-xs font-semibold transition cursor-pointer"
+                    className="flex items-center justify-center gap-2 h-[38px] px-4 rounded-[4px] border border-red-500 text-red-500 hover:bg-red-500 hover:text-white text-xs font-semibold tracking-wide transition cursor-pointer shadow-sm"
                   >
                     <IoCloseOutline className="w-4 h-4" />
                     <span>Clear Filter</span>
@@ -229,13 +229,14 @@ export default function UserActivityPage() {
                 )}
               </div>
 
-              <div
-                className="flex justify-center gap-2 py-2.5 px-6 rounded-[12px] border border-[#E7E7E7] cursor-pointer bg-primary-600 items-center hover:bg-primary-700 active:bg-primary-800 transition"
+              <button
+                type="button"
+                className="flex items-center justify-center gap-2 h-[38px] px-4 rounded-[4px] border border-[#E7E7E7] cursor-pointer bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs font-semibold tracking-wide transition shadow-sm"
                 onClick={() => setFlyoutFilterOpen(true)}
               >
                 <FiFilter className="w-4 h-4 text-white" />
-                <p className="text-white text-sm font-semibold">Filter</p>
-              </div>
+                <span>Filter</span>
+              </button>
             </div>
 
             {/* Table */}
