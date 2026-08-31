@@ -1,7 +1,5 @@
-"use client"; // Add this at the top
+"use client";
 import React from "react";
-import { logEvent } from "firebase/analytics";
-import { analytics } from "./firebase-config"; // Your Firebase config file
 
 type ErrorBoundaryProps = {
   children: React.ReactNode;
@@ -22,14 +20,6 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log the error to Firebase Analytics
-    if (analytics) {
-      logEvent(analytics, "exception", {
-        description: error.message,
-        fatal: true,
-      });
-    }
-
     console.error("Error caught in Error Boundary:", error, errorInfo);
   }
 
