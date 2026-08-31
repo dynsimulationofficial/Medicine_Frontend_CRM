@@ -9,8 +9,6 @@ import "react-toastify/dist/ReactToastify.css";
 import Script from "next/script";
 import { usePathname } from "next/navigation";
 
-import NotificationListener from "./NotificationListener";
-
 // Client-only chunks
 const ErrorBoundary = dynamic(() => import("./ErrorBoundary"), { ssr: false });
 const AppProvider = dynamic(
@@ -27,26 +25,15 @@ const LeftSideBar = dynamic(() => import("./component/LeftSideBar"), {
   ssr: false,
 });
 
-const WebPushInitializer = dynamic(
-  () => import("./component/WebPushInitializer"),
-  { ssr: false }
-);
-
 const inter = Inter({ subsets: ["latin"] });
 
 type RootLayoutProps = {
   children: ReactNode;
 };
 
-// Optional: export metadata if you want
-// export const metadata = {
-//   title: "Lead CRM",
-//   description: "",
-// };
-
 export default function RootLayout({ children }: RootLayoutProps) {
-    const pathname = usePathname();
-  // Hide sidebar on "/" and "/opt"
+  const pathname = usePathname();
+  // Hide sidebar on "/" and "/otp"
   const hideSidebar = pathname === "/" || pathname === "/otp";
   return (
     <html lang="en">
@@ -55,14 +42,12 @@ export default function RootLayout({ children }: RootLayoutProps) {
           <AppProvider>
             {/* Page shell: sidebar + main content */}
             <div className="min-h-dvh flex">
-          {/* Sidebar column */}
+              {/* Sidebar column */}
               {!hideSidebar && <LeftSideBar />}
 
               {/* Main content column */}
               <main className="flex-1 min-w-0">{children}</main>
             </div>
-
-            <NotificationListener />
 
             {/* Toasts */}
             <ToastContainer
@@ -78,8 +63,6 @@ export default function RootLayout({ children }: RootLayoutProps) {
               theme="light"
             />
           </AppProvider>
-
-          <WebPushInitializer />
         </ErrorBoundary>
 
 {/* Production-only script to disable right-click */}

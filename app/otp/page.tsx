@@ -9,8 +9,6 @@ import { AppContext } from "../AppContext";
 import UserActivityLogger from "../../provider/UserActivityLogger";
 import OtpInput from "react-otp-input";
 import { isTokenExpired } from "../component/utils/authUtils";
-import { messaging } from "../firebase-config";
-import { getToken } from "firebase/messaging";
 
 const axiosProvider = new AxiosProvider();
 
@@ -97,37 +95,6 @@ export default function OtpHome() {
       }
     }
   }, [router]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const registerFCMToken = async () => {
-        if (isLogged) {
-          try {
-            const currentToken = await getToken(messaging, {
-              vapidKey:
-                "BPGmALJgnU2asXN4pqtYf85enB-Y3KbCkCwmSmxtSE3nWT69ghqbFAvIYxRsqntM6oR4jJTCpnpngmXIlJ7ik_k", // Replace with your actual VAPID Key
-            });
-
-            if (currentToken) {
-              const response = await AxiosProvider.post("/register-fcm", {
-                fcmtoken: currentToken,
-              });
-              console.log("FCM Token registered", response.data);
-            } else {
-              console.log("No registration token available");
-            }
-          } catch (err) {
-            console.error(
-              "Error fetching FCM token or registering FCM token",
-              err,
-            );
-          }
-        }
-      };
-
-      registerFCMToken();
-    }
-  }, [isLogged]);
 
   return (
     <>
