@@ -378,46 +378,45 @@ export default function Home() {
                         </td>
 
                         {/* Role */}
-                        <td className="px-2 py-1     hidden md:table-cell">
-                          <button className="py-[4px] px-3 bg-primary-600 hover:bg-primary-600 active:bg-primary-700 group flex gap-1 items-center rounded-xl text-xs md:text-sm">
-                            {/* <MdRemoveRedEye className="text-white w-4 h-4" /> */}
-                            <p className="text-white hidden md:block">
-                              {item?.role_name ?? "-"}
-                            </p>
-                          </button>
+                        <td className="px-2 py-1 hidden md:table-cell">
+                          <span className="inline-flex items-center px-2.5 py-0.5 bg-primary-600 text-white rounded-full text-[11px] font-semibold tracking-wide">
+                            {item?.role_name ?? "-"}
+                          </span>
                         </td>
-
-                        {/* Action Buttons */}
-                        <td className="px-2 py-1    ">
-                          <div className="flex gap-1 md:gap-2 justify-center md:justify-start">
+                        {/* Action Buttons Group (No Divide Lines) */}
+                        <td className="px-2 py-1">
+                          <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1 shadow-sm">
                             <button
                               onClick={() => clickOnEditButton(item)}
-                              className="py-[4px] px-3 bg-black hover:bg-primary-700 active:bg-primary-800 flex gap-1 items-center rounded-xl text-xs md:text-sm"
+                              className="p-1 hover:bg-primary-700 rounded-md text-white transition cursor-pointer"
+                              title="Edit User"
                             >
-                              <MdRemoveRedEye className="text-white w-4 h-4" />
-                              <p className="text-white hidden md:block"></p>
+                              <MdRemoveRedEye className="text-white w-3.5 h-3.5" />
                             </button>
 
                             <button
                               onClick={() => deleteUserData(item)}
-                              className="py-[4px] px-3 bg-black hover:bg-primary-800 active:bg-primary-700 flex gap-1 items-center rounded-full text-xs md:text-sm"
+                              className="p-1 hover:bg-red-700 rounded-md text-white transition cursor-pointer"
+                              title="Delete User"
                             >
-                              <RiDeleteBin6Line className="text-white w-4 h-4" />
-                              <p className="text-white hidden md:block"></p>
+                              <RiDeleteBin6Line className="text-white w-3.5 h-3.5" />
                             </button>
 
                             {item.role_name === "Admin" ? (
-                              <button className="py-[4px] px-3 bg-black opacity-50 cursor-not-allowed flex gap-1 items-center rounded-full text-xs md:text-sm">
-                                <ImBlocked className="text-white w-4 h-4" />
-                                <p className="text-white hidden md:block"></p>
+                              <button
+                                disabled
+                                className="p-1 opacity-30 cursor-not-allowed text-white rounded-md"
+                                title="Admin cannot be blocked"
+                              >
+                                <ImBlocked className="text-white w-3.5 h-3.5" />
                               </button>
                             ) : (
                               <button
                                 onClick={() => blockUserData(item)}
-                                className="py-[4px] px-3 bg-black hover:bg-primary-700 active:bg-primary-800 flex gap-1 items-center rounded-full text-xs md:text-sm"
+                                className="p-1 hover:bg-yellow-700 rounded-md text-white transition cursor-pointer"
+                                title="Block User"
                               >
-                                <ImBlocked className="text-white w-4 h-4" />
-                                <p className="text-white hidden md:block"></p>
+                                <ImBlocked className="text-white w-3.5 h-3.5" />
                               </button>
                             )}
                           </div>

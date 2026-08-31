@@ -209,33 +209,33 @@ export default function LeadSourcesPage() {
                         {row.created_at ? new Date(row.created_at).toLocaleDateString() : "-"}
                       </td>
                       <td className="px-3 py-2 md:table-cell">
-                        <div className="flex gap-1 md:gap-2 justify-center md:justify-start">
+                        <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1 shadow-sm">
                           <button
                             onClick={() => {
                               setSelectedData(row);
                               setFlyout("view");
                             }}
-                            className="py-1 px-3 bg-black hover:bg-primary-800 active:bg-primary-800 flex gap-2 items-center rounded-xl cursor-pointer"
+                            className="p-1 hover:bg-primary-700 rounded-md text-white transition cursor-pointer"
                             title="View Details"
                           >
-                            <FaEye className="text-white w-3.5 h-3.5 hover:text-white" />
+                            <FaEye className="text-white w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => {
                               setSelectedData(row);
                               setFlyout("edit");
                             }}
-                            className="py-1 px-3 bg-black hover:bg-primary-800 active:bg-primary-800 flex gap-2 items-center rounded-xl cursor-pointer"
+                            className="p-1 hover:bg-primary-700 rounded-md text-white transition cursor-pointer"
                             title="Edit Source"
                           >
-                            <FaEdit className="text-white w-3.5 h-3.5 hover:text-white" />
+                            <FaEdit className="text-white w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDelete(row.id, row.name)}
-                            className="py-1 px-3 bg-black hover:bg-primary-800 active:bg-primary-800 flex gap-2 items-center rounded-xl cursor-pointer"
+                            className="p-1 hover:bg-red-700 rounded-md text-white transition cursor-pointer"
                             title="Delete Source"
                           >
-                            <RiDeleteBin6Line className="text-white w-3.5 h-3.5 hover:text-white" />
+                            <RiDeleteBin6Line className="text-white w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>

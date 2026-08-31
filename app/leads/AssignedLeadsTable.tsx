@@ -526,14 +526,14 @@ const AssignedLeadsTable = ({
 
                 {/* Action */}
                 <td className="px-3 py-2 md:table-cell align-middle">
-                  <div className="flex gap-1 md:gap-2 justify-center md:justify-start">
+                  <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1 shadow-sm">
                     <button
                       onClick={() => {
                         setSelectedData(item);
                         fetchCampaigns(item?.lead_source_id);
                         setFlyout("edit");
                       }}
-                      className="p-1.5 bg-black hover:bg-primary-800 active:bg-primary-800 flex items-center justify-center rounded-lg"
+                      className="p-1 hover:bg-primary-700 rounded-md text-white transition cursor-pointer flex items-center justify-center"
                       title="Edit Lead"
                     >
                       <MdEdit className="text-white w-3.5 h-3.5" />
@@ -542,7 +542,7 @@ const AssignedLeadsTable = ({
                     {userRole === "Admin" && (
                       <button
                         onClick={() => handleDeleteLead(item.id)}
-                        className="p-1.5 bg-black hover:bg-primary-800 active:bg-primary-800 flex items-center justify-center rounded-lg"
+                        className="p-1 hover:bg-red-700 rounded-md text-white transition cursor-pointer flex items-center justify-center"
                         title="Delete Lead"
                       >
                         <RiDeleteBin6Line className="text-white w-3.5 h-3.5" />

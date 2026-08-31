@@ -90,6 +90,30 @@ export default function LeadOrdersTab({
     if (leadId) fetchOrders();
   }, [leadId, hitApi]);
 
+  // Auto-close medicine autocomplete dropdown on click-outside or Escape
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        !target.closest(".medicine-suggestion-box") &&
+        !target.closest(".medicine-name-input")
+      ) {
+        setActiveSugIndex(null);
+      }
+    };
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setActiveSugIndex(null);
+      }
+    };
+    document.addEventListener("mousedown", handleGlobalClick);
+    document.addEventListener("keydown", handleGlobalKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleGlobalClick);
+      document.removeEventListener("keydown", handleGlobalKeyDown);
+    };
+  }, []);
+
   const openEdit = (ord: OrderData) => {
     setEditingOrder(ord);
     setPaymentStatus(ord.payment_status || "Pending");
@@ -372,14 +396,14 @@ export default function LeadOrdersTab({
                     </span>
                   </td>
                   <td className="py-2 px-3 text-center align-middle whitespace-nowrap">
-                    <div className="flex gap-1.5 justify-center items-center">
+                    <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1 shadow-sm">
                       {ord.tracking_number && (
                         <button
                           onClick={() => {
                             setTrackingOrder(ord);
                             setIsTrackingOpen(true);
                           }}
-                          className="p-1.5 bg-cyan-600 hover:bg-cyan-700 rounded text-white text-xs cursor-pointer transition-colors"
+                          className="p-1 hover:bg-cyan-700 rounded-md text-white transition cursor-pointer flex items-center justify-center"
                           title="Track Parcel Journey"
                         >
                           <FaMapMarkerAlt className="w-3.5 h-3.5" />
@@ -387,14 +411,14 @@ export default function LeadOrdersTab({
                       )}
                       <button
                         onClick={() => openEdit(ord)}
-                        className="p-1.5 bg-primary-600 hover:bg-primary-700 rounded text-white text-xs cursor-pointer transition-colors"
+                        className="p-1 hover:bg-primary-700 rounded-md text-white transition cursor-pointer flex items-center justify-center"
                         title="Edit Order"
                       >
                         <MdEdit className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteOrder(ord)}
-                        className="p-1.5 bg-red-600 hover:bg-red-700 rounded text-white text-xs cursor-pointer transition-colors"
+                        className="p-1 hover:bg-red-700 rounded-md text-white transition cursor-pointer flex items-center justify-center"
                         title="Delete Order"
                       >
                         <RiDeleteBin6Line className="w-3.5 h-3.5" />
@@ -517,10 +541,10 @@ export default function LeadOrdersTab({
                             }
                             placeholder="Type medicine name..."
                             required
-                            className="w-full bg-black border border-gray-700 rounded text-xs p-2 text-white outline-none focus:border-primary-500"
+                            className="medicine-name-input w-full bg-black border border-gray-700 rounded text-xs p-2 text-white outline-none focus:border-primary-500"
                           />
                           {activeSugIndex === idx && suggestions.length > 0 && (
-                            <div className="absolute top-full left-0 right-0 z-50 bg-[#1c1c1c] border border-gray-600 rounded-md shadow-2xl max-h-56 overflow-y-auto mt-1 divide-y divide-gray-700/60">
+                            <div className="medicine-suggestion-box absolute top-full left-0 right-0 z-50 bg-[#1c1c1c] border border-gray-600 rounded-md shadow-2xl max-h-56 overflow-y-auto mt-1 divide-y divide-gray-700/60">
                               {suggestions.map((sug, sIdx) => (
                                 <div
                                   key={sIdx}
@@ -613,10 +637,11 @@ export default function LeadOrdersTab({
                     className="w-full bg-black border border-gray-700 rounded text-xs p-2 text-white outline-none focus:border-primary-500"
                   >
                     <option value="India Post">India Post (Speed Post / EMS)</option>
-                    <option value="UAE Post (Emirates Post)">UAE Post (Emirates Post)</option>
+                    <option value="Emirates Post">Emirates Post</option>
+                    <option value="Dubai Post">Dubai Post</option>
+                    <option value="Aramex">Aramex (UAE / Middle East)</option>
                     <option value="DHL Express">DHL Express</option>
                     <option value="FedEx">FedEx</option>
-                    <option value="Aramex">Aramex</option>
                     <option value="Blue Dart">Blue Dart</option>
                     <option value="Other">Other Courier</option>
                   </select>

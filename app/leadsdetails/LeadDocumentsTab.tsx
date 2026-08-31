@@ -7,6 +7,7 @@ import { MdEdit } from "react-icons/md";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoCloseOutline } from "react-icons/io5";
 import { FiPlusCircle } from "react-icons/fi";
+import { FaDownload } from "react-icons/fa";
 import Swal from "sweetalert2";
 
 export interface DocumentData {
@@ -253,11 +254,13 @@ export default function LeadDocumentsTab({
                     {d.notes || "—"}
                   </td>
                   <td className="py-2 px-3 text-center">
-                    <div className="flex gap-1.5 justify-center">
+                    <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1 shadow-sm">
                       <button
                         onClick={() => handleDownload(d)}
-                        className="py-1 px-2 bg-primary-600 hover:bg-primary-700 rounded text-[11px] text-white cursor-pointer transition-colors"
+                        className="px-2 py-1 hover:bg-primary-700 rounded-md text-[11px] text-white cursor-pointer transition flex items-center gap-1 font-medium"
+                        title="Download File"
                       >
+                        <FaDownload className="w-3 h-3" />
                         Download
                       </button>
                       <button
@@ -265,17 +268,17 @@ export default function LeadDocumentsTab({
                           setEditingDoc(d);
                           setEditNotes(d.notes || "");
                         }}
-                        className="py-1 px-2 bg-primary-600 hover:bg-primary-700 rounded text-white text-sm cursor-pointer transition-colors"
+                        className="p-1 hover:bg-primary-700 rounded-md text-white transition cursor-pointer flex items-center justify-center"
                         title="Edit Notes"
                       >
-                        <MdEdit />
+                        <MdEdit className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleDelete(d)}
-                        className="py-1 px-2 bg-red-600 hover:bg-red-700 rounded text-white text-sm cursor-pointer transition-colors"
+                        className="p-1 hover:bg-red-700 rounded-md text-white transition cursor-pointer flex items-center justify-center"
                         title="Delete Document"
                       >
-                        <RiDeleteBin6Line />
+                        <RiDeleteBin6Line className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </td>

@@ -102,6 +102,83 @@ const DynamicBreadCrum = () => {
           </p>
         </div>
       )}
+      {pathname === "/medicines" && (
+        <div className="flex md:flex gap-2 w-auto items-center">
+          <p className="text-white text-sm font-medium leading-5">
+            Medicines
+          </p>
+          <IoChevronForward className="text-white w-3 h-3" />
+          <p className="text-primary-600 text-sm leading-5 font-medium">
+            All Medicines
+          </p>
+        </div>
+      )}
+      {pathname === "/campaigns" && (
+        <div className="flex md:flex gap-2 w-auto items-center">
+          <p className="text-white text-sm font-medium leading-5">
+            Campaigns
+          </p>
+          <IoChevronForward className="text-white w-3 h-3" />
+          <p className="text-primary-600 text-sm leading-5 font-medium">
+            All Campaigns
+          </p>
+        </div>
+      )}
+      {pathname === "/leadsources" && (
+        <div className="flex md:flex gap-2 w-auto items-center">
+          <p className="text-white text-sm font-medium leading-5">
+            Lead Sources
+          </p>
+          <IoChevronForward className="text-white w-3 h-3" />
+          <p className="text-primary-600 text-sm leading-5 font-medium">
+            All Sources
+          </p>
+        </div>
+      )}
+      {pathname === "/reports" && (
+        <div className="flex md:flex gap-2 w-auto items-center">
+          <p className="text-white text-sm font-medium leading-5">
+            Reports
+          </p>
+          <IoChevronForward className="text-white w-3 h-3" />
+          <p className="text-primary-600 text-sm leading-5 font-medium">
+            Performance Analytics
+          </p>
+        </div>
+      )}
+      {pathname === "/dashboard-admin" && (
+        <div className="flex md:flex gap-2 w-auto items-center">
+          <p className="text-white text-sm font-medium leading-5">
+            Dashboard
+          </p>
+          <IoChevronForward className="text-white w-3 h-3" />
+          <p className="text-primary-600 text-sm leading-5 font-medium">
+            Admin Dashboard
+          </p>
+        </div>
+      )}
+      {pathname === "/dashboard-agent" && (
+        <div className="flex md:flex gap-2 w-auto items-center">
+          <p className="text-white text-sm font-medium leading-5">
+            Dashboard
+          </p>
+          <IoChevronForward className="text-white w-3 h-3" />
+          <p className="text-primary-600 text-sm leading-5 font-medium">
+            Agent Dashboard
+          </p>
+        </div>
+      )}
+      {pathname === "/blocked_user" && (
+        <div className="flex md:flex gap-2 w-auto items-center">
+          <p className="text-white text-sm font-medium leading-5">
+            User Management
+          </p>
+          <IoChevronForward className="text-white w-3 h-3" />
+          <p className="text-primary-600 text-sm leading-5 font-medium">
+            Blocked Users
+          </p>
+        </div>
+      )}
     </div>
   );
 };

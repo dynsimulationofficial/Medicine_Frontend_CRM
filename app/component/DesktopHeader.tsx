@@ -76,7 +76,7 @@ const DesktopHeader = () => {
   };
   return (
     <>
-      <div className="w-full flex justify-between items-center gap-4 md:mb-8">
+      <div className="w-full flex justify-between items-center gap-4 pt-3 pb-3 mb-9 md:mb-11">
         <div className="w-full h-24 bg-[linear-gradient(206deg,#21abd6_28.85%,rgba(33,171,214,0)_89.55%)] p-6 rounded-lg text-white opacity-20 absolute top-0 left-0 right-0 pointer-events-none"></div>
         {/* SEARCH INPUT WITH ICON */}
         <div className="hidden md:block md:w-auto">

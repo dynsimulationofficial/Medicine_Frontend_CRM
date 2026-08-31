@@ -252,25 +252,25 @@ export default function LeadActivityTab({ leadId, hitApi, setHitApi }: Props) {
                       {act.agent_name || "—"} {act.is_edited ? "(Edited)" : ""}
                     </td>
                     <td className="py-2 px-3 text-center">
-                      <div className="flex gap-1.5 justify-center">
+                      <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1 shadow-sm">
                         <button
                           type="button"
                           onClick={() => {
                             setEditingActivity(act);
                           }}
-                          className="py-1 px-2.5 bg-primary-600 hover:bg-primary-700 rounded text-white text-sm cursor-pointer transition-colors"
+                          className="p-1 hover:bg-primary-700 rounded-md text-white transition cursor-pointer flex items-center justify-center"
                           title="Edit Activity"
                         >
-                          <MdEdit />
+                          <MdEdit className="w-3.5 h-3.5" />
                         </button>
                         {userRole === "Admin" && (
                           <button
                             type="button"
                             onClick={() => handleDelete(act)}
-                            className="py-1 px-2.5 bg-red-600 hover:bg-red-700 rounded text-white text-sm cursor-pointer transition-colors"
+                            className="p-1 hover:bg-red-700 rounded-md text-white transition cursor-pointer flex items-center justify-center"
                             title="Delete Activity"
                           >
-                            <RiDeleteBin6Line />
+                            <RiDeleteBin6Line className="w-3.5 h-3.5" />
                           </button>
                         )}
                       </div>

@@ -264,14 +264,14 @@ export default function LeadTasksTab({
                       </button>
                     </td>
                     <td className="py-2 px-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
+                      <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1 shadow-sm">
                         <button
                           onClick={() => setEditingTask(t)}
                           disabled={locked}
-                          className={`p-1.5 rounded text-white text-xs transition-colors ${
+                          className={`p-1 rounded-md text-white transition flex items-center justify-center ${
                             locked
-                              ? "bg-gray-600 opacity-40 cursor-not-allowed"
-                              : "bg-primary-600 hover:bg-primary-700 cursor-pointer"
+                              ? "opacity-30 cursor-not-allowed"
+                              : "hover:bg-primary-700 cursor-pointer"
                           }`}
                           title="Edit Task"
                         >
@@ -281,7 +281,7 @@ export default function LeadTasksTab({
                           <button
                             type="button"
                             onClick={() => handleDeleteTask(t.id, t.subject)}
-                            className="p-1.5 bg-red-600 hover:bg-red-700 rounded text-white text-xs transition-colors cursor-pointer"
+                            className="p-1 hover:bg-red-700 rounded-md text-white transition cursor-pointer flex items-center justify-center"
                             title="Delete Task"
                           >
                             <RiDeleteBin6Line className="w-3.5 h-3.5" />
