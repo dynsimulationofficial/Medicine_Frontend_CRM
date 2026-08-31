@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import AxiosProvider from "../../provider/AxiosProvider";
+import axios from "axios";
+import AxiosProvider, { getBaseURL } from "../../provider/AxiosProvider";
 import { toast } from "react-toastify";
 import { MdEdit } from "react-icons/md";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -81,19 +82,38 @@ export default function LeadDocumentsTab({
       const res = await AxiosProvider.post("/leads/documents/geturl", {
         id: doc.id,
       });
-      const url = res.data?.data?.url;
-      if (url) {
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = doc.file_name || "document";
-        a.target = "_blank";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      } else {
+      let fileUrl = res.data?.data?.url;
+      if (!fileUrl) {
         toast.error("Download URL not available");
+        return;
       }
-    } catch {
+
+      // If relative path, resolve to backend origin
+      if (fileUrl.startsWith("/")) {
+        try {
+          const origin = new URL(getBaseURL()).origin;
+          fileUrl = `${origin}${fileUrl}`;
+        } catch {
+          fileUrl = `http://localhost:8016${fileUrl}`;
+        }
+      }
+
+      // Fetch as Blob to prevent corrupt HTML downloads and trigger native browser file saving
+      const response = await axios.get(fileUrl, { responseType: "blob" });
+      const blob = new Blob([response.data], {
+        type: doc.mime_type || response.headers["content-type"] || "application/octet-stream",
+      });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = doc.file_name || "document";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(downloadUrl);
+      toast.success("Download started");
+    } catch (err) {
+      console.error("Failed to download file:", err);
       toast.error("Failed to download document");
     }
   };
