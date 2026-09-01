@@ -97,6 +97,8 @@ export interface ActivityData {
 
 type Props = {
   leadId: string;
+  agentId?: string | null;
+  agentName?: string | null;
   hitApi?: boolean;
   setHitApi?: React.Dispatch<React.SetStateAction<boolean>>;
 };
@@ -108,12 +110,15 @@ const activitySchema = Yup.object({
   agent_id: Yup.string().nullable().optional(),
 });
 
-export default function LeadActivityTab({ leadId, hitApi, setHitApi }: Props) {
+export default function LeadActivityTab({
+  leadId,
+  agentId,
+  agentName,
+  hitApi,
+  setHitApi,
+}: Props) {
   const [activities, setActivities] = useState<ActivityData[]>([]);
   const [dispositions, setDispositions] = useState<any[]>([]);
-  const [agents, setAgents] = useState<any[]>([]);
-  const [page, setPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [isCreateOpen, setIsCreateOpen] = useState<boolean>(false);
@@ -124,39 +129,39 @@ export default function LeadActivityTab({ leadId, hitApi, setHitApi }: Props) {
   const currentUserId = storage.getUserId();
   const currentUserName = storage.getUserName();
 
-  // Fetch Dispositions & Agents
+  const displayAgentName =
+    agentName ||
+    (userRole === "Agent" ? currentUserName : "") ||
+    "Assigned Agent";
+
+  // Fetch Dispositions
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [dispRes, agentRes] = await Promise.all([
-          AxiosProvider.get("/leads/dispositions/all"),
-          AxiosProvider.get("/allagents"),
-        ]);
-        const dispList = dispRes.data?.data?.items || dispRes.data?.data?.data || dispRes.data?.data || [];
+        const dispRes = await AxiosProvider.get("/leads/dispositions/all");
+        const dispList =
+          dispRes.data?.data?.items ||
+          dispRes.data?.data?.data ||
+          dispRes.data?.data ||
+          [];
         setDispositions(dispList);
-
-        const agentList = agentRes.data?.data?.data || agentRes.data?.data || [];
-        setAgents(agentList);
       } catch (err) {
-        console.error("Error loading initial data:", err);
+        console.error("Error loading dispositions:", err);
       }
     };
     fetchInitialData();
   }, []);
 
-  // Fetch Activities
+  // Fetch Activities (All Rows - No Limit)
   const fetchActivities = async () => {
     if (!leadId) return;
     setIsLoading(true);
     try {
       const res = await AxiosProvider.post("/leads/activities/list", {
         lead_id: leadId,
-        page,
-        pageSize: 10,
       });
       const list = res.data?.data?.activities || res.data?.data?.data || [];
       setActivities(list);
-      setTotalPages(res.data?.data?.pagination?.totalPages || 1);
     } catch (err) {
       console.error("Error fetching activities:", err);
     } finally {
@@ -166,7 +171,7 @@ export default function LeadActivityTab({ leadId, hitApi, setHitApi }: Props) {
 
   useEffect(() => {
     fetchActivities();
-  }, [leadId, page, hitApi]);
+  }, [leadId, hitApi]);
 
   const handleDelete = (activity: ActivityData) => {
     Swal.fire({
@@ -287,7 +292,7 @@ export default function LeadActivityTab({ leadId, hitApi, setHitApi }: Props) {
                     className="odd:bg-[#404040] even:bg-[#2d2d2d] hover:bg-primary-700/80 transition-colors"
                   >
                     <td className="py-2 px-3 text-center text-gray-300 font-medium">
-                      {(page - 1) * 10 + idx + 1}
+                      {idx + 1}
                     </td>
                     <td className="py-2 px-3 text-[11px] text-gray-200 whitespace-nowrap">
                       {formattedDate}
@@ -343,29 +348,6 @@ export default function LeadActivityTab({ leadId, hitApi, setHitApi }: Props) {
               })}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {/* Pagination */}
-      {activities.length > 0 && totalPages > 1 && (
-        <div className="flex justify-center items-center my-6 gap-3 flex-wrap">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="px-3 py-2 border border-gray-700 rounded bg-primary-600 hover:bg-primary-700 text-white disabled:opacity-40 cursor-pointer transition"
-          >
-            <HiChevronDoubleLeft className="w-5 h-auto" />
-          </button>
-          <span className="text-sm font-medium text-gray-300 px-2">
-            Page {page} of {totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-            className="px-3 py-2 border border-gray-700 rounded bg-primary-600 hover:bg-primary-700 text-white disabled:opacity-40 cursor-pointer transition"
-          >
-            <HiChevronDoubleRight className="w-5 h-auto" />
-          </button>
         </div>
       )}
 
@@ -469,35 +451,21 @@ export default function LeadActivityTab({ leadId, hitApi, setHitApi }: Props) {
                   )}
                 </div>
 
-                {/* 2. Agent / Logged By */}
+                {/* 2. Agent / Logged By (Read-only) */}
                 <div>
                   <p className="text-white font-medium text-xs mb-1.5">
                     Agent / Logged By
                   </p>
-                  {userRole === "Admin" ? (
-                    <Select
-                      value={
-                        agents.find((a) => a.id === values.agent_id) || null
-                      }
-                      onChange={(selected: any) => {
-                        setFieldValue("agent_id", selected ? selected.id : "");
-                      }}
-                      onBlur={() => setFieldTouched("agent_id", true)}
-                      getOptionLabel={(opt: any) => opt.name || opt.email}
-                      getOptionValue={(opt: any) => opt.id}
-                      options={agents}
-                      placeholder="Select Agent..."
-                      isSearchable
-                      styles={customSelectStyles}
-                    />
-                  ) : (
-                    <input
-                      type="text"
-                      value={currentUserName || "Current Agent"}
-                      readOnly
-                      className="w-full border border-gray-700 rounded text-sm p-3 bg-black/60 text-white cursor-not-allowed"
-                    />
-                  )}
+                  <input
+                    type="text"
+                    value={
+                      editingActivity
+                        ? editingActivity.agent_name || displayAgentName
+                        : displayAgentName
+                    }
+                    readOnly
+                    className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black/60 text-white cursor-not-allowed outline-none"
+                  />
                 </div>
 
                 {/* 3. Conversation Notes */}
