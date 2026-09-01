@@ -701,7 +701,7 @@ const AssignedLeadsTable = ({
                 return (
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-5">
-                      {/* Full Name */}
+                      {/* 1. Full Name */}
                       <div>
                         <p className="text-white text-xs font-medium mb-1.5">
                           Full Name <span className="text-red-500">*</span>
@@ -714,7 +714,7 @@ const AssignedLeadsTable = ({
                         <ErrorMessage name="full_name" component="div" className="text-red-500 text-xs mt-1" />
                       </div>
 
-                      {/* Email */}
+                      {/* 2. Email */}
                       <div>
                         <p className="text-white text-xs font-medium mb-1.5">
                           Email <span className="text-red-500">*</span>
@@ -727,7 +727,7 @@ const AssignedLeadsTable = ({
                         <ErrorMessage name="email" component="div" className="text-red-500 text-xs mt-1" />
                       </div>
 
-                      {/* Phone */}
+                      {/* 3. Phone */}
                       <div>
                         <p className="text-white text-xs font-medium mb-1.5">
                           Phone <span className="text-red-500">*</span>
@@ -767,7 +767,86 @@ const AssignedLeadsTable = ({
                         <ErrorMessage name="phone" component="div" className="text-red-500 text-xs mt-1" />
                       </div>
 
-                      {/* Country */}
+                      {/* 4. WhatsApp Number */}
+                      <div>
+                        <p className="text-white text-xs font-medium mb-1.5">WhatsApp Number</p>
+                        <div className="flex w-full h-[38px] border border-gray-700 rounded-[4px] bg-black overflow-hidden focus-within:border-primary-600">
+                          <select
+                            className="h-full bg-black text-white text-xs border-r border-gray-700 px-2 outline-none cursor-pointer"
+                            value={values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91"}
+                            onChange={(e) => {
+                              const currentCode = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
+                              const numberPart = (values.whatsapp_number || "").replace(currentCode, "");
+                              setFieldValue("whatsapp_number", e.target.value + numberPart);
+                            }}
+                          >
+                            <option value="+91">+91</option>
+                            <option value="+44">+44</option>
+                            <option value="+1">+1</option>
+                          </select>
+                          <input
+                            type="text"
+                            maxLength={15}
+                            className="h-full w-full bg-transparent text-white text-xs px-3 outline-none placeholder-gray-400"
+                            placeholder="Enter whatsapp number"
+                            value={(() => {
+                              const code = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
+                              return (values.whatsapp_number || "").substring(code.length);
+                            })()}
+                            onChange={(e) => {
+                              const code = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
+                              const digitsOnly = e.target.value.replace(/\D/g, "");
+                              setFieldValue("whatsapp_number", digitsOnly ? code + digitsOnly : "");
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* 5. Address Line 1 */}
+                      <div>
+                        <p className="text-white text-xs font-medium mb-1.5">Address Line 1</p>
+                        <Field
+                          type="text"
+                          name="address_line1"
+                          placeholder="Street, House no."
+                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                        />
+                      </div>
+
+                      {/* 6. Address Line 2 */}
+                      <div>
+                        <p className="text-white text-xs font-medium mb-1.5">Address Line 2</p>
+                        <Field
+                          type="text"
+                          name="address_line2"
+                          placeholder="Apartment, suite, unit, etc."
+                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                        />
+                      </div>
+
+                      {/* 7. City */}
+                      <div>
+                        <p className="text-white text-xs font-medium mb-1.5">City</p>
+                        <Field
+                          type="text"
+                          name="city"
+                          placeholder="City / Town"
+                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                        />
+                      </div>
+
+                      {/* 8. Postal Code */}
+                      <div>
+                        <p className="text-white text-xs font-medium mb-1.5">Postal Code</p>
+                        <Field
+                          type="text"
+                          name="postal_code"
+                          placeholder="400071"
+                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
+                        />
+                      </div>
+
+                      {/* 9. Country */}
                       <div>
                         <p className="text-white text-xs font-medium mb-1.5">Country</p>
                         <Select
@@ -786,7 +865,7 @@ const AssignedLeadsTable = ({
                         />
                       </div>
 
-                      {/* State */}
+                      {/* 10. State */}
                       <div>
                         <p className="text-white text-xs font-medium mb-1.5">State / Region</p>
                         <Select
@@ -802,51 +881,7 @@ const AssignedLeadsTable = ({
                         />
                       </div>
 
-                      {/* City */}
-                      <div>
-                        <p className="text-white text-xs font-medium mb-1.5">City</p>
-                        <Field
-                          type="text"
-                          name="city"
-                          placeholder="City / Town"
-                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
-                        />
-                      </div>
-
-                      {/* Address Line 1 */}
-                      <div>
-                        <p className="text-white text-xs font-medium mb-1.5">Address Line 1</p>
-                        <Field
-                          type="text"
-                          name="address_line1"
-                          placeholder="Street, House no."
-                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
-                        />
-                      </div>
-
-                      {/* Address Line 2 */}
-                      <div>
-                        <p className="text-white text-xs font-medium mb-1.5">Address Line 2</p>
-                        <Field
-                          type="text"
-                          name="address_line2"
-                          placeholder="Apartment, suite, unit, etc."
-                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
-                        />
-                      </div>
-
-                      {/* Postal Code */}
-                      <div>
-                        <p className="text-white text-xs font-medium mb-1.5">Postal Code</p>
-                        <Field
-                          type="text"
-                          name="postal_code"
-                          placeholder="400071"
-                          className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow"
-                        />
-                      </div>
-
-                      {/* Best Time to Call */}
+                      {/* 11. Best Time to Call */}
                       <div>
                         <p className="text-white text-xs font-medium mb-1.5">Best Time to Call</p>
                         <Field
@@ -857,7 +892,24 @@ const AssignedLeadsTable = ({
                         />
                       </div>
 
-                      {/* Lead Source */}
+                      {/* 12. Lead Status */}
+                      <div>
+                        <p className="text-white text-xs font-medium mb-1.5">Lead Status</p>
+                        <Select
+                          value={leadStatusOptions.find((opt) => opt.id === values.lead_status) || null}
+                          onChange={(selected: any) =>
+                            setFieldValue("lead_status", selected ? selected.id : "New")
+                          }
+                          onBlur={() => setFieldTouched("lead_status", true)}
+                          getOptionLabel={(opt: any) => opt.name}
+                          getOptionValue={(opt: any) => opt.id}
+                          options={leadStatusOptions}
+                          placeholder="Select Lead Status"
+                          styles={customSelectStyles}
+                        />
+                      </div>
+
+                      {/* 13. Lead Source */}
                       <div>
                         <p className="text-white text-xs font-medium mb-1.5">Lead Source</p>
                         <Select
@@ -878,7 +930,7 @@ const AssignedLeadsTable = ({
                         />
                       </div>
 
-                      {/* Campaign */}
+                      {/* 14. Campaign */}
                       <div>
                         <p className="text-white text-xs font-medium mb-1.5">Campaign</p>
                         <Select
@@ -898,43 +950,8 @@ const AssignedLeadsTable = ({
                         />
                       </div>
 
-                      {/* WhatsApp Number */}
-                      <div>
-                        <p className="text-white text-xs font-medium mb-1.5">WhatsApp Number</p>
-                        <div className="flex w-full h-[38px] border border-gray-700 rounded-[4px] bg-black overflow-hidden focus-within:border-primary-600">
-                          <select
-                            className="h-full bg-black text-white text-xs border-r border-gray-700 px-2 outline-none cursor-pointer"
-                            value={values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91"}
-                            onChange={(e) => {
-                              const currentCode = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
-                              const numberPart = (values.whatsapp_number || "").replace(currentCode, "");
-                              setFieldValue("whatsapp_number", e.target.value + numberPart);
-                            }}
-                          >
-                            <option value="+91">+91</option>
-                            <option value="+44">+44</option>
-                            <option value="+1">+1</option>
-                          </select>
-                          <input
-                            type="text"
-                            maxLength={10}
-                            className="h-full w-full bg-transparent text-white text-xs px-3 outline-none placeholder-gray-400"
-                            placeholder="Enter whatsapp number"
-                            value={(() => {
-                              const code = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
-                              return (values.whatsapp_number || "").substring(code.length);
-                            })()}
-                            onChange={(e) => {
-                              const code = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
-                              const digitsOnly = e.target.value.replace(/\D/g, "");
-                              setFieldValue("whatsapp_number", code + digitsOnly);
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Assign to Agent */}
-                      <div>
+                      {/* 15. Assign to Agent */}
+                      <div className="md:col-span-2">
                         <p className="text-white text-xs font-medium mb-1.5">Assign to Agent</p>
                         <Select
                           value={agentList.find((opt: any) => opt.id === values.agent_id) || null}
@@ -945,23 +962,6 @@ const AssignedLeadsTable = ({
                           options={agentList}
                           placeholder="Select Agent"
                           isClearable
-                          styles={customSelectStyles}
-                        />
-                      </div>
-
-                      {/* Lead Status */}
-                      <div>
-                        <p className="text-white text-xs font-medium mb-1.5">Lead Status</p>
-                        <Select
-                          value={leadStatusOptions.find((opt) => opt.id === values.lead_status) || null}
-                          onChange={(selected: any) =>
-                            setFieldValue("lead_status", selected ? selected.id : "New")
-                          }
-                          onBlur={() => setFieldTouched("lead_status", true)}
-                          getOptionLabel={(opt: any) => opt.name}
-                          getOptionValue={(opt: any) => opt.id}
-                          options={leadStatusOptions}
-                          placeholder="Select Lead Status"
                           styles={customSelectStyles}
                         />
                       </div>

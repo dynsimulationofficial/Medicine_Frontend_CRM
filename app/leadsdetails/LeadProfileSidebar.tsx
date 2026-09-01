@@ -346,6 +346,58 @@ export default function LeadProfileSidebar({
                     />
                   </div>
 
+                  {/* Address Line 1 */}
+                  <div>
+                    <label className="block text-xs font-medium text-white mb-1">
+                      Address Line 1
+                    </label>
+                    <Field
+                      name="address_line1"
+                      type="text"
+                      className="w-full h-[38px] border border-white/30 rounded-[4px] px-3 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                      placeholder="Street, House no."
+                    />
+                  </div>
+
+                  {/* Address Line 2 */}
+                  <div>
+                    <label className="block text-xs font-medium text-white mb-1">
+                      Address Line 2
+                    </label>
+                    <Field
+                      name="address_line2"
+                      type="text"
+                      className="w-full h-[38px] border border-white/30 rounded-[4px] px-3 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                      placeholder="Apartment, suite, unit, etc."
+                    />
+                  </div>
+
+                  {/* City */}
+                  <div>
+                    <label className="block text-xs font-medium text-white mb-1">
+                      City
+                    </label>
+                    <Field
+                      name="city"
+                      type="text"
+                      className="w-full h-[38px] border border-white/30 rounded-[4px] px-3 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                      placeholder="City / Town"
+                    />
+                  </div>
+
+                  {/* Postal Code */}
+                  <div>
+                    <label className="block text-xs font-medium text-white mb-1">
+                      Postal Code
+                    </label>
+                    <Field
+                      name="postal_code"
+                      type="text"
+                      className="w-full h-[38px] border border-white/30 rounded-[4px] px-3 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
+                      placeholder="400071"
+                    />
+                  </div>
+
                   {/* Country */}
                   <div>
                     <label className="block text-xs font-medium text-white mb-1">
@@ -500,58 +552,6 @@ export default function LeadProfileSidebar({
                         input: (base) => ({ ...base, color: "#fff", margin: 0, padding: 0 }),
                         placeholder: (base) => ({ ...base, color: "#ccc" }),
                       }}
-                    />
-                  </div>
-
-                  {/* City */}
-                  <div>
-                    <label className="block text-xs font-medium text-white mb-1">
-                      City
-                    </label>
-                    <Field
-                      name="city"
-                      type="text"
-                      className="w-full h-[38px] border border-white/30 rounded-[4px] px-3 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
-                      placeholder="Enter city"
-                    />
-                  </div>
-
-                  {/* Address Line 1 */}
-                  <div>
-                    <label className="block text-xs font-medium text-white mb-1">
-                      Address Line 1
-                    </label>
-                    <Field
-                      name="address_line1"
-                      type="text"
-                      className="w-full h-[38px] border border-white/30 rounded-[4px] px-3 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
-                      placeholder="House / Street / Area"
-                    />
-                  </div>
-
-                  {/* Address Line 2 */}
-                  <div>
-                    <label className="block text-xs font-medium text-white mb-1">
-                      Address Line 2
-                    </label>
-                    <Field
-                      name="address_line2"
-                      type="text"
-                      className="w-full h-[38px] border border-white/30 rounded-[4px] px-3 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
-                      placeholder="Apartment / Suite / Landmark"
-                    />
-                  </div>
-
-                  {/* Postal Code */}
-                  <div>
-                    <label className="block text-xs font-medium text-white mb-1">
-                      Postal Code
-                    </label>
-                    <Field
-                      name="postal_code"
-                      type="text"
-                      className="w-full h-[38px] border border-white/30 rounded-[4px] px-3 text-xs bg-black/40 text-white placeholder-gray-300 focus:outline-none focus:border-white"
-                      placeholder="Enter postal code"
                     />
                   </div>
 
