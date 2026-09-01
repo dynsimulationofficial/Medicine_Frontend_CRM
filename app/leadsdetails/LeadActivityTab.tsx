@@ -97,8 +97,6 @@ export interface ActivityData {
 
 type Props = {
   leadId: string;
-  agentId?: string | null;
-  agentName?: string | null;
   hitApi?: boolean;
   setHitApi?: React.Dispatch<React.SetStateAction<boolean>>;
 };
@@ -106,14 +104,10 @@ type Props = {
 const activitySchema = Yup.object({
   disposition_id: Yup.string().required("Disposition is required"),
   conversation: Yup.string().trim().required("Conversation note is required"),
-  occurred_at: Yup.date().nullable().optional(),
-  agent_id: Yup.string().nullable().optional(),
 });
 
 export default function LeadActivityTab({
   leadId,
-  agentId,
-  agentName,
   hitApi,
   setHitApi,
 }: Props) {
@@ -126,13 +120,6 @@ export default function LeadActivityTab({
   const [isExpandedConv, setIsExpandedConv] = useState<Record<string, boolean>>({});
 
   const userRole = storage.getUserRole();
-  const currentUserId = storage.getUserId();
-  const currentUserName = storage.getUserName();
-
-  const displayAgentName =
-    agentName ||
-    (userRole === "Agent" ? currentUserName : "") ||
-    "Assigned Agent";
 
   // Fetch Dispositions
   useEffect(() => {
@@ -160,7 +147,9 @@ export default function LeadActivityTab({
       const res = await AxiosProvider.post("/leads/activities/list", {
         lead_id: leadId,
       });
-      const list = res.data?.data?.activities || res.data?.data?.data || [];
+      const list = Array.isArray(res.data?.data)
+        ? res.data.data
+        : res.data?.data?.activities || res.data?.data?.data || [];
       setActivities(list);
     } catch (err) {
       console.error("Error fetching activities:", err);
@@ -211,8 +200,6 @@ export default function LeadActivityTab({
         lead_id: leadId,
         conversation: values.conversation.trim(),
         disposition_id: values.disposition_id,
-        agent_id: values.agent_id || (userRole === "Agent" ? currentUserId : null),
-        occurred_at: values.occurred_at ? new Date(values.occurred_at).toISOString() : new Date().toISOString(),
       };
 
       const url = isEdit ? "/leads/update/activity" : "/leads/activities/create";
@@ -272,7 +259,6 @@ export default function LeadActivityTab({
                 <th className="py-2.5 px-3">Date / Time</th>
                 <th className="py-2.5 px-3">Disposition</th>
                 <th className="py-2.5 px-3">Conversation</th>
-                <th className="py-2.5 px-3">Added By</th>
                 <th className="py-2.5 px-3 text-center w-24">Action</th>
               </tr>
             </thead>
@@ -298,7 +284,7 @@ export default function LeadActivityTab({
                       {formattedDate}
                     </td>
                     <td className="py-2 px-3 font-semibold text-primary-300 text-xs">
-                      {act.disposition || "—"}
+                      {act.disposition || "—"} {act.is_edited ? <span className="text-[10px] text-gray-400 font-normal">(Edited)</span> : ""}
                     </td>
                     <td className="py-2 px-3 text-xs text-gray-100 max-w-xs">
                       <p>
@@ -315,9 +301,6 @@ export default function LeadActivityTab({
                           {isExpanded ? "Show less" : "Show more"}
                         </button>
                       )}
-                    </td>
-                    <td className="py-2 px-3 text-[11px] text-gray-300">
-                      {act.agent_name || "—"} {act.is_edited ? "(Edited)" : ""}
                     </td>
                     <td className="py-2 px-3 text-center">
                       <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1 shadow-sm">
@@ -380,12 +363,6 @@ export default function LeadActivityTab({
             enableReinitialize
             initialValues={{
               disposition_id: editingActivity?.disposition_id || "",
-              agent_id: editingActivity?.agent_id || (userRole === "Agent" ? currentUserId : ""),
-              occurred_at: editingActivity?.occurred_at
-                ? new Date(editingActivity.occurred_at)
-                : editingActivity?.created_at
-                ? new Date(editingActivity.created_at)
-                : new Date(),
               conversation: editingActivity?.conversation || "",
             }}
             validationSchema={activitySchema}
@@ -451,24 +428,7 @@ export default function LeadActivityTab({
                   )}
                 </div>
 
-                {/* 2. Agent / Logged By (Read-only) */}
-                <div>
-                  <p className="text-white font-medium text-xs mb-1.5">
-                    Agent / Logged By
-                  </p>
-                  <input
-                    type="text"
-                    value={
-                      editingActivity
-                        ? editingActivity.agent_name || displayAgentName
-                        : displayAgentName
-                    }
-                    readOnly
-                    className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black/60 text-white cursor-not-allowed outline-none"
-                  />
-                </div>
-
-                {/* 3. Conversation Notes */}
+                {/* 2. Conversation Notes */}
                 <div>
                   <p className="text-white font-medium text-xs mb-1">
                     Conversation Notes <span className="text-red-500">*</span>

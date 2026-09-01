@@ -88,8 +88,6 @@ export default function LeadDetailsPage() {
       content: (
         <LeadActivityTab
           leadId={leadId || ""}
-          agentId={data?.agent_id}
-          agentName={data?.agent_name}
           hitApi={hitApi}
           setHitApi={setHitApi}
         />
