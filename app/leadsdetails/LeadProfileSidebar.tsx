@@ -98,7 +98,7 @@ export default function LeadProfileSidebar({
       {/* ========================================================================= */}
       {isEditFirstLead ? (
         /* ---------- VIEW MODE ---------- */
-        <div className="w-full rounded bg-primary-600 px-3.5 py-4 mb-5 shadow">
+        <div className="w-full rounded-[4px] bg-primary-600 border border-primary-600 px-3.5 py-4 mb-4 shadow box-border">
           <div className="flex justify-between text-white mb-3.5 capitalize">
             <div className="flex gap-2 items-center">
               <FaStar className="text-white text-sm" />
@@ -236,7 +236,7 @@ export default function LeadProfileSidebar({
                 Object.values(statesByCountry).flat();
 
               return (
-                <Form className="w-full rounded bg-primary-600 px-4 py-6 mb-6 space-y-4 text-white">
+                <Form className="w-full rounded-[4px] bg-primary-600 border border-primary-600 px-4 py-6 mb-4 space-y-4 text-white box-border">
                   <div className="flex justify-between items-center mb-2">
                     <p className="text-base font-semibold">
                       Edit Contact & Address
@@ -597,20 +597,20 @@ export default function LeadProfileSidebar({
       {/* 2. LEAD & ORDER PROPERTIES CARD */}
       {/* ========================================================================= */}
       {isleadPropertyEdit ? (
-        <div className="w-full border border-gray-700 rounded overflow-hidden mb-5">
-          <table className="w-full text-xs text-left text-white">
+        <div className="w-full border border-gray-700 rounded-[4px] overflow-hidden mb-5 box-border">
+          <table className="w-full text-xs text-left text-white border-collapse">
             <thead>
-              <tr className="border border-gray-700 talbleheaderBg">
+              <tr className="border-b border-gray-700 talbleheaderBg">
                 <th
                   scope="col"
                   colSpan={2}
-                  className="px-3 py-2.5 border border-gray-700 font-semibold text-white text-xs"
+                  className="px-3.5 py-2.5 font-semibold text-white text-xs"
                 >
                   <div className="flex justify-between items-center">
                     <span>Lead & Order Properties</span>
                     <button
                       type="button"
-                      className="flex gap-1 items-center px-2.5 py-1 rounded-[4px] bg-primary-600 text-white text-xs font-medium cursor-pointer hover:bg-primary-700"
+                      className="flex gap-1 items-center px-2.5 py-1 rounded-[4px] bg-primary-600 text-white text-xs font-medium cursor-pointer hover:bg-primary-700 transition"
                       onClick={() => setIsLeadPropertyEdit(!isleadPropertyEdit)}
                     >
                       <MdEdit className="w-3 h-3" />
@@ -621,7 +621,7 @@ export default function LeadProfileSidebar({
               </tr>
             </thead>
 
-            <tbody>
+            <tbody className="divide-y divide-gray-700">
               {[
                 { label: "Lead Number", value: data?.lead_number },
                 { label: "Lead Status", value: data?.lead_status || "New" },
@@ -636,12 +636,12 @@ export default function LeadProfileSidebar({
               ].map((row, idx) => (
                 <tr
                   key={idx}
-                  className="border transition-colors border-b border-gray-700 odd:bg-[#1E1E1E] even:bg-[#141414]"
+                  className="transition-colors odd:bg-[#1E1E1E] even:bg-[#141414] hover:bg-[#252525]"
                 >
-                  <td className="text-xs text-gray-400 py-2 px-3 font-medium w-1/3">
+                  <td className="text-xs text-gray-400 py-2.5 px-3.5 font-medium w-1/3">
                     {row.label}
                   </td>
-                  <td className="text-xs font-medium text-white py-2 px-3">
+                  <td className="text-xs font-medium text-white py-2.5 px-3.5">
                     {row.value || "-"}
                   </td>
                 </tr>
@@ -651,7 +651,7 @@ export default function LeadProfileSidebar({
         </div>
       ) : (
         /* ---------- LEAD PROPERTIES EDIT FORM ---------- */
-        <div className="w-full border border-gray-700 rounded overflow-hidden mb-6 bg-[#181818] p-4">
+        <div className="w-full border border-gray-700 rounded-[4px] overflow-hidden mb-6 bg-[#181818] p-4">
           <p className="text-base font-semibold text-white mb-4 border-b border-gray-700 pb-2">
             Edit Lead Properties
           </p>
