@@ -424,15 +424,6 @@ const UnassignedLeadsTable = ({
 
             <th scope="col" className="px-3 py-2 hidden md:table-cell">
               <div className="flex items-center gap-2">
-                <MdOutlineLocationCity className="w-4 h-4 text-white" />
-                <span className="font-bold text-white text-xs tracking-wide">
-                  Address
-                </span>
-              </div>
-            </th>
-
-            <th scope="col" className="px-3 py-2 hidden md:table-cell">
-              <div className="flex items-center gap-2">
                 <FaBullhorn className="w-3.5 h-3.5 text-white" />
                 <span className="font-bold text-white text-xs tracking-wide">
                   Source / Campaign
@@ -517,13 +508,6 @@ const UnassignedLeadsTable = ({
                 <td className="px-3 py-2 hidden md:table-cell align-middle">
                   <span className="text-white text-xs">
                     {item?.phone ?? "-"}
-                  </span>
-                </td>
-
-                {/* Address */}
-                <td className="px-3 py-2 hidden md:table-cell align-middle">
-                  <span className="text-white text-xs capitalize">
-                    {item?.address?.line1 ?? "-"}
                   </span>
                 </td>
 
