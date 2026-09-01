@@ -106,9 +106,9 @@ export default function LeadProfileSidebar({
                 <p className="text-sm font-semibold leading-none">
                   {data?.full_name || "-"}
                 </p>
-                {data?.address?.country && (
+                {(data?.country || data?.address?.country) && (
                   <p className="text-[11px] text-gray-200 mt-1">
-                    {data?.address?.country}
+                    {data?.country || data?.address?.country}
                   </p>
                 )}
               </div>
@@ -146,12 +146,12 @@ export default function LeadProfileSidebar({
             <MdLocationPin className="text-base flex-shrink-0 mt-0.5" />
             <p className="text-xs font-medium leading-relaxed">
               {[
-                data?.address?.line1,
-                data?.address?.line2,
-                data?.address?.city,
-                data?.address?.state,
-                data?.address?.postal_code,
-                data?.address?.country,
+                data?.address_line1 || data?.address?.line1,
+                data?.address_line2 || data?.address?.line2,
+                data?.city || data?.address?.city,
+                data?.state || data?.address?.state,
+                data?.postal_code || data?.address?.postal_code,
+                data?.country || data?.address?.country,
               ]
                 .filter(Boolean)
                 .join(", ") || "-"}
@@ -659,7 +659,7 @@ export default function LeadProfileSidebar({
             enableReinitialize
             initialValues={{
               id: leadId,
-              agent_id: data?.agent?.id ?? "",
+              agent_id: data?.agent_id || data?.agent?.id || "",
               lead_status: data?.lead_status ?? "New",
               lead_source_id:
                 data?.lead_source_id ||
