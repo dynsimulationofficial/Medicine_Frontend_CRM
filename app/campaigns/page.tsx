@@ -82,7 +82,7 @@ const customSelectStyles = {
 
 const campaignSchema = Yup.object({
   name: Yup.string().trim().required("Campaign name is required").max(255),
-  lead_source_id: Yup.string().nullable().optional(),
+  lead_source_id: Yup.string().required("Lead source is required"),
 });
 
 export default function CampaignsPage() {
@@ -403,14 +403,14 @@ export default function CampaignsPage() {
                 <Form className="space-y-4">
                   <div>
                     <p className="text-white text-xs mb-1.5 font-medium">
-                      Lead Source (Platform)
+                      Lead Source (Platform) <span className="text-red-500">*</span>
                     </p>
                     <Select
                       options={leadSources}
                       value={leadSources.find((s) => s.value === values.lead_source_id) || null}
                       onChange={(opt: any) => setFieldValue("lead_source_id", opt ? opt.value : "")}
                       isClearable
-                      placeholder="Select Lead Source (optional)"
+                      placeholder="Select Lead Source"
                       styles={customSelectStyles}
                     />
                     <ErrorMessage name="lead_source_id" component="div" className="text-red-500 text-xs mt-1" />
