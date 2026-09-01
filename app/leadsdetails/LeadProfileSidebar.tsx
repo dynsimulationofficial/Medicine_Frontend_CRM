@@ -627,9 +627,9 @@ export default function LeadProfileSidebar({
                 { label: "Lead Status", value: data?.lead_status || "New" },
                 {
                   label: "Agent Name",
-                  value: data?.agent?.name || data?.owner_name || "Unassigned",
+                  value: data?.agent_name || data?.agent?.name || data?.owner_name || "Unassigned",
                 },
-                { label: "Lead Source", value: data?.lead_source },
+                { label: "Lead Source", value: data?.lead_source_name || data?.lead_source || "-" },
                 { label: "Campaign", value: data?.campaign_name || data?.campaign?.name || "-" },
                 { label: "Best time to call", value: data?.best_time_to_call },
                 { label: "WhatsApp Number", value: data?.whatsapp_number },

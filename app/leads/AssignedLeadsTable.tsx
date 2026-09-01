@@ -153,8 +153,18 @@ const AssignedLeadsTable = ({
           AxiosProvider.get("/leadsources"),
           AxiosProvider.get("/allagents"),
         ]);
-        setLeadSourceData(srcRes.data?.data?.data ?? []);
-        setAgentList(agentRes.data?.data?.data ?? []);
+        const srcList = Array.isArray(srcRes.data?.data)
+          ? srcRes.data.data
+          : Array.isArray(srcRes.data?.data?.data)
+          ? srcRes.data.data.data
+          : [];
+        const agList = Array.isArray(agentRes.data?.data)
+          ? agentRes.data.data
+          : Array.isArray(agentRes.data?.data?.data)
+          ? agentRes.data.data.data
+          : [];
+        setLeadSourceData(srcList);
+        setAgentList(agList);
       } catch (err) {
         console.error("Error fetching dropdowns in AssignedLeadsTable:", err);
       }
@@ -508,7 +518,7 @@ const AssignedLeadsTable = ({
                 {/* Source / Campaign */}
                 <td className="px-3 py-2 hidden md:table-cell text-xs align-middle">
                   <div className="flex flex-col justify-center">
-                    <span className="text-white font-medium">{item?.lead_source || "-"}</span>
+                    <span className="text-white font-medium">{item?.lead_source_name || item?.lead_source || "-"}</span>
                     {item?.campaign_name && (
                       <span className="text-[11px] text-primary-400 font-normal">
                         {item.campaign_name}
@@ -520,7 +530,7 @@ const AssignedLeadsTable = ({
                 {/* Agent */}
                 <td className="px-3 py-2 hidden md:table-cell align-middle">
                   <span className="text-white text-xs capitalize">
-                    {item?.agent?.name ?? item?.owner_name ?? "-"}
+                    {item?.agent_name ?? item?.agent?.name ?? item?.owner_name ?? "-"}
                   </span>
                 </td>
 

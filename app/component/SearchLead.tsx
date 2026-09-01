@@ -118,20 +118,26 @@ const SearchLead: React.FC<SearchLeadProps> = ({
   useEffect(() => {
     (async () => {
       try {
-        const [ls, ag, cons, debt] = await Promise.all([
+        const [ls, ag] = await Promise.all([
           AxiosProvider.get("/leadsources"),
           AxiosProvider.get("/allagents"),
-          AxiosProvider.get("/getconsolidation"),
-          AxiosProvider.get("/leaddebtstatuses"),
         ]);
 
-        setLeadSourceData(ls?.data?.data?.data ?? []);
-        setAgentList(ag?.data?.data?.data ?? []);
-        setConsolidationData(cons?.data?.data?.data ?? []);
-        setDebtConsolidation(debt?.data?.data?.data ?? []);
+        const srcList = Array.isArray(ls.data?.data)
+          ? ls.data.data
+          : Array.isArray(ls.data?.data?.data)
+          ? ls.data.data.data
+          : [];
+        const agList = Array.isArray(ag.data?.data)
+          ? ag.data.data
+          : Array.isArray(ag.data?.data?.data)
+          ? ag.data.data.data
+          : [];
+
+        setLeadSourceData(srcList);
+        setAgentList(agList);
       } catch (err) {
         console.error("Dropdown fetch failed:", err);
-        toast.error("Failed to load filters.");
       }
     })();
   }, []);
