@@ -380,21 +380,21 @@ export default function LeadTasksTab({
                 {/* Row 1: Owner & Associated Lead */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-white font-medium text-xs mb-1">Owner</p>
+                    <p className="text-white font-medium text-xs mb-1.5">Owner</p>
                     <input
                       type="text"
                       value={values.owner}
                       readOnly
-                      className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white cursor-not-allowed"
+                      className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black/60 text-white cursor-not-allowed"
                     />
                   </div>
                   <div>
-                    <p className="text-white font-medium text-xs mb-1">Associated Lead</p>
+                    <p className="text-white font-medium text-xs mb-1.5">Associated Lead</p>
                     <input
                       type="text"
                       value={values.associated_lead}
                       readOnly
-                      className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white cursor-not-allowed"
+                      className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black/60 text-white cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -402,37 +402,37 @@ export default function LeadTasksTab({
                 {/* Row 2: Subject & Location */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-white font-medium text-xs mb-1">Subject</p>
+                    <p className="text-white font-medium text-xs mb-1.5">Subject</p>
                     <input
                       type="text"
                       name="subject"
                       value={values.subject}
                       onChange={handleChange}
                       placeholder="Meeting: Name"
-                      className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
+                      className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black text-white outline-none focus:border-primary-600"
                     />
                   </div>
                   <div>
-                    <p className="text-white font-medium text-xs mb-1">Location</p>
+                    <p className="text-white font-medium text-xs mb-1.5">Location</p>
                     <input
                       type="text"
                       name="location"
                       value={values.location}
                       onChange={handleChange}
                       placeholder="online"
-                      className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
+                      className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black text-white outline-none focus:border-primary-600"
                     />
                   </div>
                 </div>
 
                 {/* Schedule Header */}
                 <div className="pt-1">
-                  <p className="text-white font-medium text-sm">Schedule</p>
+                  <p className="text-white font-semibold text-xs">Schedule</p>
                 </div>
 
                 {/* From Date */}
                 <div>
-                  <p className="text-white font-medium text-xs mb-1">From</p>
+                  <p className="text-white font-medium text-xs mb-1.5">From</p>
                   <DatePicker
                     selected={values.start_at}
                     placeholderText="Select start date & time"
@@ -450,13 +450,13 @@ export default function LeadTasksTab({
                     timeFormat="h:mma"
                     timeIntervals={15}
                     dateFormat="MM-dd-yyyy h:mma"
-                    className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
+                    className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black text-white outline-none focus:border-primary-600"
                   />
                 </div>
 
                 {/* To Date */}
                 <div>
-                  <p className="text-white font-medium text-xs mb-1">To</p>
+                  <p className="text-white font-medium text-xs mb-1.5">To</p>
                   <DatePicker
                     selected={values.end_at}
                     placeholderText="Select end date & time"
@@ -467,7 +467,7 @@ export default function LeadTasksTab({
                     timeFormat="h:mma"
                     timeIntervals={15}
                     dateFormat="MM-dd-yyyy h:mma"
-                    className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
+                    className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black text-white outline-none focus:border-primary-600"
                   />
                 </div>
 
@@ -579,16 +579,16 @@ export default function LeadTasksTab({
                         type="text"
                         value={values.owner}
                         readOnly
-                        className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white cursor-not-allowed"
+                        className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black/60 text-white cursor-not-allowed"
                       />
                     </div>
                     <div>
-                      <p className="text-white font-medium text-xs mb-1">Associated Lead</p>
+                      <p className="text-white font-medium text-xs mb-1.5">Associated Lead</p>
                       <input
                         type="text"
                         value={values.associated_lead}
                         readOnly
-                        className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white cursor-not-allowed"
+                        className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black/60 text-white cursor-not-allowed"
                       />
                     </div>
                   </div>
@@ -596,35 +596,35 @@ export default function LeadTasksTab({
                   {/* Row 2: Subject & Location */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-white font-medium text-xs mb-1">Subject</p>
+                      <p className="text-white font-medium text-xs mb-1.5">Subject</p>
                       <input
                         type="text"
                         name="subject"
                         value={values.subject}
                         onChange={handleChange}
-                        className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
+                        className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black text-white outline-none focus:border-primary-600"
                       />
                     </div>
                     <div>
-                      <p className="text-white font-medium text-xs mb-1">Location</p>
+                      <p className="text-white font-medium text-xs mb-1.5">Location</p>
                       <input
                         type="text"
                         name="location"
                         value={values.location}
                         onChange={handleChange}
-                        className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
+                        className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black text-white outline-none focus:border-primary-600"
                       />
                     </div>
                   </div>
 
                   {/* Schedule Header */}
                   <div className="pt-1">
-                    <p className="text-white font-medium text-sm">Schedule</p>
+                    <p className="text-white font-semibold text-xs">Schedule</p>
                   </div>
 
                   {/* From Date */}
                   <div>
-                    <p className="text-white font-medium text-xs mb-1">From</p>
+                    <p className="text-white font-medium text-xs mb-1.5">From</p>
                     <DatePicker
                       selected={values.start_at}
                       onChange={(date: Date | null) => {
@@ -638,13 +638,13 @@ export default function LeadTasksTab({
                       timeFormat="h:mma"
                       timeIntervals={15}
                       dateFormat="MM-dd-yyyy h:mma"
-                      className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
+                      className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black text-white outline-none focus:border-primary-600"
                     />
                   </div>
 
                   {/* To Date */}
                   <div>
-                    <p className="text-white font-medium text-xs mb-1">To</p>
+                    <p className="text-white font-medium text-xs mb-1.5">To</p>
                     <DatePicker
                       selected={values.end_at}
                       onChange={(date: Date | null) => {
@@ -654,20 +654,20 @@ export default function LeadTasksTab({
                       timeFormat="h:mma"
                       timeIntervals={15}
                       dateFormat="MM-dd-yyyy h:mma"
-                      className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white"
+                      className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black text-white outline-none focus:border-primary-600"
                     />
                   </div>
 
                   {/* Description (optional) */}
                   <div>
-                    <p className="text-white font-medium text-xs mb-1">Description (optional)</p>
+                    <p className="text-white font-medium text-xs mb-1.5">Description (optional)</p>
                     <textarea
                       name="description"
                       value={values.description}
                       onChange={handleChange}
-                      rows={4}
+                      rows={3}
                       placeholder="Add description (optional)"
-                      className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white resize-y"
+                      className="w-full border border-gray-700 rounded-[4px] text-xs p-3 bg-black text-white resize-none outline-none focus:border-primary-600"
                     />
                   </div>
 

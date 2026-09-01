@@ -344,12 +344,12 @@ export default function LeadDocumentsTab({
                 value={createNotes}
                 onChange={(e) => setCreateNotes(e.target.value)}
                 placeholder="Enter document notes or title"
-                className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white outline-none focus:border-primary-500"
+                className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black text-white outline-none focus:border-primary-600"
               />
             </div>
 
             <div>
-              <p className="text-white font-medium text-xs mb-1">
+              <p className="text-white font-medium text-xs mb-1.5">
                 Select File <span className="text-red-400">*</span>
               </p>
               <input
@@ -358,14 +358,14 @@ export default function LeadDocumentsTab({
                 onChange={(e) => setCreateFile(e.target.files?.[0] || null)}
                 accept=".jpeg,.jpg,.png,.webp,.pdf,.xls,.xlsx,.csv"
                 required
-                className="w-full border border-gray-700 rounded text-sm p-2.5 bg-black text-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-primary-600 file:text-white hover:file:bg-primary-700 cursor-pointer"
+                className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs p-1.5 bg-black text-white file:mr-4 file:py-1 file:px-3 file:rounded-[4px] file:border-0 file:text-xs file:bg-primary-600 file:text-white hover:file:bg-primary-700 cursor-pointer"
               />
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-[11px] text-gray-400 mt-1">
                 Allowed: JPEG, PNG, WEBP, PDF, XLS, XLSX, CSV
               </p>
             </div>
 
-            <div className="mt-8 flex gap-3 pt-4 border-t border-gray-700">
+            <div className="mt-6 flex gap-3 pt-4 border-t border-gray-700">
               <button
                 type="button"
                 onClick={closeCreateDrawer}
@@ -412,41 +412,41 @@ export default function LeadDocumentsTab({
           {editingDoc && (
             <form onSubmit={handleEditSubmit} className="space-y-5">
               <div>
-                <p className="text-white font-medium text-xs mb-1">Current File</p>
+                <p className="text-white font-medium text-xs mb-1.5">Current File</p>
                 <input
                   type="text"
                   value={editingDoc.file_name}
                   readOnly
-                  className="w-full border border-gray-700 rounded text-sm p-3 bg-black/60 text-white cursor-not-allowed"
+                  className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs px-3 bg-black/60 text-white cursor-not-allowed"
                 />
               </div>
 
               <div>
-                <p className="text-white font-medium text-xs mb-1">
+                <p className="text-white font-medium text-xs mb-1.5">
                   Choose New File <span className="text-gray-400 font-normal text-xs">(optional - to replace existing file)</span>
                 </p>
                 <input
                   type="file"
                   onChange={(e) => setEditFile(e.target.files?.[0] || null)}
-                  className="w-full border border-gray-700 rounded text-sm p-2.5 bg-black text-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-primary-600 file:text-white hover:file:bg-primary-700 cursor-pointer"
+                  className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs p-1.5 bg-black text-white file:mr-4 file:py-1 file:px-3 file:rounded-[4px] file:border-0 file:text-xs file:bg-primary-600 file:text-white hover:file:bg-primary-700 cursor-pointer"
                 />
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-[11px] text-gray-400 mt-1">
                   Allowed: JPEG, PNG, WEBP, PDF, XLS, XLSX, CSV
                 </p>
               </div>
 
               <div>
-                <p className="text-white font-medium text-xs mb-1">Document Notes</p>
+                <p className="text-white font-medium text-xs mb-1.5">Document Notes</p>
                 <textarea
-                  rows={4}
+                  rows={3}
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
                   placeholder="Enter notes..."
-                  className="w-full border border-gray-700 rounded text-sm p-3 bg-black text-white outline-none focus:border-primary-500 resize-none"
+                  className="w-full border border-gray-700 rounded-[4px] text-xs p-3 bg-black text-white outline-none focus:border-primary-600 resize-none"
                 />
               </div>
 
-              <div className="mt-8 flex gap-3 pt-4 border-t border-gray-700">
+              <div className="mt-6 flex gap-3 pt-4 border-t border-gray-700">
                 <button
                   type="button"
                   onClick={() => {

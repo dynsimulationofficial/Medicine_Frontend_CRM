@@ -19,6 +19,68 @@ import StorageManager from "../../provider/StorageManager";
 const Select = dynamic(() => import("react-select"), { ssr: false });
 const storage = new StorageManager();
 
+const customSelectStyles = {
+  control: (base: any, { isFocused }: any) => ({
+    ...base,
+    height: "38px",
+    minHeight: "38px",
+    backgroundColor: "#000",
+    borderColor: isFocused ? "var(--primary-500, #0284c7)" : "#374151",
+    borderRadius: 4,
+    fontSize: "12px",
+    boxShadow: "none",
+    "&:hover": {
+      borderColor: isFocused ? "var(--primary-500, #0284c7)" : "#4b5563",
+    },
+  }),
+  valueContainer: (base: any) => ({
+    ...base,
+    height: "38px",
+    padding: "0 8px",
+  }),
+  input: (base: any) => ({
+    ...base,
+    margin: "0px",
+    padding: "0px",
+    color: "#fff",
+    fontSize: "12px",
+  }),
+  indicatorsContainer: (base: any) => ({
+    ...base,
+    height: "38px",
+  }),
+  singleValue: (base: any) => ({
+    ...base,
+    color: "#fff",
+    fontSize: "12px",
+  }),
+  placeholder: (base: any) => ({
+    ...base,
+    color: "#aaa",
+    fontSize: "12px",
+  }),
+  menu: (base: any) => ({
+    ...base,
+    borderRadius: 4,
+    backgroundColor: "#000",
+    border: "1px solid #374151",
+    zIndex: 9999,
+  }),
+  menuPortal: (base: any) => ({ ...base, zIndex: 9999 }),
+  option: (base: any, { isFocused, isSelected }: any) => ({
+    ...base,
+    backgroundColor: isSelected
+      ? "var(--primary-600, #0284c7)"
+      : isFocused
+      ? "#222"
+      : "#000",
+    color: "#fff",
+    cursor: "pointer",
+    fontSize: "12px",
+    padding: "8px 12px",
+  }),
+};
+
 export interface ActivityData {
   id: string;
   lead_id: string;
@@ -400,34 +462,7 @@ export default function LeadActivityTab({ leadId, hitApi, setHitApi }: Props) {
                     options={dispositions}
                     placeholder="Search & Select Disposition..."
                     isSearchable
-                    classNames={{
-                      control: () =>
-                        "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black/60 !border-gray-700 hover:!border-primary-500",
-                    }}
-                    styles={{
-                      menu: (base) => ({
-                        ...base,
-                        borderRadius: 6,
-                        backgroundColor: "#181818",
-                        border: "1px solid #374151",
-                        zIndex: 9999,
-                      }),
-                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                      option: (base, { isFocused, isSelected }) => ({
-                        ...base,
-                        backgroundColor: isSelected
-                          ? "var(--primary-600)"
-                          : isFocused
-                          ? "#282828"
-                          : "#181818",
-                        color: "#fff",
-                        cursor: "pointer",
-                      }),
-                      singleValue: (base) => ({ ...base, color: "#fff" }),
-                      input: (base) => ({ ...base, color: "#fff" }),
-                      placeholder: (base) => ({ ...base, color: "#9ca3af" }),
-                    }}
-                    menuPortalTarget={typeof document !== "undefined" ? document.body : undefined}
+                    styles={customSelectStyles}
                   />
                   {touched.disposition_id && errors.disposition_id && (
                     <p className="text-red-400 text-xs mt-1">{String(errors.disposition_id)}</p>
@@ -436,7 +471,7 @@ export default function LeadActivityTab({ leadId, hitApi, setHitApi }: Props) {
 
                 {/* 2. Agent / Logged By */}
                 <div>
-                  <p className="text-white font-medium text-xs mb-1">
+                  <p className="text-white font-medium text-xs mb-1.5">
                     Agent / Logged By
                   </p>
                   {userRole === "Admin" ? (
@@ -453,34 +488,7 @@ export default function LeadActivityTab({ leadId, hitApi, setHitApi }: Props) {
                       options={agents}
                       placeholder="Select Agent..."
                       isSearchable
-                      classNames={{
-                        control: () =>
-                          "!w-full !border-[0.4px] !rounded-[4px] !text-sm !py-1 !px-1 !bg-black/60 !border-gray-700 hover:!border-primary-500",
-                      }}
-                      styles={{
-                        menu: (base) => ({
-                          ...base,
-                          borderRadius: 6,
-                          backgroundColor: "#181818",
-                          border: "1px solid #374151",
-                          zIndex: 9999,
-                        }),
-                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                        option: (base, { isFocused, isSelected }) => ({
-                          ...base,
-                          backgroundColor: isSelected
-                            ? "var(--primary-600)"
-                            : isFocused
-                            ? "#282828"
-                            : "#181818",
-                          color: "#fff",
-                          cursor: "pointer",
-                        }),
-                        singleValue: (base) => ({ ...base, color: "#fff" }),
-                        input: (base) => ({ ...base, color: "#fff" }),
-                        placeholder: (base) => ({ ...base, color: "#9ca3af" }),
-                      }}
-                      menuPortalTarget={typeof document !== "undefined" ? document.body : undefined}
+                      styles={customSelectStyles}
                     />
                   ) : (
                     <input
