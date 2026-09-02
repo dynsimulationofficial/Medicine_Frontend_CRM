@@ -192,28 +192,13 @@ export default function BulkUploadLead({
         fd.append("agent_id", String(selectedAgent.value));
       }
 
-      const res = await fetch(`${getBaseURL()}/leads/bulk/upload`, {
-        method: "POST",
-        body: fd,
+      const res = await AxiosProvider.post("/leads/bulk/upload", fd, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
-      let payload: any;
-      const ct = res.headers.get("content-type") || "";
-      if (ct.includes("application/json")) {
-        payload = await res.json();
-      } else {
-        payload = await res.text();
-      }
-
-      if (!res.ok) {
-        const errorMessage =
-          payload?.message ||
-          payload?.error ||
-          `Bulk upload failed (HTTP ${res.status})`;
-        throw new Error(errorMessage);
-      }
-
-      const successMessage = payload?.message || "Bulk upload successful!";
+      const successMessage = res.data?.message || res.data?.msg || "Bulk upload successful!";
       toast.success(successMessage);
 
       setExcelFile(null);
@@ -225,10 +210,15 @@ export default function BulkUploadLead({
       onSuccess();
     } catch (err: any) {
       console.error("Bulk upload error:", err);
-      if (err.message?.includes("invalid")) {
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.msg ||
+        err.message ||
+        "Bulk upload failed";
+      if (errorMsg.toLowerCase().includes("invalid")) {
         toast.error("Bulk upload failed - all rows invalid");
       } else {
-        toast.error(err.message || "Bulk upload failed");
+        toast.error(errorMsg);
       }
     } finally {
       setIsLoading(false);
