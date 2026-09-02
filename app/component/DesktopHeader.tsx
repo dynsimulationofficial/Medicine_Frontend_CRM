@@ -11,11 +11,13 @@ import DynamicBreadCrum from "./DynamicBreadCrum";
 
 import { usePathname } from "next/navigation";
 import AxiosProvider from "../../provider/AxiosProvider";
+import StorageManager from "../../provider/StorageManager";
 import { toast } from "react-toastify";
 import { LuSearchX } from "react-icons/lu";
 import { FaSearch } from "react-icons/fa";
 
 const DesktopHeader = () => {
+  const [isAdmin, setIsAdmin] = useState(false);
   const [notificationData, setNotificationData] = useState<any[]>([]);
   const [isHovered, setIsHovered] = useState(false);
   const [isFlyoutFilterOpen, setFlyoutFilterOpen] = useState<boolean>(false);
@@ -27,6 +29,14 @@ const DesktopHeader = () => {
 
   const knownIdsRef = useRef<Set<string>>(new Set());
   const initialLoadDoneRef = useRef(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storage = new StorageManager();
+      const role = (storage.getUserRole() || "").toLowerCase();
+      setIsAdmin(role === "admin");
+    }
+  }, []);
 
   // Gentle WhatsApp-like notification chime
   const playNotificationSound = () => {
@@ -120,6 +130,10 @@ const DesktopHeader = () => {
 
   // Notification fetcher with background auto-polling
   const fetchNotification = async () => {
+    if (isAdmin) {
+      setNotificationData([]);
+      return;
+    }
     try {
       const response = await AxiosProvider.get("/assigned-lead-notifications");
       const list: any[] = Array.isArray(response.data?.data) ? response.data.data : [];
@@ -151,10 +165,11 @@ const DesktopHeader = () => {
   };
 
   useEffect(() => {
+    if (isAdmin) return;
     fetchNotification();
     const interval = setInterval(fetchNotification, 10000); // Poll every 10 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [isAdmin]);
 
   const navigateLeadDetails = (leadId: string) => {
     window.open(`/leadsdetails?id=${leadId}`, "_blank"); // "_blank" = new tab
@@ -194,15 +209,19 @@ const DesktopHeader = () => {
 
           {/* Bell icon */}
           <div
-            className="relative flex items-center cursor-pointer"
+            className={`relative flex items-center ${
+              isAdmin ? "opacity-40 cursor-not-allowed pointer-events-none" : "cursor-pointer"
+            }`}
             onClick={() => {
+              if (isAdmin) return;
               setIsLeftSideBar(true);
               fetchNotification();
             }}
+            title={isAdmin ? "Notifications are for Agents" : "Notifications"}
           >
             <div className="w-[36px] h-[36px] bg-primary-600 hover:bg-primary-700 rounded-full flex items-center justify-center transition shrink-0 relative">
               <IoIosNotificationsOutline className="text-white w-[20px] h-[20px]" />
-              {notificationData?.length > 0 && (
+              {!isAdmin && notificationData?.length > 0 && (
                 <div className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-600 rounded-full border border-black"></div>
               )}
             </div>
