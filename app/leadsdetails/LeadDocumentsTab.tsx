@@ -98,15 +98,16 @@ export default function LeadDocumentsTab({
         }
       }
 
-      // Trigger direct browser download via anchor element (bypasses S3 CORS restriction)
-      const a = document.createElement("a");
-      a.href = fileUrl;
-      a.setAttribute("download", doc.file_name || "document");
-      a.setAttribute("target", "_blank");
-      a.setAttribute("rel", "noopener noreferrer");
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      // Trigger seamless background download without opening any blank new tab
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      iframe.src = fileUrl;
+      document.body.appendChild(iframe);
+      setTimeout(() => {
+        try {
+          document.body.removeChild(iframe);
+        } catch {}
+      }, 5000);
       toast.success("Download started");
     } catch (err) {
       console.error("Failed to download file:", err);
