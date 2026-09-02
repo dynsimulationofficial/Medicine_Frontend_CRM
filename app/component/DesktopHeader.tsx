@@ -188,7 +188,7 @@ const DesktopHeader = () => {
         </div>
         <div className="hidden md:w-auto md:flex md:justify-end md:items-center md:gap-3 w-auto z-10">
           {/* Seamless Search Bar */}
-          <div className="flex items-center h-[36px] bg-black border border-gray-700 rounded-[8px] overflow-hidden focus-within:border-primary-500 hover:shadow-hoverInputShadow">
+          <div className="flex items-center h-[36px] bg-black border border-gray-700 rounded-[5px] overflow-hidden focus-within:border-primary-500 hover:shadow-hoverInputShadow">
             <input
               type="text"
               placeholder="Search for email, mobile"
@@ -207,42 +207,41 @@ const DesktopHeader = () => {
             </button>
           </div>
 
-          {/* Bell icon */}
-          <div
-            className={`relative flex items-center ${
-              isAdmin ? "opacity-40 cursor-not-allowed pointer-events-none" : "cursor-pointer"
-            }`}
-            onClick={() => {
-              if (isAdmin) return;
-              setIsLeftSideBar(true);
-              fetchNotification();
-            }}
-            title={isAdmin ? "Notifications are for Agents" : "Notifications"}
-          >
-            <div className="w-[36px] h-[36px] bg-primary-600 hover:bg-primary-700 rounded-full flex items-center justify-center transition shrink-0 relative">
-              <IoIosNotificationsOutline className="text-white w-[20px] h-[20px]" />
-              {!isAdmin && notificationData?.length > 0 && (
-                <div className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-600 rounded-full border border-black"></div>
+          {/* Bell icon (Only for Agents, completely hidden from Admin) */}
+          {!isAdmin && (
+            <div
+              className="relative flex items-center cursor-pointer"
+              onClick={() => {
+                setIsLeftSideBar(true);
+                fetchNotification();
+              }}
+              title="Notifications"
+            >
+              <div className="w-[36px] h-[36px] bg-primary-600 hover:bg-primary-700 rounded-full flex items-center justify-center transition shrink-0 relative">
+                <IoIosNotificationsOutline className="text-white w-[20px] h-[20px]" />
+                {notificationData?.length > 0 && (
+                  <div className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-600 rounded-full border border-black"></div>
+                )}
+              </div>
+
+              {/* Notification list */}
+              {isHovered && (notificationData?.length || 0) > 0 && (
+                <div className="absolute top-[42px] right-0 w-96 shadow-lg rounded-md z-50 bg-[#171717]">
+                  <ul className="divide-y divide-gray-200">
+                    {(notificationData || []).map((notification, index) => (
+                      <li
+                        onClick={() => navigateLeadDetails(notification.lead_id)}
+                        key={index}
+                        className="px-3 py-3 text-sm hover:cursor-pointer hover:bg-primary-800"
+                      >
+                        {notification.body}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </div>
-
-            {/* Notification list */}
-            {isHovered && (notificationData?.length || 0) > 0 && (
-              <div className="absolute top-[42px] right-0 w-96 shadow-lg rounded-md z-50 bg-[#171717]">
-                <ul className="divide-y divide-gray-200">
-                  {(notificationData || []).map((notification, index) => (
-                    <li
-                      onClick={() => navigateLeadDetails(notification.lead_id)}
-                      key={index}
-                      className="px-3 py-3 text-sm hover:cursor-pointer hover:bg-primary-800"
-                    >
-                      {notification.body}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+          )}
           {/* END BELL ICON */}
           {/* <div className=" w-[50px] h-[50px]  rounded-full flex justify-center items-center z-10">
             <Image
