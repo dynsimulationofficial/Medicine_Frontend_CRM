@@ -226,12 +226,10 @@ export default function CampaignsPage() {
             <table className="w-full text-xs text-left text-white whitespace-nowrap">
               <thead className="text-xs text-[#999999] talbleheaderBg">
                 <tr>
-                  <th scope="col" className="px-3 py-2.5">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-white text-xs tracking-wide">
-                        #
-                      </span>
-                    </div>
+                  <th scope="col" className="px-3 py-2.5 w-14 text-center">
+                    <span className="font-bold text-white text-xs tracking-wide">
+                      #
+                    </span>
                   </th>
 
                   <th scope="col" className="px-3 py-2 hidden md:table-cell">
@@ -291,7 +289,7 @@ export default function CampaignsPage() {
                       key={row.id || idx}
                       className="hover:bg-primary-700 border-b border-[#E7E7E7] odd:bg-[#404040]"
                     >
-                      <td className="px-3 py-2 text-center text-gray-300 font-medium">
+                      <td className="px-3 py-2 text-center text-gray-300 font-medium w-14">
                         {(page - 1) * 20 + idx + 1}
                       </td>
                       <td className="px-3 py-2 hidden md:table-cell text-white font-medium">
