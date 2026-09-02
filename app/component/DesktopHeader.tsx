@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { CiSettings } from "react-icons/ci";
 import { IoIosNotificationsOutline } from "react-icons/io";
@@ -17,15 +17,81 @@ import { FaSearch } from "react-icons/fa";
 
 const DesktopHeader = () => {
   const [notificationData, setNotificationData] = useState<any[]>([]);
-  //console.log("NOTIFICATION", notificationData);
   const [isHovered, setIsHovered] = useState(false);
   const [isFlyoutFilterOpen, setFlyoutFilterOpen] = useState<boolean>(false);
   const toggleFilterFlyout = () => setFlyoutFilterOpen(!isFlyoutFilterOpen);
   const [isLeftSidebar, setIsLeftSideBar] = useState<boolean>(false);
 
   const pathname = usePathname();
-
   const [query, setQuery] = useState("");
+
+  const knownIdsRef = useRef<Set<string>>(new Set());
+  const initialLoadDoneRef = useRef(false);
+
+  // Gentle WhatsApp-like notification chime
+  const playNotificationSound = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08); // A5
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.35);
+    } catch {}
+  };
+
+  // WhatsApp-style Desktop Pop-up Notification
+  const showDesktopNotification = (title: string, body: string, leadId?: string) => {
+    playNotificationSound();
+
+    // 1. Chrome / OS Desktop Popup
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "granted") {
+        try {
+          const n = new Notification(title || "New Lead Assigned", {
+            body: body || "A new lead has been assigned to you.",
+            icon: "/favicon.ico",
+          });
+          n.onclick = () => {
+            window.focus();
+            if (leadId) {
+              window.open(`/leadsdetails?id=${leadId}`, "_blank");
+            }
+          };
+        } catch (e) {
+          console.error("Browser notification error:", e);
+        }
+      }
+    }
+
+    // 2. In-App Toast Popup (Top-Right)
+    toast.info(`🔔 ${title}: ${body}`, {
+      position: "top-right",
+      autoClose: 6000,
+      onClick: () => {
+        if (leadId) {
+          window.open(`/leadsdetails?id=${leadId}`, "_blank");
+        }
+      },
+    });
+  };
+
+  // Request browser notification permission once on load
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+    }
+  }, []);
 
   const handleSearch = async () => {
     if (!query) {
@@ -35,7 +101,7 @@ const DesktopHeader = () => {
 
     // basic type check
     const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(query);
-  const isPhone = /^(?:\+91[\s-]?)?\d{10}$/.test(query);
+    const isPhone = /^(?:\+91[\s-]?)?\d{10}$/.test(query);
 
     if (!isEmail && !isPhone) {
       toast.error("Enter a valid email or 10-digit mobile number");
@@ -44,20 +110,40 @@ const DesktopHeader = () => {
 
     try {
       const res = await AxiosProvider.get(`/leads/search/dashboard?q=${query}`);
-      // console.log("Search result:", res.data.data.leads[0].id);
       const searchId = res.data.data.leads[0].id;
-      window.open(`/leadsdetails?id=${searchId}`, "_blank"); // "_blank" = new tab
+      window.open(`/leadsdetails?id=${searchId}`, "_blank");
     } catch (err) {
       console.error("Search failed:", err);
       toast.error("No lead found");
     }
   };
 
-  // USE EFFECT NOTIFICATION
+  // Notification fetcher with background auto-polling
   const fetchNotification = async () => {
     try {
       const response = await AxiosProvider.get("/assigned-lead-notifications");
-      setNotificationData(Array.isArray(response.data?.data) ? response.data.data : []);
+      const list: any[] = Array.isArray(response.data?.data) ? response.data.data : [];
+      setNotificationData(list);
+
+      // On initial load, mark existing notifications as seen
+      if (!initialLoadDoneRef.current) {
+        list.forEach((item) => {
+          if (item.id) knownIdsRef.current.add(item.id);
+        });
+        initialLoadDoneRef.current = true;
+      } else {
+        // Any new notification that arrives triggers the desktop popup!
+        for (const item of list) {
+          if (item.id && !knownIdsRef.current.has(item.id)) {
+            knownIdsRef.current.add(item.id);
+            showDesktopNotification(
+              item.title || "New Lead Assigned",
+              item.body || "A new lead has been assigned to you.",
+              item.lead_id
+            );
+          }
+        }
+      }
     } catch (error) {
       console.error("Error fetching Notification:", error);
       setNotificationData([]);
@@ -66,6 +152,8 @@ const DesktopHeader = () => {
 
   useEffect(() => {
     fetchNotification();
+    const interval = setInterval(fetchNotification, 10000); // Poll every 10 seconds
+    return () => clearInterval(interval);
   }, []);
 
   const navigateLeadDetails = (leadId: string) => {

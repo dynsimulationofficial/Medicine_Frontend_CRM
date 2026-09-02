@@ -239,7 +239,15 @@ const CreateLead = ({ closeFlyOut }: any) => {
 
   const handleCreateLead = async (payload: any) => {
     try {
-      await AxiosProvider.post("/leads", payload);
+      const cleanPayload: any = {};
+      Object.keys(payload).forEach((key) => {
+        const val = payload[key];
+        if (val !== "" && val !== null && val !== undefined) {
+          cleanPayload[key] = val;
+        }
+      });
+
+      await AxiosProvider.post("/leads", cleanPayload);
       toast.success("Lead is Created");
       closeFlyOut();
     } catch (error: any) {
