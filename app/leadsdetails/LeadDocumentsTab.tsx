@@ -98,19 +98,15 @@ export default function LeadDocumentsTab({
         }
       }
 
-      // Fetch as Blob to prevent corrupt HTML downloads and trigger native browser file saving
-      const response = await axios.get(fileUrl, { responseType: "blob" });
-      const blob = new Blob([response.data], {
-        type: doc.mime_type || response.headers["content-type"] || "application/octet-stream",
-      });
-      const downloadUrl = window.URL.createObjectURL(blob);
+      // Trigger direct browser download via anchor element (bypasses S3 CORS restriction)
       const a = document.createElement("a");
-      a.href = downloadUrl;
-      a.download = doc.file_name || "document";
+      a.href = fileUrl;
+      a.setAttribute("download", doc.file_name || "document");
+      a.setAttribute("target", "_blank");
+      a.setAttribute("rel", "noopener noreferrer");
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      window.URL.revokeObjectURL(downloadUrl);
       toast.success("Download started");
     } catch (err) {
       console.error("Failed to download file:", err);
