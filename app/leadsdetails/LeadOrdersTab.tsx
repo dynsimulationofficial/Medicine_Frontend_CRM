@@ -11,6 +11,7 @@ import { FiPlusCircle } from "react-icons/fi";
 import Swal from "sweetalert2";
 import TrackingTimelineDrawer from "./TrackingTimelineDrawer";
 
+// ==================== TYPES & INTERFACES ====================
 export interface OrderItem {
   id?: string;
   medicine_name: string;
@@ -47,6 +48,7 @@ type Props = {
   onCloseCreate?: () => void;
 };
 
+// ==================== MAIN COMPONENT ====================
 export default function LeadOrdersTab({
   leadId,
   hitApi,
@@ -54,13 +56,14 @@ export default function LeadOrdersTab({
   isCreateOpen = false,
   onCloseCreate,
 }: Props) {
+  // ---------------- State Management ----------------
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [editingOrder, setEditingOrder] = useState<OrderData | null>(null);
   const [isLocalCreateOpen, setIsLocalCreateOpen] = useState(false);
   const [trackingOrder, setTrackingOrder] = useState<OrderData | null>(null);
   const [isTrackingOpen, setIsTrackingOpen] = useState<boolean>(false);
 
-  // Form state for Create / Edit
+  // Form State
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
     { medicine_name: "", unit: "Strip", quantity: 1, rate: 0 },
   ]);
@@ -76,6 +79,7 @@ export default function LeadOrdersTab({
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [activeSugIndex, setActiveSugIndex] = useState<number | null>(null);
 
+  // ---------------- 1. API: Fetch Orders ----------------
   const fetchOrders = async () => {
     try {
       const res = await AxiosProvider.post("/leads/orders/list", {
@@ -91,7 +95,7 @@ export default function LeadOrdersTab({
     if (leadId) fetchOrders();
   }, [leadId, hitApi]);
 
-  // Auto-close medicine autocomplete dropdown on click-outside or Escape
+  // Click-outside listener to dismiss autocomplete dropdown
   useEffect(() => {
     const handleGlobalClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -115,6 +119,7 @@ export default function LeadOrdersTab({
     };
   }, []);
 
+  // ---------------- 2. Form Open / Reset ----------------
   const openEdit = (ord: OrderData) => {
     setEditingOrder(ord);
     setPaymentStatus(ord.payment_status || "Pending");
@@ -138,27 +143,14 @@ export default function LeadOrdersTab({
     }
   };
 
-  const handleQuickUpdateStatus = async (
-    orderId: string,
-    newOrderStatus?: string,
-    newPaymentStatus?: string
-  ) => {
-    try {
-      await AxiosProvider.post("/leads/orders/update-status", {
-        id: orderId,
-        order_id: orderId,
-        lead_id: leadId,
-        order_status: newOrderStatus,
-        payment_status: newPaymentStatus,
-      });
-      toast.success("Order status updated");
-      setHitApi((prev) => !prev);
-      fetchOrders();
-    } catch {
-      toast.error("Failed to update status");
-    }
+  const isModalOpen = isCreateOpen || isLocalCreateOpen || !!editingOrder;
+  const handleCloseModal = () => {
+    setEditingOrder(null);
+    setIsLocalCreateOpen(false);
+    if (onCloseCreate) onCloseCreate();
   };
 
+  // ---------------- 3. API: Delete Order ----------------
   const handleDeleteOrder = (ord: OrderData) => {
     Swal.fire({
       title: "Are you sure?",
@@ -193,6 +185,7 @@ export default function LeadOrdersTab({
     });
   };
 
+  // ---------------- 4. Medicine Items Handlers ----------------
   const handleItemChange = (index: number, field: keyof OrderItem, val: any) => {
     const updated = [...orderItems];
     updated[index] = { ...updated[index], [field]: val };
@@ -223,7 +216,7 @@ export default function LeadOrdersTab({
       ...updated[index],
       medicine_name: item.medicine_name,
       unit: item.unit || "Strip",
-      rate: item.rate != null ? Number(item.rate) : updated[index].rate,
+      rate: item.rate != null && Number(item.rate) > 0 ? Number(item.rate) : updated[index].rate,
     };
     setOrderItems(updated);
     setActiveSugIndex(null);
@@ -244,12 +237,14 @@ export default function LeadOrdersTab({
     setOrderItems(orderItems.filter((_, i) => i !== index));
   };
 
+  // Calculate Grand Total
   const grandTotal = orderItems.reduce((sum, it) => {
     const q = Number(it.quantity) || 0;
     const r = Number(it.rate) || 0;
     return sum + q * r;
   }, 0);
 
+  // ---------------- 5. API: Save / Update Order ----------------
   const handleSaveOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     const validItems = orderItems.filter((it) => it.medicine_name.trim() !== "");
@@ -280,22 +275,15 @@ export default function LeadOrdersTab({
       };
 
       const res = await AxiosProvider.post("/leads/orders/save", payload);
-      toast.success(res.data?.msg || "Order saved successfully");
+      toast.success(res.data?.msg || res.data?.message || "Order saved successfully");
       setHitApi((prev) => !prev);
       fetchOrders();
       handleCloseModal();
     } catch (e: any) {
-      toast.error(e?.response?.data?.msg || "Failed to save order");
+      toast.error(e?.response?.data?.msg || e?.response?.data?.message || "Failed to save order");
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const isModalOpen = isCreateOpen || isLocalCreateOpen || !!editingOrder;
-  const handleCloseModal = () => {
-    setEditingOrder(null);
-    setIsLocalCreateOpen(false);
-    if (onCloseCreate) onCloseCreate();
   };
 
   return (
@@ -531,7 +519,7 @@ export default function LeadOrdersTab({
                       className="p-3 bg-black/60 border border-gray-700 rounded-lg relative"
                     >
                       <div className="grid grid-cols-12 gap-2 items-center">
-                        {/* Medicine Name with Suggestions */}
+                        {/* Medicine Name with Autocomplete */}
                         <div className="col-span-12 sm:col-span-5 relative">
                           <p className="text-xs text-gray-400 mb-1">Medicine Name *</p>
                           <input
@@ -554,12 +542,9 @@ export default function LeadOrdersTab({
                                     e.preventDefault();
                                     selectSuggestion(idx, sug);
                                   }}
-                                  className="p-2.5 text-xs text-white hover:bg-primary-600 cursor-pointer flex justify-between items-center transition-colors"
+                                  className="p-2.5 text-xs text-white hover:bg-primary-600 cursor-pointer flex items-center transition-colors"
                                 >
-                                  <span className="font-semibold text-gray-100">{sug.medicine_name}</span>
-                                  <span className="text-primary-300 text-[11px] font-medium">
-                                    {sug.unit || "Strip"}{sug.rate && Number(sug.rate) > 0 ? ` • ₹${Number(sug.rate).toFixed(2)}` : ""}
-                                  </span>
+                                  <span className="font-medium text-gray-100">{sug.medicine_name}</span>
                                 </div>
                               ))}
                             </div>
