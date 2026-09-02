@@ -274,8 +274,9 @@ export default function LeadOrdersTab({
         })),
       };
 
-      const res = await AxiosProvider.post("/leads/orders/save", payload);
-      toast.success(res.data?.msg || res.data?.message || "Order saved successfully");
+      const endpoint = editingOrder ? "/leads/orders/update" : "/leads/orders/create";
+      const res = await AxiosProvider.post(endpoint, payload);
+      toast.success(res.data?.msg || res.data?.message || (editingOrder ? "Order updated successfully" : "Order created successfully"));
       setHitApi((prev) => !prev);
       fetchOrders();
       handleCloseModal();
