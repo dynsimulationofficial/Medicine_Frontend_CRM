@@ -504,6 +504,9 @@ export default function Home() {
                   .required("Email is required")
                   .email("Invalid email format"),
                 role_name: Yup.string().required("Role is required"),
+                password: Yup.string()
+                  .min(6, "Password must be at least 6 characters")
+                  .optional(),
               })}
               onSubmit={handleSubmit}
             >
@@ -587,7 +590,7 @@ export default function Home() {
                       type="text"
                       value={values.role_name}
                       readOnly
-                      className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs placeholder-gray-400 px-3 text-white bg-black outline-none focus:border-primary-500 outline-none cursor-not-allowed"
+                      className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs placeholder-gray-400 px-3 text-white bg-black outline-none focus:border-primary-500 cursor-not-allowed"
                     />
                     {errors.role_name &&
                       touched.role_name &&
@@ -598,11 +601,35 @@ export default function Home() {
                       )}
                   </div>
 
+                  {/* New Password (Optional) */}
+                  <div className="w-full relative mb-3 col-span-2">
+                    <div className="flex justify-between items-center mb-1.5">
+                      <p className="text-white text-xs font-medium">
+                        New Password <span className="text-gray-400 text-[11px] font-normal">(Leave blank to keep current password)</span>
+                      </p>
+                    </div>
+                    <input
+                      type="password"
+                      name="password"
+                      value={values.password || ""}
+                      onChange={handleChange}
+                      placeholder="Enter new password (min 6 characters)"
+                      className="hover:shadow-hoverInputShadow focus-border-primary w-full h-[38px] border border-gray-700 rounded-[4px] text-xs placeholder-gray-500 px-3 text-white bg-black outline-none focus:border-primary-500"
+                    />
+                    {errors.password &&
+                      touched.password &&
+                      typeof errors.password === "string" && (
+                        <div className="text-red-500 text-sm mt-1">
+                          {errors.password}
+                        </div>
+                      )}
+                  </div>
+
                   {/* Submit */}
                   <div className="col-span-2">
                     <button
                       type="submit"
-                      className="w-full h-[38px] bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-[4px] transition cursor-pointer flex items-center justify-center"
+                      className="w-full h-[38px] bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-[4px] transition cursor-pointer flex items-center justify-center shadow"
                     >
                       Save Changes
                     </button>
