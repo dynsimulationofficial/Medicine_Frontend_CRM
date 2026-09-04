@@ -1,5 +1,8 @@
+"use client";
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import AxiosProvider from "../../provider/AxiosProvider";
+import { FaUserCircle, FaClock, FaCheckCircle, FaExclamationCircle, FaInfoCircle } from "react-icons/fa";
 
 /* ---------- Types ---------- */
 type CardCounts = {
@@ -7,15 +10,32 @@ type CardCounts = {
   done_today: number;
   overdue_all: number;
   pending_today: number;
-  today_ca: string;
+  today?: string;
+  today_ca?: string;
   total_today: number;
 };
 
+type CampaignRanking = {
+  source_name: string;
+  campaign_name: string;
+  leads_count: number;
+  percentage: number;
+  converted_count: number;
+  conversion_rate: number;
+};
+
 type TaskRow = {
+  task_id: string;
   lead_id: string | number;
   lead_name: string;
+  lead_phone?: string;
+  subject?: string;
+  location?: string;
+  task_type?: string;
   status?: string;
   due_date?: string;
+  start_at?: string;
+  end_at?: string;
   start_at_ca?: string;
   end_at_ca?: string;
 };
@@ -23,6 +43,9 @@ type TaskRow = {
 type AgentTasks = {
   agent_id: string;
   agent_name: string;
+  total_assigned_leads?: number;
+  new_leads?: number;
+  converted_leads?: number;
   total_today?: number;
   pending_today?: number;
   done_today?: number;
@@ -30,98 +53,87 @@ type AgentTasks = {
   tasks?: TaskRow[];
 };
 
-type AdminDashResponse = {
-  data?: {
-    cards?: Partial<CardCounts> & { team_tasks?: Partial<CardCounts> };
-    tables?: {
-      team_tasks_by_agent?: AgentTasks[];
-    };
-    lists?: {
-      today_tasks_by_agent?: AgentTasks[];
-      overdue_tasks_by_agent?: AgentTasks[];
-    };
-  };
-};
-
 const DEFAULT_CARDS: CardCounts = {
   cancelled_today: 0,
   done_today: 0,
   overdue_all: 0,
   pending_today: 0,
-  today_ca: "",
+  today: "",
   total_today: 0,
 };
 
 const AdminDashboard: React.FC = () => {
+  // ---------------- State Management ----------------
   const [cardsAdminData, setCardsAdminData] = useState<CardCounts>(DEFAULT_CARDS);
-
+  const [campaignRankings, setCampaignRankings] = useState<CampaignRanking[]>([]);
+  const [campaignTotalLeads, setCampaignTotalLeads] = useState<number>(0);
   const [teamTasksByAgent, setTeamTasksByAgent] = useState<AgentTasks[]>([]);
   const [todayTasksByAgent, setTodayTasksByAgent] = useState<AgentTasks[]>([]);
   const [overdueTasksByAgent, setOverdueTasksByAgent] = useState<AgentTasks[]>([]);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isError, setIsError] = useState<string | null>(null);
 
-  // Separate accordion states so sections don't fight each other
+  // Accordion open/close state
   const [activeTodayAgent, setActiveTodayAgent] = useState<string | null>(null);
   const [activeOverdueAgent, setActiveOverdueAgent] = useState<string | null>(null);
 
   const mountedRef = useRef(true);
 
-  const fetchAdminData = async () => {
+  // ---------------- Separate API Calls ----------------
+  const fetchAllDashboardData = async () => {
     setIsLoading(true);
     setIsError(null);
 
-    const controller = new AbortController();
-
     try {
-      const response = await AxiosProvider.post<AdminDashResponse>(
-        "/leads/admin/dashboard",
-        {},
-        { signal: controller.signal }
-      );
+      // 1. Fetch KPI Cards API
+      const cardsPromise = AxiosProvider.post("/leads/admin/dashboard/cards", {}).then((res) => {
+        if (res.data?.success && res.data?.data) {
+          setCardsAdminData({ ...DEFAULT_CARDS, ...res.data.data });
+        }
+      });
 
-      if (!mountedRef.current) return;
+      // 2. Fetch Campaign Performance API
+      const campaignPromise = AxiosProvider.post("/leads/admin/dashboard/campaigns", {}).then((res) => {
+        if (res.data?.success && res.data?.data) {
+          setCampaignRankings(res.data.data.rankings || []);
+          setCampaignTotalLeads(res.data.data.total_leads || 0);
+        }
+      });
 
-      const payload = response?.data?.data ?? {};
+      // 3. Fetch Team Tasks Table API
+      const teamTasksPromise = AxiosProvider.post("/leads/admin/dashboard/team-tasks", {}).then((res) => {
+        if (res.data?.success && res.data?.data) {
+          setTeamTasksByAgent(res.data.data || []);
+        }
+      });
 
-      // Cards can be at data.cards or data.cards.team_tasks; prefer the latter when present
-      const rawCards = (payload.cards?.team_tasks ?? payload.cards ?? {}) as Partial<CardCounts>;
-      const safeCards: CardCounts = {
-        ...DEFAULT_CARDS,
-        ...rawCards,
-      };
-      setCardsAdminData(safeCards);
+      // 4. Fetch Detailed Tasks List API
+      const tasksListPromise = AxiosProvider.post("/leads/admin/dashboard/tasks-list", {}).then((res) => {
+        if (res.data?.success && res.data?.data) {
+          setTodayTasksByAgent(res.data.data.today_tasks_by_agent || []);
+          setOverdueTasksByAgent(res.data.data.overdue_tasks_by_agent || []);
+        }
+      });
 
-      // Tables
-      const teamTasks = payload.tables?.team_tasks_by_agent ?? [];
-      setTeamTasksByAgent(teamTasks);
-
-      // Lists
-      const todayTasks = payload.lists?.today_tasks_by_agent ?? [];
-      setTodayTasksByAgent(todayTasks);
-
-      const overdueTasks = payload.lists?.overdue_tasks_by_agent ?? [];
-      setOverdueTasksByAgent(overdueTasks);
+      // Execute all separate APIs concurrently
+      await Promise.allSettled([cardsPromise, campaignPromise, teamTasksPromise, tasksListPromise]);
     } catch (err: any) {
       if (err?.name !== "CanceledError" && err?.message !== "canceled") {
-        setIsError(err?.message || "Failed to load dashboard");
+        setIsError(err?.message || "Failed to load dashboard data");
       }
     } finally {
       if (mountedRef.current) setIsLoading(false);
     }
-
-    return () => controller.abort();
   };
 
   useEffect(() => {
     mountedRef.current = true;
-    fetchAdminData();
+    fetchAllDashboardData();
 
     return () => {
       mountedRef.current = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const openLead = (id: string | number) => {
@@ -134,226 +146,350 @@ const AdminDashboard: React.FC = () => {
       {
         label: "Total Task Today",
         value: cardsAdminData.total_today,
-        box: "bg-primary-600",
-        iconBox: "bg-primary-600",
-        iconPath: "M19 3l-7 7-7-7",
+        icon: <FaClock className="w-5 h-5 text-white" />,
       },
       {
         label: "Task Done Today",
         value: cardsAdminData.done_today,
-        box: "bg-primary-600",
-        iconBox: "bg-primary-600",
-        iconPath: "M5 13l4 4L19 7",
+        icon: <FaCheckCircle className="w-5 h-5 text-white" />,
       },
       {
         label: "All Overdue Task",
         value: cardsAdminData.overdue_all,
-        box: "bg-primary-600",
-        iconBox: "bg-primary-600",
-        iconPath: "M12 8v4m0 4h.01M4.22 4.22l15.56 15.56",
+        icon: <FaInfoCircle className="w-5 h-5 text-white" />,
       },
       {
         label: "Pending Task Today",
         value: cardsAdminData.pending_today,
-        box: "bg-primary-600",
-        iconBox: "bg-primart-600",
-        iconPath: "M12 8v4m0 4h.01M4.22 4.22l15.56 15.56",
+        icon: <FaClock className="w-5 h-5 text-white" />,
       },
     ],
     [cardsAdminData]
   );
 
-  if (isLoading) return <div className="p-4 text-white">Loading...</div>;
-  if (isError) return <div className="p-4 text-red-400">Error: {isError}</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cyan-500"></div>
+        <span className="ml-3 text-gray-300 font-medium">Loading Admin Dashboard...</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-red-400 font-medium mb-3">Error loading dashboard: {isError}</p>
+        <button
+          onClick={fetchAllDashboardData}
+          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-semibold rounded-lg transition"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="container my-4 text-white ">
-      <h3 className="text-2xl font-semibold mb-4">Admin Dashboard</h3>
+    <div className="container mx-auto px-4 py-6 text-white max-w-7xl">
+      {/* ==================== 1. HEADER ==================== */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-white tracking-tight">Admin Dashboard</h2>
+        <p className="text-sm text-gray-400 mt-0.5">Live Team Overview, Daily Workload &amp; Task Activity</p>
+      </div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+      {/* ==================== 2. 4 TOP KPI CARDS ==================== */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {cards.map((c, i) => (
-          <div key={i} className={`${c.box} p-4 rounded-lg shadow-md flex items-center justify-between`}>
+          <div
+            key={i}
+            className="bg-[#008db9] hover:bg-[#007da4] transition-colors p-4 rounded-xl shadow-md flex items-center justify-between"
+          >
             <div>
-              <h3 className="text-lg font-semibold">{c.label}</h3>
-              <p className="text-2xl font-bold text-white">{c.value}</p>
+              <p className="text-xs font-semibold text-cyan-100 uppercase tracking-wider">{c.label}</p>
+              <p className="text-3xl font-extrabold text-white mt-1">{c.value}</p>
             </div>
-            <div className={`${c.iconBox} p-3 rounded-full`}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white relative top-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={c.iconPath} />
-              </svg>
+            <div className="bg-white/20 p-2.5 rounded-full flex items-center justify-center">
+              {c.icon}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Team Tasks by Agent */}
-      <div className="mt-8">
-        <h4 className="text-xl font-semibold">Team Tasks by Agent</h4>
-        <div className="mt-4 overflow-x-auto rounded-lg border border-gray-800">
-          <table className="min-w-full table-auto text-white">
+      {/* ==================== 3. CAMPAIGN RANKING & LEAD SOURCE PERFORMANCE ==================== */}
+      <div className="bg-[#1f242d] border border-gray-800 rounded-xl p-5 mb-6 shadow-lg">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
+          <div>
+            <h3 className="text-base font-semibold text-white">
+              Campaign Ranking &amp; Lead Source Performance (This Month)
+            </h3>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Campaign-wise lead count aur percentage contribution
+            </p>
+          </div>
+          <div className="self-start sm:self-auto bg-[#2b313c] px-3 py-1 rounded-full text-xs font-medium text-gray-200 border border-gray-700">
+            Total Leads: <span className="font-bold text-cyan-400">{campaignTotalLeads}</span>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-gray-300">
             <thead>
-              <tr className="talbleheaderBg">
-                <th className="border-b px-4 py-2 text-left">Agent Name</th>
-                <th className="border-b px-4 py-2 text-left">Total Today</th>
-                <th className="border-b px-4 py-2 text-left">Pending Today</th>
-                <th className="border-b px-4 py-2 text-left">Done Today</th>
-                <th className="border-b px-4 py-2 text-left">Overdue</th>
+              <tr className="bg-[#2b313c] text-xs uppercase font-semibold text-gray-300 tracking-wider">
+                <th className="px-4 py-3 rounded-l-lg">#</th>
+                <th className="px-4 py-3">LEAD SOURCE</th>
+                <th className="px-4 py-3">CAMPAIGN NAME</th>
+                <th className="px-4 py-3 text-center">LEADS</th>
+                <th className="px-4 py-3 min-w-[200px]">SHARE (%)</th>
+                <th className="px-4 py-3 text-right rounded-r-lg">CONVERTED</th>
               </tr>
             </thead>
-            <tbody>
-              {teamTasksByAgent.length === 0 && (
+            <tbody className="divide-y divide-gray-800">
+              {campaignRankings.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-3 text-gray-400">
-                    No data available.
+                  <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
+                    No campaign data found for this month.
                   </td>
                 </tr>
+              ) : (
+                campaignRankings.map((row, idx) => (
+                  <tr key={idx} className="hover:bg-[#282e3a] transition-colors">
+                    <td className="px-4 py-3 text-gray-400 font-mono text-xs">{idx + 1}</td>
+                    <td className="px-4 py-3 font-medium text-white">{row.source_name}</td>
+                    <td className="px-4 py-3 text-gray-300">{row.campaign_name}</td>
+                    <td className="px-4 py-3 text-center font-semibold text-white">{row.leads_count}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-bold text-cyan-400 w-10">{row.percentage}%</span>
+                        <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden flex-1">
+                          <div
+                            className="bg-cyan-400 h-full rounded-full transition-all duration-500"
+                            style={{ width: `${Math.min(row.percentage, 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-[11px] text-gray-400">
+                          {row.leads_count}/{campaignTotalLeads}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="font-semibold text-white">
+                        {row.converted_count}{" "}
+                        <span className="text-xs text-gray-400 font-normal">({row.conversion_rate}%)</span>
+                      </span>
+                    </td>
+                  </tr>
+                ))
               )}
-              {teamTasksByAgent.map((agent) => (
-                <tr key={agent.agent_id} className="hover:bg-primary-600 odd:bg-[#404040]">
-                  <td className="border-b px-4 py-2">{agent.agent_name}</td>
-                  <td className="border-b px-4 py-2">{agent.total_today ?? 0}</td>
-                  <td className="border-b px-4 py-2">{agent.pending_today ?? 0}</td>
-                  <td className="border-b px-4 py-2">{agent.done_today ?? 0}</td>
-                  <td className="border-b px-4 py-2">{agent.overdue ?? 0}</td>
-                </tr>
-              ))}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Today Tasks by Agent */}
-      <div className="mt-6">
-        <h4 className="text-xl font-semibold text-white">Today Tasks by Agent</h4>
-        <div className="mt-4">
-          {todayTasksByAgent.length === 0 && (
-            <div className="text-gray-400">No tasks for today.</div>
-          )}
-          {todayTasksByAgent.map((agent) => {
-            const isOpen = activeTodayAgent === agent.agent_id;
-            const tasks = agent.tasks ?? [];
-            return (
-              <div key={`today-${agent.agent_id}`} className="mb-3 overflow-hidden rounded-lg border border-gray-700">
-                <button
-                  className="w-full flex justify-between items-center talbleheaderBg hover:bg-primary-600 px-4 py-3 text-left text-white font-medium"
-                  onClick={() => setActiveTodayAgent(isOpen ? null : agent.agent_id)}
-                >
-                  <span>{agent.agent_name}</span>
-                  <span className="text-xl">{isOpen ? "−" : "+"}</span>
-                </button>
-
-                {isOpen && (
-                  <div className=" p-4">
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full text-sm text-white">
-                        <thead>
-                          <tr className="talbleheaderBg text-left">
-                            <th className="px-4 py-2 border-b border-gray-700">Lead Name</th>
-                            <th className="px-4 py-2 border-b border-gray-700">Status</th>
-                            <th className="px-4 py-2 border-b border-gray-700">Due Date</th>
-                            <th className="px-4 py-2 border-b border-gray-700">Start Time</th>
-                            <th className="px-4 py-2 border-b border-gray-700">End Time</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {tasks.length === 0 && (
-                            <tr>
-                              <td colSpan={5} className="px-4 py-3 text-gray-400">
-                                No tasks.
-                              </td>
-                            </tr>
-                          )}
-                          {tasks.map((task, idx) => (
-                            <tr key={`${agent.agent_id}-today-${task.lead_id}-${idx}`} className="hover:bg-primary-700 transition-colors duration-150 odd:bg-[#404040]">
-                              <td
-                                onClick={() => openLead(task.lead_id)}
-                                className="px-4 py-2 border-b border-gray-800 text-primary-600 underline  cursor-pointer rounded-l"
-                                title="Open lead in new tab"
-                              >
-                                {task.lead_name}
-                              </td>
-                              <td className="px-4 py-2 border-b border-gray-800">{task.status ?? "-"}</td>
-                              <td className="px-4 py-2 border-b border-gray-800">{task.due_date ?? "-"}</td>
-                              <td className="px-4 py-2 border-b border-gray-800">{task.start_at_ca ?? "-"}</td>
-                              <td className="px-4 py-2 border-b border-gray-800">{task.end_at_ca ?? "-"}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+      {/* ==================== 4. TEAM TASKS BY AGENT ==================== */}
+      <div className="bg-[#1f242d] border border-gray-800 rounded-xl p-5 mb-6 shadow-lg">
+        <h3 className="text-base font-semibold text-white mb-4">Team Tasks by Agent</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-gray-300">
+            <thead>
+              <tr className="bg-[#2b313c] text-xs uppercase font-semibold text-gray-300 tracking-wider">
+                <th className="px-4 py-3 rounded-l-lg">AGENT NAME</th>
+                <th className="px-4 py-3 text-center">TOTAL TODAY</th>
+                <th className="px-4 py-3 text-center">PENDING TODAY</th>
+                <th className="px-4 py-3 text-center">DONE TODAY</th>
+                <th className="px-4 py-3 text-center rounded-r-lg">OVERDUE</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-800">
+              {teamTasksByAgent.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
+                    No agent data available.
+                  </td>
+                </tr>
+              ) : (
+                teamTasksByAgent.map((agent) => (
+                  <tr key={agent.agent_id} className="hover:bg-[#282e3a] transition-colors">
+                    <td className="px-4 py-3 font-medium text-white flex items-center gap-2.5">
+                      <FaUserCircle className="w-5 h-5 text-cyan-400 shrink-0" />
+                      <span>{agent.agent_name}</span>
+                    </td>
+                    <td className="px-4 py-3 text-center font-semibold text-white">{agent.total_today ?? 0}</td>
+                    <td className="px-4 py-3 text-center font-semibold text-amber-400">{agent.pending_today ?? 0}</td>
+                    <td className="px-4 py-3 text-center font-semibold text-emerald-400">{agent.done_today ?? 0}</td>
+                    <td className="px-4 py-3 text-center font-semibold text-rose-400">{agent.overdue ?? 0}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Overdue Tasks by Agent */}
-      <div className="mt-6">
-        <h4 className="text-xl font-semibold text-white">Overdue Tasks by Agent</h4>
-        <div className="mt-4">
-          {overdueTasksByAgent.length === 0 && (
-            <div className="text-gray-400">No overdue tasks 🎉</div>
-          )}
-          {overdueTasksByAgent.map((agent) => {
-            const isOpen = activeOverdueAgent === agent.agent_id;
-            const tasks = agent.tasks ?? [];
-            return (
-              <div key={`overdue-${agent.agent_id}`} className="mb-3 overflow-hidden rounded-lg border border-gray-700">
-                <button
-                  className="w-full flex justify-between items-center talbleheaderBg hover:bg-primary-500 px-4 py-3 text-left text-white font-medium"
-                  onClick={() => setActiveOverdueAgent(isOpen ? null : agent.agent_id)}
+      {/* ==================== 5. TODAY TASKS BY AGENT (ACCORDION) ==================== */}
+      <div className="bg-[#1f242d] border border-gray-800 rounded-xl p-5 mb-6 shadow-lg">
+        <h3 className="text-base font-semibold text-white mb-4">Today Tasks by Agent</h3>
+        <div className="space-y-3">
+          {todayTasksByAgent.length === 0 ? (
+            <div className="text-sm text-gray-400 py-3">No tasks scheduled for today.</div>
+          ) : (
+            todayTasksByAgent.map((agent) => {
+              const isOpen = activeTodayAgent === agent.agent_id;
+              const tasks = agent.tasks ?? [];
+              return (
+                <div
+                  key={`today-${agent.agent_id}`}
+                  className="overflow-hidden rounded-lg border border-gray-800 bg-[#171b22]"
                 >
-                  <span>{agent.agent_name}</span>
-                  <span className="text-xl">{isOpen ? "−" : "+"}</span>
-                </button>
+                  <button
+                    className="w-full flex justify-between items-center bg-[#252b37] hover:bg-[#2e3644] px-4 py-3 text-left transition-colors"
+                    onClick={() => setActiveTodayAgent(isOpen ? null : agent.agent_id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-semibold text-white text-sm">{agent.agent_name}</span>
+                      <span className="bg-cyan-900/60 text-cyan-300 text-xs px-2.5 py-0.5 rounded-full font-medium border border-cyan-700/50">
+                        {tasks.length} Task{tasks.length === 1 ? "" : "s"} Today
+                      </span>
+                    </div>
+                    <span className="text-xl font-bold text-gray-400">{isOpen ? "−" : "+"}</span>
+                  </button>
 
-                {isOpen && (
-                  <div className="   p-4">
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full text-sm text-white">
+                  {isOpen && (
+                    <div className="p-4 overflow-x-auto">
+                      <table className="w-full text-left text-sm text-gray-300">
                         <thead>
-                          <tr className="talbleheaderBg text-left">
-                            <th className="px-4 py-2 border-b border-gray-700">Lead Name</th>
-                            <th className="px-4 py-2 border-b border-gray-700">Status</th>
-                            <th className="px-4 py-2 border-b border-gray-700">Due Date</th>
-                            <th className="px-4 py-2 border-b border-gray-700">Start Time</th>
-                            <th className="px-4 py-2 border-b border-gray-700">End Time</th>
+                          <tr className="bg-[#2b313c] text-xs uppercase font-semibold text-gray-300">
+                            <th className="px-4 py-2 rounded-l">Lead Name</th>
+                            <th className="px-4 py-2">Status</th>
+                            <th className="px-4 py-2">Due Date</th>
+                            <th className="px-4 py-2">Start Time</th>
+                            <th className="px-4 py-2 rounded-r">End Time</th>
                           </tr>
                         </thead>
-                        <tbody>
-                          {tasks.length === 0 && (
+                        <tbody className="divide-y divide-gray-800">
+                          {tasks.length === 0 ? (
                             <tr>
-                              <td colSpan={5} className="px-4 py-3 text-gray-400">
+                              <td colSpan={5} className="px-4 py-3 text-center text-gray-500">
                                 No tasks.
                               </td>
                             </tr>
+                          ) : (
+                            tasks.map((task, idx) => (
+                              <tr key={`${agent.agent_id}-today-${task.lead_id}-${idx}`} className="hover:bg-[#202632]">
+                                <td
+                                  onClick={() => openLead(task.lead_id)}
+                                  className="px-4 py-2.5 text-cyan-400 hover:text-cyan-300 underline cursor-pointer font-medium"
+                                  title="Open lead in new tab"
+                                >
+                                  {task.lead_name}
+                                </td>
+                                <td className="px-4 py-2.5">
+                                  <span
+                                    className={`text-xs px-2 py-0.5 rounded font-medium ${
+                                      task.status === "done"
+                                        ? "bg-emerald-900/60 text-emerald-300"
+                                        : "bg-amber-900/60 text-amber-300"
+                                    }`}
+                                  >
+                                    {task.status ?? "pending"}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-2.5 text-gray-300">{task.due_date ?? "-"}</td>
+                                <td className="px-4 py-2.5 text-gray-400">{task.start_at || task.start_at_ca || "-"}</td>
+                                <td className="px-4 py-2.5 text-gray-400">{task.end_at || task.end_at_ca || "-"}</td>
+                              </tr>
+                            ))
                           )}
-                          {tasks.map((task, idx) => (
-                            <tr key={`${agent.agent_id}-overdue-${task.lead_id}-${idx}`} className="hover:bg-primary-700 transition-colors duration-150 odd:bg-[#404040]">
-                              <td
-                                onClick={() => openLead(task.lead_id)}
-                                className="px-4 py-2 border-b border-gray-800 text-primary-600 underline  cursor-pointer rounded-l"
-                                title="Open lead in new tab"
-                              >
-                                {task.lead_name}
-                              </td>
-                              <td className="px-4 py-2 border-b border-gray-800">{task.status ?? "-"}</td>
-                              <td className="px-4 py-2 border-b border-gray-800">{task.due_date ?? "-"}</td>
-                              <td className="px-4 py-2 border-b border-gray-800">{task.start_at_ca ?? "-"}</td>
-                              <td className="px-4 py-2 border-b border-gray-800">{task.end_at_ca ?? "-"}</td>
-                            </tr>
-                          ))}
                         </tbody>
                       </table>
                     </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* ==================== 6. OVERDUE TASKS BY AGENT (ACCORDION) ==================== */}
+      <div className="bg-[#1f242d] border border-gray-800 rounded-xl p-5 shadow-lg">
+        <h3 className="text-base font-semibold text-white mb-4">Overdue Tasks by Agent</h3>
+        <div className="space-y-3">
+          {overdueTasksByAgent.length === 0 ? (
+            <div className="text-sm text-emerald-400 py-3">No overdue tasks 🎉 All tasks are on schedule!</div>
+          ) : (
+            overdueTasksByAgent.map((agent) => {
+              const isOpen = activeOverdueAgent === agent.agent_id;
+              const tasks = agent.tasks ?? [];
+              return (
+                <div
+                  key={`overdue-${agent.agent_id}`}
+                  className="overflow-hidden rounded-lg border border-gray-800 bg-[#171b22]"
+                >
+                  <button
+                    className="w-full flex justify-between items-center bg-[#252b37] hover:bg-[#2e3644] px-4 py-3 text-left transition-colors"
+                    onClick={() => setActiveOverdueAgent(isOpen ? null : agent.agent_id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-semibold text-white text-sm">{agent.agent_name}</span>
+                      <span className="bg-rose-900/60 text-rose-300 text-xs px-2.5 py-0.5 rounded-full font-medium border border-rose-700/50">
+                        {tasks.length} Task{tasks.length === 1 ? "" : "s"} Overdue
+                      </span>
+                    </div>
+                    <span className="text-xl font-bold text-gray-400">{isOpen ? "−" : "+"}</span>
+                  </button>
+
+                  {isOpen && (
+                    <div className="p-4 overflow-x-auto">
+                      <table className="w-full text-left text-sm text-gray-300">
+                        <thead>
+                          <tr className="bg-[#2b313c] text-xs uppercase font-semibold text-gray-300">
+                            <th className="px-4 py-2 rounded-l">Lead Name</th>
+                            <th className="px-4 py-2">Status</th>
+                            <th className="px-4 py-2">Due Date</th>
+                            <th className="px-4 py-2">Start Time</th>
+                            <th className="px-4 py-2 rounded-r">End Time</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-800">
+                          {tasks.length === 0 ? (
+                            <tr>
+                              <td colSpan={5} className="px-4 py-3 text-center text-gray-500">
+                                No overdue tasks.
+                              </td>
+                            </tr>
+                          ) : (
+                            tasks.map((task, idx) => (
+                              <tr
+                                key={`${agent.agent_id}-overdue-${task.lead_id}-${idx}`}
+                                className="hover:bg-[#202632]"
+                              >
+                                <td
+                                  onClick={() => openLead(task.lead_id)}
+                                  className="px-4 py-2.5 text-cyan-400 hover:text-cyan-300 underline cursor-pointer font-medium"
+                                  title="Open lead in new tab"
+                                >
+                                  {task.lead_name}
+                                </td>
+                                <td className="px-4 py-2.5">
+                                  <span className="text-xs px-2 py-0.5 rounded font-medium bg-rose-900/60 text-rose-300">
+                                    overdue
+                                  </span>
+                                </td>
+                                <td className="px-4 py-2.5 text-gray-300">{task.due_date ?? "-"}</td>
+                                <td className="px-4 py-2.5 text-gray-400">{task.start_at || task.start_at_ca || "-"}</td>
+                                <td className="px-4 py-2.5 text-gray-400">{task.end_at || task.end_at_ca || "-"}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </div>
