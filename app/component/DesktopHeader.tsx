@@ -207,10 +207,11 @@ const DesktopHeader = () => {
             </button>
           </div>
 
-          {/* Bell icon (Only for Agents, completely hidden from Admin) */}
-          {!isAdmin && (
+          {/* Bell icon (Hidden / Display None) */}
+          {false && (
             <div
-              className="relative flex items-center cursor-pointer"
+              className="relative hidden items-center cursor-pointer"
+              style={{ display: "none" }}
               onClick={() => {
                 setIsLeftSideBar(true);
                 fetchNotification();
