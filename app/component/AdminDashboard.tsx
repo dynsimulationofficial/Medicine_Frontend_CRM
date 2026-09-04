@@ -80,44 +80,81 @@ const AdminDashboard: React.FC = () => {
 
   const mountedRef = useRef(true);
 
-  // ---------------- Separate API Calls ----------------
+  // ---------------- Separate & Fallback API Calls ----------------
   const fetchAllDashboardData = async () => {
     setIsLoading(true);
     setIsError(null);
 
     try {
+      let anySuccess = false;
+
       // 1. Fetch KPI Cards API
-      const cardsPromise = AxiosProvider.post("/leads/admin/dashboard/cards", {}).then((res) => {
-        if (res.data?.success && res.data?.data) {
-          setCardsAdminData({ ...DEFAULT_CARDS, ...res.data.data });
-        }
-      });
+      const cardsPromise = AxiosProvider.post("/leads/admin/dashboard/cards", {})
+        .then((res) => {
+          if (res.data?.success && res.data?.data) {
+            setCardsAdminData({ ...DEFAULT_CARDS, ...res.data.data });
+            anySuccess = true;
+          }
+        })
+        .catch(() => {});
 
       // 2. Fetch Campaign Performance API
-      const campaignPromise = AxiosProvider.post("/leads/admin/dashboard/campaigns", {}).then((res) => {
-        if (res.data?.success && res.data?.data) {
-          setCampaignRankings(res.data.data.rankings || []);
-          setCampaignTotalLeads(res.data.data.total_leads || 0);
-        }
-      });
+      const campaignPromise = AxiosProvider.post("/leads/admin/dashboard/campaigns", {})
+        .then((res) => {
+          if (res.data?.success && res.data?.data) {
+            setCampaignRankings(res.data.data.rankings || []);
+            setCampaignTotalLeads(res.data.data.total_leads || 0);
+            anySuccess = true;
+          }
+        })
+        .catch(() => {});
 
       // 3. Fetch Team Tasks Table API
-      const teamTasksPromise = AxiosProvider.post("/leads/admin/dashboard/team-tasks", {}).then((res) => {
-        if (res.data?.success && res.data?.data) {
-          setTeamTasksByAgent(res.data.data || []);
-        }
-      });
+      const teamTasksPromise = AxiosProvider.post("/leads/admin/dashboard/team-tasks", {})
+        .then((res) => {
+          if (res.data?.success && res.data?.data) {
+            setTeamTasksByAgent(res.data.data || []);
+            anySuccess = true;
+          }
+        })
+        .catch(() => {});
 
       // 4. Fetch Detailed Tasks List API
-      const tasksListPromise = AxiosProvider.post("/leads/admin/dashboard/tasks-list", {}).then((res) => {
-        if (res.data?.success && res.data?.data) {
-          setTodayTasksByAgent(res.data.data.today_tasks_by_agent || []);
-          setOverdueTasksByAgent(res.data.data.overdue_tasks_by_agent || []);
-        }
-      });
+      const tasksListPromise = AxiosProvider.post("/leads/admin/dashboard/tasks-list", {})
+        .then((res) => {
+          if (res.data?.success && res.data?.data) {
+            setTodayTasksByAgent(res.data.data.today_tasks_by_agent || []);
+            setOverdueTasksByAgent(res.data.data.overdue_tasks_by_agent || []);
+            anySuccess = true;
+          }
+        })
+        .catch(() => {});
 
-      // Execute all separate APIs concurrently
       await Promise.allSettled([cardsPromise, campaignPromise, teamTasksPromise, tasksListPromise]);
+
+      // If separate endpoints did not return data (e.g. older backend deployment), fallback to unified endpoint
+      if (!anySuccess) {
+        const unifiedRes = await AxiosProvider.post("/leads/admin/dashboard", {});
+        if (unifiedRes.data?.success && unifiedRes.data?.data) {
+          const d = unifiedRes.data.data;
+          if (d.cards?.team_tasks) {
+            setCardsAdminData({ ...DEFAULT_CARDS, ...d.cards.team_tasks });
+          }
+          if (d.campaign_performance) {
+            setCampaignRankings(d.campaign_performance.rankings || []);
+            setCampaignTotalLeads(d.campaign_performance.total_leads || 0);
+          }
+          if (d.tables?.team_tasks_by_agent) {
+            setTeamTasksByAgent(d.tables.team_tasks_by_agent || []);
+          }
+          if (d.lists?.today_tasks_by_agent) {
+            setTodayTasksByAgent(d.lists.today_tasks_by_agent || []);
+          }
+          if (d.lists?.overdue_tasks_by_agent) {
+            setOverdueTasksByAgent(d.lists.overdue_tasks_by_agent || []);
+          }
+        }
+      }
     } catch (err: any) {
       if (err?.name !== "CanceledError" && err?.message !== "canceled") {
         setIsError(err?.message || "Failed to load dashboard data");
