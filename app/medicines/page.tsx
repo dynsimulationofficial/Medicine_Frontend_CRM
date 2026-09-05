@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import { FiPlusCircle } from "react-icons/fi";
+import { FiPlusCircle, FiUploadCloud } from "react-icons/fi";
 import { IoCloseOutline } from "react-icons/io5";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
-import { FaEdit, FaPills, FaEye } from "react-icons/fa";
+import { FaEdit, FaPills, FaEye, FaImage } from "react-icons/fa";
 import { MdDateRange, MdOutlineSettings } from "react-icons/md";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { HiChevronDoubleLeft, HiChevronDoubleRight } from "react-icons/hi";
@@ -20,6 +20,7 @@ import { useAuthRedirect } from "../component/hooks/useAuthRedirect";
 
 const medicineSchema = Yup.object({
   name: Yup.string().trim().required("Medicine name is required").max(255),
+  description: Yup.string().nullable().optional(),
 });
 
 export default function MedicinesPage() {
@@ -32,6 +33,11 @@ export default function MedicinesPage() {
 
   const [flyout, setFlyout] = useState<"add" | "edit" | "view" | "">("");
   const [selectedData, setSelectedData] = useState<any | null>(null);
+
+  // File upload state for Add/Edit
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -55,6 +61,35 @@ export default function MedicinesPage() {
   const closeFlyout = () => {
     setFlyout("");
     setSelectedData(null);
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleOpenEdit = (row: any) => {
+    setSelectedData(row);
+    setSelectedFile(null);
+    setPreviewUrl(row.image_url || null);
+    setFlyout("edit");
+  };
+
+  const handleOpenAdd = () => {
+    setSelectedData(null);
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setFlyout("add");
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select a valid image file (JPG, PNG, WEBP)");
+        return;
+      }
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -88,9 +123,23 @@ export default function MedicinesPage() {
   const handleSubmit = async (values: any, { setSubmitting }: any) => {
     try {
       const isEdit = flyout === "edit" && selectedData?.id;
+
+      const fd = new FormData();
+      fd.append("name", values.name.trim());
+      if (values.description !== undefined && values.description !== null) {
+        fd.append("description", values.description.trim());
+      }
+      if (selectedFile) {
+        fd.append("image", selectedFile);
+      }
+
       const res = isEdit
-        ? await AxiosProvider.put(`/medicines/${selectedData.id}`, values)
-        : await AxiosProvider.post("/medicines", values);
+        ? await AxiosProvider.put(`/medicines/${selectedData.id}`, fd, {
+            headers: { "Content-Type": "multipart/form-data" },
+          })
+        : await AxiosProvider.post("/medicines", fd, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
 
       if (res.data?.success) {
         toast.success(
@@ -136,13 +185,10 @@ export default function MedicinesPage() {
               <button
                 type="button"
                 className="flex items-center justify-center gap-2 h-[38px] px-4 rounded-[4px] border border-[#E7E7E7] bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs font-semibold tracking-wide cursor-pointer transition shadow-sm"
-                onClick={() => {
-                  setSelectedData(null);
-                  setFlyout("add");
-                }}
+                onClick={handleOpenAdd}
               >
                 <FiPlusCircle className="w-4 h-4 text-white" />
-                <span>Add Medicine</span>
+                <span>Add Medicines</span>
               </button>
             </div>
 
@@ -150,32 +196,32 @@ export default function MedicinesPage() {
             <table className="w-full text-xs text-left text-white whitespace-nowrap">
               <thead className="text-xs text-[#999999] talbleheaderBg">
                 <tr>
-                  <th scope="col" className="px-3 py-2.5 w-14 text-center">
+                  <th scope="col" className="px-3 py-2.5 w-12 text-center">
                     <span className="font-bold text-white text-xs tracking-wide">
                       #
                     </span>
                   </th>
 
                   <th scope="col" className="px-3 py-2.5">
-                    <div className="flex items-center gap-2">
-                      <FaPills className="w-4 h-4 text-white" />
-                      <span className="font-bold text-white text-xs tracking-wide">
-                        Medicine Name
-                      </span>
-                    </div>
+                    <span className="font-bold text-white text-xs tracking-wide">
+                      Medicine Name
+                    </span>
                   </th>
 
-                  <th scope="col" className="px-3 py-2 hidden md:table-cell">
-                    <div className="flex items-center gap-2">
-                      <MdDateRange className="w-4 h-4 text-white" />
-                      <span className="font-bold text-white text-xs tracking-wide">
-                        Added Date
-                      </span>
-                    </div>
+                  <th scope="col" className="px-3 py-2.5">
+                    <span className="font-bold text-white text-xs tracking-wide">
+                      Description
+                    </span>
                   </th>
 
-                  <th scope="col" className="px-3 py-2 md:table-cell">
-                    <div className="flex items-center gap-2">
+                  <th scope="col" className="px-3 py-2.5 w-16 text-center">
+                    <span className="font-bold text-white text-xs tracking-wide">
+                      Image
+                    </span>
+                  </th>
+
+                  <th scope="col" className="px-3 py-2 text-center w-28">
+                    <div className="flex items-center justify-center gap-2">
                       <MdOutlineSettings className="w-4 h-4 text-white" />
                       <span className="font-bold text-white text-xs tracking-wide">
                         Action
@@ -188,13 +234,16 @@ export default function MedicinesPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={4} className="text-center py-8 text-white">
+                    <td colSpan={5} className="text-center py-8 text-white">
                       <div className="animate-pulse">Loading medicines...</div>
                     </td>
                   </tr>
                 ) : data.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="text-center text-xl py-8 text-white">
+                    <td
+                      colSpan={5}
+                      className="text-center text-xl py-8 text-white"
+                    >
                       <div>Data not found</div>
                     </td>
                   </tr>
@@ -204,18 +253,35 @@ export default function MedicinesPage() {
                       key={row.id || idx}
                       className="hover:bg-primary-700 border-b border-[#E7E7E7] odd:bg-[#404040]"
                     >
-                      <td className="px-3 py-2 text-center text-gray-300 font-medium w-14">
+                      <td className="px-3 py-2 text-center text-gray-300 font-medium w-12">
                         {(page - 1) * 20 + idx + 1}
                       </td>
+
+                      {/* Medicine Name */}
                       <td className="px-3 py-2 font-semibold text-white">
                         {row.name}
                       </td>
-                      <td className="px-3 py-2 hidden md:table-cell text-white">
-                        {row.created_at
-                          ? new Date(row.created_at).toLocaleDateString()
-                          : "-"}
+
+                      {/* Description */}
+                      <td className="px-3 py-2 text-gray-300 text-xs max-w-xs truncate">
+                        {row.description || "—"}
                       </td>
-                      <td className="px-3 py-2 md:table-cell">
+
+                      {/* Medicine Image (small thumbnail) */}
+                      <td className="px-3 py-2 text-center w-16">
+                        {row.image_url ? (
+                          <img
+                            src={row.image_url}
+                            alt={row.name}
+                            className="w-9 h-9 rounded object-cover border border-gray-600 bg-gray-900 mx-auto shadow-sm"
+                          />
+                        ) : (
+                          <span className="text-gray-500 text-[11px]">—</span>
+                        )}
+                      </td>
+
+                      {/* Action Buttons */}
+                      <td className="px-3 py-2 text-center w-28">
                         <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1 shadow-sm">
                           <button
                             onClick={() => {
@@ -228,10 +294,7 @@ export default function MedicinesPage() {
                             <FaEye className="text-white w-3.5 h-3.5" />
                           </button>
                           <button
-                            onClick={() => {
-                              setSelectedData(row);
-                              setFlyout("edit");
-                            }}
+                            onClick={() => handleOpenEdit(row)}
                             className="p-1 hover:bg-primary-700 rounded-md text-white transition cursor-pointer"
                             title="Edit Medicine"
                           >
@@ -308,6 +371,7 @@ export default function MedicinesPage() {
             <Formik
               initialValues={{
                 name: selectedData?.name || "",
+                description: selectedData?.description || "",
               }}
               validationSchema={medicineSchema}
               onSubmit={handleSubmit}
@@ -315,6 +379,7 @@ export default function MedicinesPage() {
             >
               {({ isSubmitting }) => (
                 <Form className="space-y-4">
+                  {/* Medicine Name */}
                   <div>
                     <p className="text-white text-xs mb-1.5 font-medium">
                       Medicine Name <span className="text-red-500">*</span>
@@ -329,6 +394,54 @@ export default function MedicinesPage() {
                       name="name"
                       component="div"
                       className="text-red-500 text-xs mt-1"
+                    />
+                  </div>
+
+                  {/* Medicine Image Upload */}
+                  <div>
+                    <p className="text-white text-xs mb-1.5 font-medium">
+                      Medicine Image{" "}
+                      <span className="text-gray-400 font-normal">
+                        (Optional)
+                      </span>
+                    </p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleFileChange}
+                      className="w-full h-[38px] border border-gray-700 rounded-[4px] text-xs p-1.5 bg-black text-white file:mr-4 file:py-1 file:px-3 file:rounded-[4px] file:border-0 file:text-xs file:bg-primary-600 file:text-white hover:file:bg-primary-700 cursor-pointer"
+                    />
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      Allowed formats: JPG, PNG, WEBP
+                    </p>
+
+                    {/* Image Preview */}
+                    {previewUrl && (
+                      <div className="mt-2 relative w-20 h-20 rounded border border-gray-700 overflow-hidden bg-black">
+                        <img
+                          src={previewUrl}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Medicine Description */}
+                  <div>
+                    <p className="text-white text-xs mb-1.5 font-medium">
+                      Description{" "}
+                      <span className="text-gray-400 font-normal">
+                        (Optional)
+                      </span>
+                    </p>
+                    <Field
+                      as="textarea"
+                      name="description"
+                      rows={4}
+                      placeholder="Enter details, usage instructions, dosage notes..."
+                      className="w-full border border-gray-700 rounded-[4px] text-xs p-3 bg-black text-white outline-none focus:border-primary-600 resize-none placeholder-gray-400"
                     />
                   </div>
 
@@ -363,7 +476,23 @@ export default function MedicinesPage() {
                 className="h-8 w-8 border border-gray-700 text-white rounded cursor-pointer hover:bg-gray-800 transition"
               />
             </div>
-            <div className="space-y-4">
+            <div className="space-y-5">
+              {/* Medicine Image Banner */}
+              {selectedData.image_url ? (
+                <div className="w-full h-44 rounded-lg overflow-hidden border border-gray-700 bg-black flex items-center justify-center">
+                  <img
+                    src={selectedData.image_url}
+                    alt={selectedData.name}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-28 rounded-lg border border-dashed border-gray-700 bg-gray-900/50 flex flex-col items-center justify-center text-gray-500">
+                  <FaPills className="w-8 h-8 text-gray-600 mb-1" />
+                  <span className="text-xs">No image uploaded</span>
+                </div>
+              )}
+
               <h3 className="text-sm font-semibold text-primary-400 border-b border-gray-800 pb-2">
                 Medicine Information
               </h3>
@@ -375,7 +504,13 @@ export default function MedicinesPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400">Created At</p>
+                  <p className="text-xs text-gray-400">Description</p>
+                  <p className="text-xs text-gray-200 mt-0.5 whitespace-pre-line leading-relaxed">
+                    {selectedData.description || "No description provided."}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Added Date</p>
                   <p className="text-sm font-medium text-gray-200 mt-0.5">
                     {selectedData.created_at
                       ? new Date(selectedData.created_at).toLocaleString()
