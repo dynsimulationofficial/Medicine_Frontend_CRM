@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import LeftSideBar from "../component/LeftSideBar";
 import DesktopHeader from "../component/DesktopHeader";
 import { useAuthRedirect } from "../component/hooks/useAuthRedirect";
@@ -14,6 +15,9 @@ import {
   FaPhoneAlt,
   FaEnvelope,
   FaExclamationTriangle,
+  FaCalendarAlt,
+  FaCheckCircle,
+  FaClock,
 } from "react-icons/fa";
 
 export default function AgentDashboardPage() {
@@ -43,6 +47,20 @@ export default function AgentDashboardPage() {
     pending_today: 0,
   }); // Card 5
   const [overdueTasksCount, setOverdueTasksCount] = useState<number>(0); // Card 6
+
+  // 3. Agent Tasks State (API 8)
+  const [agentTasks, setAgentTasks] = useState<{
+    pending_today: any[];
+    overdue: any[];
+    upcoming: any[];
+    done_today: any[];
+  }>({
+    pending_today: [],
+    overdue: [],
+    upcoming: [],
+    done_today: [],
+  });
+  const [selectedTaskTab, setSelectedTaskTab] = useState<"pending" | "overdue" | "upcoming" | "done">("pending");
 
   // Role Protection: Redirect Admin to /dashboard-admin
   useEffect(() => {
@@ -128,12 +146,48 @@ export default function AgentDashboardPage() {
           setTotalLeads(fallbackRes.data?.data?.pagination?.total || list.length);
         });
 
-      // Run all 7 APIs in parallel
-      await Promise.allSettled([api1, api2, api3, api4, api5, api6, api7]);
+      // API 8: Agent Tasks Details & Lists
+      const api8 = AxiosProvider.get("/leads/task/agent/dashboard")
+        .then((res) => {
+          if (res.data?.success && res.data.data) {
+            const lists = res.data.data.lists || {};
+            setAgentTasks({
+              pending_today: lists.pending_today || [],
+              overdue: lists.overdue || [],
+              upcoming: lists.upcoming || [],
+              done_today: lists.done_today || [],
+            });
+            if (res.data.data.cards?.today) {
+              setTasksToday({
+                total_today: Number(res.data.data.cards.today.total || 0),
+                pending_today: Number(res.data.data.cards.today.pending || 0),
+              });
+            }
+            if (res.data.data.cards?.overdue !== undefined) {
+              setOverdueTasksCount(Number(res.data.data.cards.overdue || 0));
+            }
+          }
+        })
+        .catch((e) => console.error("Error fetching Agent Tasks:", e));
+
+      // Run all 8 APIs in parallel
+      await Promise.allSettled([api1, api2, api3, api4, api5, api6, api7, api8]);
     } catch (error) {
       console.error("Error in dashboard fetch:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleMarkTaskDone = async (taskId: string) => {
+    try {
+      await AxiosProvider.post("/leads/tasks/edit", {
+        id: taskId,
+        status: "done",
+      });
+      fetchAgentDashboardData();
+    } catch (err) {
+      console.error("Error completing task:", err);
     }
   };
 
@@ -248,7 +302,14 @@ export default function AgentDashboardPage() {
             </div>
 
             {/* 5. Tasks Today (Card 5) */}
-            <div className="bg-[#1e1e1e] p-4 rounded-xl border border-cyan-900/40 bg-cyan-950/10">
+            <div
+              onClick={() => setSelectedTaskTab("pending")}
+              className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                selectedTaskTab === "pending"
+                  ? "bg-cyan-950/40 border-cyan-400 ring-1 ring-cyan-400/50"
+                  : "bg-[#1e1e1e] border-cyan-900/40 hover:border-cyan-700"
+              }`}
+            >
               <p className="text-xs text-cyan-400 font-medium uppercase">
                 TASKS TODAY
               </p>
@@ -261,7 +322,14 @@ export default function AgentDashboardPage() {
             </div>
 
             {/* 6. Overdue Tasks (Card 6) */}
-            <div className="bg-[#1e1e1e] p-4 rounded-xl border border-red-900/50 bg-red-950/20">
+            <div
+              onClick={() => setSelectedTaskTab("overdue")}
+              className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                selectedTaskTab === "overdue"
+                  ? "bg-red-950/40 border-red-400 ring-1 ring-red-400/50"
+                  : "bg-[#1e1e1e] border-red-900/50 hover:border-red-700"
+              }`}
+            >
               <div className="flex justify-between items-start">
                 <p className="text-xs text-red-400 font-medium uppercase">
                   OVERDUE TASKS
@@ -278,6 +346,243 @@ export default function AgentDashboardPage() {
               </span>
             </div>
           </div>
+
+          {/* ==================== 8. MY TASKS & FOLLOW-UPS SECTION ==================== */}
+          {(() => {
+            const currentTaskList =
+              selectedTaskTab === "pending"
+                ? agentTasks.pending_today
+                : selectedTaskTab === "overdue"
+                ? agentTasks.overdue
+                : selectedTaskTab === "upcoming"
+                ? agentTasks.upcoming
+                : agentTasks.done_today;
+
+            return (
+              <div className="mb-8 bg-[#181818] border border-gray-800 rounded-2xl p-5 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-800">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-cyan-950/60 border border-cyan-800/50 flex items-center justify-center text-cyan-400 text-sm">
+                      <FaCalendarAlt />
+                    </div>
+                    <div>
+                      <h2 className="text-base font-bold text-white tracking-wide">
+                        My Tasks &amp; Scheduled Follow-ups
+                      </h2>
+                      <p className="text-xs text-gray-400">
+                        Never miss a follow-up, meeting or call with your assigned leads
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Task Tabs */}
+                  <div className="flex items-center gap-1.5 bg-[#121212] p-1 rounded-xl border border-gray-800 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTaskTab("pending")}
+                      className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                        selectedTaskTab === "pending"
+                          ? "bg-cyan-600 text-white shadow"
+                          : "text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      <span>Pending Today</span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          selectedTaskTab === "pending"
+                            ? "bg-cyan-900 text-cyan-200"
+                            : "bg-gray-800 text-gray-300"
+                        }`}
+                      >
+                        {agentTasks.pending_today.length}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTaskTab("overdue")}
+                      className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                        selectedTaskTab === "overdue"
+                          ? "bg-red-600 text-white shadow"
+                          : "text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      <span>Overdue</span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          agentTasks.overdue.length > 0
+                            ? "bg-red-950 text-red-300 animate-pulse"
+                            : "bg-gray-800 text-gray-300"
+                        }`}
+                      >
+                        {agentTasks.overdue.length}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTaskTab("upcoming")}
+                      className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                        selectedTaskTab === "upcoming"
+                          ? "bg-purple-600 text-white shadow"
+                          : "text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      <span>Upcoming</span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          selectedTaskTab === "upcoming"
+                            ? "bg-purple-900 text-purple-200"
+                            : "bg-gray-800 text-gray-300"
+                        }`}
+                      >
+                        {agentTasks.upcoming.length}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTaskTab("done")}
+                      className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                        selectedTaskTab === "done"
+                          ? "bg-emerald-600 text-white shadow"
+                          : "text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      <span>Done Today</span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          selectedTaskTab === "done"
+                            ? "bg-emerald-900 text-emerald-200"
+                            : "bg-gray-800 text-gray-300"
+                        }`}
+                      >
+                        {agentTasks.done_today.length}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Task Table */}
+                <div className="relative overflow-x-auto rounded-xl border border-gray-800">
+                  <table className="w-full text-xs text-left text-gray-300">
+                    <thead className="text-[11px] uppercase bg-[#1e1e1e] text-gray-400 border-b border-gray-800">
+                      <tr>
+                        <th className="py-3 px-4">Task / Subject</th>
+                        <th className="py-3 px-4">Lead / Customer</th>
+                        <th className="py-3 px-4">Type</th>
+                        <th className="py-3 px-4">Scheduled Time</th>
+                        <th className="py-3 px-4 text-center">Status</th>
+                        <th className="py-3 px-4 text-center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800/60">
+                      {currentTaskList.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-8 text-center text-gray-400 text-xs">
+                            <div className="flex flex-col items-center justify-center gap-1.5">
+                              <FaCheckCircle className="text-gray-600 text-2xl mb-1" />
+                              <p className="font-medium text-gray-300">
+                                {selectedTaskTab === "pending"
+                                  ? "No pending tasks for today!"
+                                  : selectedTaskTab === "overdue"
+                                  ? "No overdue tasks! Everything is on track."
+                                  : selectedTaskTab === "upcoming"
+                                  ? "No upcoming future tasks scheduled."
+                                  : "No tasks marked completed today yet."}
+                              </p>
+                              <span className="text-[11px] text-gray-500">
+                                Tasks created for your assigned leads will appear here automatically.
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        currentTaskList.map((task: any) => {
+                          const isDone = task.status === "done";
+                          const isOverdue = selectedTaskTab === "overdue";
+                          const typeBadge =
+                            task.type === "meeting"
+                              ? "bg-purple-950/60 text-purple-300 border-purple-800/40"
+                              : task.type === "phonecall"
+                              ? "bg-blue-950/60 text-blue-300 border-blue-800/40"
+                              : "bg-cyan-950/60 text-cyan-300 border-cyan-800/40";
+
+                          return (
+                            <tr
+                              key={task.id}
+                              className="bg-[#151515] hover:bg-[#1f1f1f] transition-colors"
+                            >
+                              <td className="py-3 px-4 font-semibold text-white">
+                                <div className="flex items-center gap-2">
+                                  {task.type === "phonecall" ? (
+                                    <FaPhoneAlt className="text-blue-400 text-xs" />
+                                  ) : (
+                                    <FaCalendarAlt className="text-cyan-400 text-xs" />
+                                  )}
+                                  <span>{task.subject || "Follow-up Task"}</span>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 font-medium text-gray-200">
+                                {task.lead_name || "—"}
+                              </td>
+                              <td className="py-3 px-4">
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium border capitalize ${typeBadge}`}
+                                >
+                                  {task.type || "Followup"}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 text-gray-300 font-mono text-[11px]">
+                                {task.start_at || task.due_date || "—"}
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                {isDone ? (
+                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-800/50 inline-flex items-center gap-1">
+                                    <FaCheckCircle className="text-[9px]" /> Completed
+                                  </span>
+                                ) : isOverdue ? (
+                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-950/80 text-red-300 border border-red-800/50 inline-flex items-center gap-1">
+                                    <FaExclamationTriangle className="text-[9px]" /> Overdue
+                                  </span>
+                                ) : (
+                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-950/80 text-cyan-300 border border-cyan-800/50 inline-flex items-center gap-1">
+                                    <FaClock className="text-[9px]" /> Pending
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <div className="flex items-center justify-center gap-2">
+                                  {task.lead_id && (
+                                    <Link
+                                      href={`/leadsdetails?id=${task.lead_id}`}
+                                      className="px-2.5 py-1 rounded bg-primary-600 hover:bg-primary-500 text-white font-medium text-[11px] transition-colors inline-flex items-center gap-1"
+                                    >
+                                      Open Lead &rarr;
+                                    </Link>
+                                  )}
+                                  {!isDone && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleMarkTaskDone(task.id)}
+                                      className="px-2 py-1 rounded bg-emerald-950/60 hover:bg-emerald-800/80 text-emerald-300 border border-emerald-700/40 text-[11px] font-medium transition-colors"
+                                      title="Mark Task Completed"
+                                    >
+                                      Mark Done
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* ==================== 7. MY ASSIGNED LEAD QUEUE (API 7) ==================== */}
           <div className="flex justify-between items-center mb-4">
