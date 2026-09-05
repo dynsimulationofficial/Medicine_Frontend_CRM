@@ -188,7 +188,7 @@ export default function MedicinesPage() {
                 onClick={handleOpenAdd}
               >
                 <FiPlusCircle className="w-4 h-4 text-white" />
-                <span>Add Medicines</span>
+                <span>Add Medicine</span>
               </button>
             </div>
 
