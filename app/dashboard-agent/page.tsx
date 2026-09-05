@@ -424,9 +424,15 @@ export default function AgentDashboardPage() {
                                 {lead.order_count} Order{lead.order_count === 1 ? "" : "s"}
                               </span>
                               <p className="text-[11px] font-semibold text-yellow-400 mt-1 font-mono">
-                                {lead.currency === "GBP" || lead.country === "UK" || (lead.phone && lead.phone.startsWith("+44"))
+                                {lead.phone && (lead.phone.startsWith("+44") || lead.phone.startsWith("44")) || lead.country === "UK"
                                   ? "£"
-                                  : lead.currency === "USD" || lead.country === "USA" || (lead.phone && lead.phone.startsWith("+1"))
+                                  : lead.phone && (lead.phone.startsWith("+1") || (lead.phone.startsWith("1") && lead.phone.length >= 11)) || lead.country === "USA"
+                                  ? "$"
+                                  : lead.phone && (lead.phone.startsWith("+91") || lead.phone.startsWith("91")) || lead.country === "India"
+                                  ? "₹"
+                                  : lead.currency === "GBP"
+                                  ? "£"
+                                  : lead.currency === "USD"
                                   ? "$"
                                   : "₹"}
                                 {Number(lead.total_order_amount || 0).toLocaleString("en-IN")}
