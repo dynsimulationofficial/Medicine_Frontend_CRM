@@ -190,7 +190,9 @@ export default function LeadDocumentsTab({
           headers: { "Content-Type": "multipart/form-data" },
         });
         try {
-          await AxiosProvider.post("/leads/documents/delete", { id: editingDoc.id });
+          await AxiosProvider.post("/leads/documents/delete", {
+            id: editingDoc.id,
+          });
         } catch {}
         toast.success("Document updated successfully");
       } else {
@@ -205,7 +207,11 @@ export default function LeadDocumentsTab({
       setHitApi((prev) => !prev);
       fetchDocs();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || err?.response?.data?.msg || "Failed to update document");
+      toast.error(
+        err?.response?.data?.message ||
+          err?.response?.data?.msg ||
+          "Failed to update document",
+      );
     }
   };
 
@@ -224,7 +230,7 @@ export default function LeadDocumentsTab({
           className="flex items-center justify-center gap-2 w-[160px] h-[38px] rounded-[4px] border border-[#E7E7E7] bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs font-semibold tracking-wide cursor-pointer transition shadow-sm"
         >
           <FiPlusCircle className="w-4 h-4 text-white" />
-          <span>Upload Document</span>
+          <span>Upload Documents</span>
         </button>
       </div>
 
@@ -298,7 +304,9 @@ export default function LeadDocumentsTab({
       {/* 2. UPLOAD DOCUMENT RIGHT-SIDE FLYOUT */}
       <div
         className={`fixed inset-0 bg-black/60 backdrop-blur-[1px] z-40 transition-opacity duration-300 ease-in-out cursor-pointer ${
-          isCreateVisible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          isCreateVisible
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
         onClick={closeCreateDrawer}
       />
@@ -373,7 +381,9 @@ export default function LeadDocumentsTab({
       {/* 3. EDIT DOCUMENT NOTES RIGHT-SIDE FLYOUT */}
       <div
         className={`fixed inset-0 bg-black/60 backdrop-blur-[1px] z-40 transition-opacity duration-300 ease-in-out cursor-pointer ${
-          editingDoc ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          editingDoc
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
         onClick={() => setEditingDoc(null)}
       />
@@ -397,7 +407,9 @@ export default function LeadDocumentsTab({
           {editingDoc && (
             <form onSubmit={handleEditSubmit} className="space-y-5">
               <div>
-                <p className="text-white font-medium text-xs mb-1.5">Current File</p>
+                <p className="text-white font-medium text-xs mb-1.5">
+                  Current File
+                </p>
                 <input
                   type="text"
                   value={editingDoc.file_name}
@@ -408,7 +420,10 @@ export default function LeadDocumentsTab({
 
               <div>
                 <p className="text-white font-medium text-xs mb-1.5">
-                  Choose New File <span className="text-gray-400 font-normal text-xs">(optional - to replace existing file)</span>
+                  Choose New File{" "}
+                  <span className="text-gray-400 font-normal text-xs">
+                    (optional - to replace existing file)
+                  </span>
                 </p>
                 <input
                   type="file"
@@ -421,7 +436,9 @@ export default function LeadDocumentsTab({
               </div>
 
               <div>
-                <p className="text-white font-medium text-xs mb-1.5">Document Notes</p>
+                <p className="text-white font-medium text-xs mb-1.5">
+                  Document Notes
+                </p>
                 <textarea
                   rows={3}
                   value={editNotes}
