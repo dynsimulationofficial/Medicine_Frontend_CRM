@@ -240,9 +240,6 @@ export default function LeadDocumentsTab({
               <tr>
                 <th className="py-2.5 px-3 w-10 text-center">#</th>
                 <th className="py-2.5 px-3">File Name</th>
-                <th className="py-2.5 px-3">Type</th>
-                <th className="py-2.5 px-3">Size</th>
-                <th className="py-2.5 px-3">Uploaded On</th>
                 <th className="py-2.5 px-3">Notes</th>
                 <th className="py-2.5 px-3 text-center w-28">Action</th>
               </tr>
@@ -256,17 +253,8 @@ export default function LeadDocumentsTab({
                   <td className="py-2 px-3 text-center text-gray-300 font-medium">
                     {idx + 1}
                   </td>
-                  <td className="py-2 px-3 font-semibold text-white truncate max-w-[160px] text-xs">
+                  <td className="py-2 px-3 font-semibold text-white truncate max-w-[260px] text-xs">
                     {d.file_name}
-                  </td>
-                  <td className="py-2 px-3 text-[11px] text-gray-300">
-                    {d.mime_type || "-"}
-                  </td>
-                  <td className="py-2 px-3 text-[11px] text-gray-200">
-                    {fmtSize(d.file_size)}
-                  </td>
-                  <td className="py-2 px-3 text-[11px] text-gray-200 whitespace-nowrap">
-                    {d.created_at ? new Date(d.created_at).toLocaleString() : "-"}
                   </td>
                   <td className="py-2 px-3 text-xs text-gray-200 max-w-xs truncate">
                     {d.notes || "—"}
