@@ -230,7 +230,7 @@ export default function LeadDocumentsTab({
           className="flex items-center justify-center gap-2 w-[160px] h-[38px] rounded-[4px] border border-[#E7E7E7] bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs font-semibold tracking-wide cursor-pointer transition shadow-sm"
         >
           <FiPlusCircle className="w-4 h-4 text-white" />
-          <span>Upload Documents</span>
+          <span>Upload Document</span>
         </button>
       </div>
 
