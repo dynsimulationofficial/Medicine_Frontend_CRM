@@ -196,31 +196,31 @@ export default function MedicinesPage() {
             <table className="w-full text-xs text-left text-white whitespace-nowrap">
               <thead className="text-xs text-[#999999] talbleheaderBg">
                 <tr>
-                  <th scope="col" className="px-3 py-2.5 w-12 text-center">
+                  <th scope="col" className="px-4 py-3 w-[6%] text-center">
                     <span className="font-bold text-white text-xs tracking-wide">
                       #
                     </span>
                   </th>
 
-                  <th scope="col" className="px-3 py-2.5">
+                  <th scope="col" className="px-4 py-3 w-[26%]">
                     <span className="font-bold text-white text-xs tracking-wide">
                       Medicine Name
                     </span>
                   </th>
 
-                  <th scope="col" className="px-3 py-2.5">
+                  <th scope="col" className="px-4 py-3 w-[36%]">
                     <span className="font-bold text-white text-xs tracking-wide">
                       Description
                     </span>
                   </th>
 
-                  <th scope="col" className="px-3 py-2.5 w-16 text-center">
+                  <th scope="col" className="px-4 py-3 w-[16%] text-center">
                     <span className="font-bold text-white text-xs tracking-wide">
                       Image
                     </span>
                   </th>
 
-                  <th scope="col" className="px-3 py-2 text-center w-28">
+                  <th scope="col" className="px-4 py-3 w-[16%] text-center">
                     <div className="flex items-center justify-center gap-2">
                       <MdOutlineSettings className="w-4 h-4 text-white" />
                       <span className="font-bold text-white text-xs tracking-wide">
@@ -253,60 +253,64 @@ export default function MedicinesPage() {
                       key={row.id || idx}
                       className="hover:bg-primary-700 border-b border-[#E7E7E7] odd:bg-[#404040]"
                     >
-                      <td className="px-3 py-2 text-center text-gray-300 font-medium w-12">
+                      <td className="px-4 py-3 text-center text-gray-300 font-medium">
                         {(page - 1) * 20 + idx + 1}
                       </td>
 
                       {/* Medicine Name */}
-                      <td className="px-3 py-2 font-semibold text-white">
+                      <td className="px-4 py-3 font-semibold text-white">
                         {row.name}
                       </td>
 
                       {/* Description */}
-                      <td className="px-3 py-2 text-gray-300 text-xs max-w-xs truncate">
+                      <td className="px-4 py-3 text-gray-300 text-xs max-w-sm truncate">
                         {row.description || "—"}
                       </td>
 
-                      {/* Medicine Image (small thumbnail) */}
-                      <td className="px-3 py-2 text-center w-16">
-                        {row.image_url ? (
-                          <img
-                            src={row.image_url}
-                            alt={row.name}
-                            className="w-9 h-9 rounded object-cover border border-gray-600 bg-gray-900 mx-auto shadow-sm"
-                          />
-                        ) : (
-                          <span className="text-gray-500 text-[11px]">—</span>
-                        )}
+                      {/* Medicine Image (centered with balanced spacing) */}
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex items-center justify-center">
+                          {row.image_url ? (
+                            <img
+                              src={row.image_url}
+                              alt={row.name}
+                              className="w-10 h-10 rounded-lg object-cover border border-gray-600 bg-gray-900 shadow-sm"
+                            />
+                          ) : (
+                            <span className="text-gray-500 text-[11px]">—</span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Action Buttons */}
-                      <td className="px-3 py-2 text-center w-28">
-                        <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1 shadow-sm">
-                          <button
-                            onClick={() => {
-                              setSelectedData(row);
-                              setFlyout("view");
-                            }}
-                            className="p-1 hover:bg-primary-700 rounded-md text-white transition cursor-pointer"
-                            title="View Details"
-                          >
-                            <FaEye className="text-white w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleOpenEdit(row)}
-                            className="p-1 hover:bg-primary-700 rounded-md text-white transition cursor-pointer"
-                            title="Edit Medicine"
-                          >
-                            <FaEdit className="text-white w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(row.id, row.name)}
-                            className="p-1 hover:bg-red-700 rounded-md text-white transition cursor-pointer"
-                            title="Delete Medicine"
-                          >
-                            <RiDeleteBin6Line className="text-white w-3.5 h-3.5" />
-                          </button>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex items-center justify-center">
+                          <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1 shadow-sm">
+                            <button
+                              onClick={() => {
+                                setSelectedData(row);
+                                setFlyout("view");
+                              }}
+                              className="p-1 hover:bg-primary-700 rounded-md text-white transition cursor-pointer"
+                              title="View Details"
+                            >
+                              <FaEye className="text-white w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleOpenEdit(row)}
+                              className="p-1 hover:bg-primary-700 rounded-md text-white transition cursor-pointer"
+                              title="Edit Medicine"
+                            >
+                              <FaEdit className="text-white w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(row.id, row.name)}
+                              className="p-1 hover:bg-red-700 rounded-md text-white transition cursor-pointer"
+                              title="Delete Medicine"
+                            >
+                              <RiDeleteBin6Line className="text-white w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                       </td>
                     </tr>
