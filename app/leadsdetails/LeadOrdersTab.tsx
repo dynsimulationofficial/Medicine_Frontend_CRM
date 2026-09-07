@@ -40,12 +40,122 @@ export interface OrderData {
   items?: OrderItem[];
 }
 
+export const EXCHANGE_RATES: Record<string, number> = {
+  USD: 1.0,
+  INR: 85.0,
+  GBP: 0.78,
+  EUR: 0.92,
+  CAD: 1.38,
+  AUD: 1.52,
+};
+
+export const getCurrencySymbol = (curr?: string) => {
+  switch ((curr || "USD").toUpperCase()) {
+    case "INR":
+      return "₹";
+    case "GBP":
+      return "£";
+    case "EUR":
+      return "€";
+    case "CAD":
+      return "CA$";
+    case "AUD":
+      return "AU$";
+    case "USD":
+    default:
+      return "$";
+  }
+};
+
+export const detectCurrencyFromLead = (
+  country?: string | null,
+  currency?: string | null,
+  phone?: string | null
+): string => {
+  const normCountry = (country || "").trim().toLowerCase();
+  const cleanPhone = (phone || "").replace(/[\s\-\(\)]/g, "");
+
+  // 1. Phone number country code detection
+  if (
+    cleanPhone.startsWith("+91") ||
+    cleanPhone.startsWith("0091") ||
+    (cleanPhone.startsWith("91") && cleanPhone.length === 12)
+  ) {
+    return "INR";
+  }
+  if (
+    cleanPhone.startsWith("+44") ||
+    cleanPhone.startsWith("0044") ||
+    (cleanPhone.startsWith("44") && cleanPhone.length >= 12)
+  ) {
+    return "GBP";
+  }
+  if (
+    cleanPhone.startsWith("+1") ||
+    cleanPhone.startsWith("001") ||
+    (cleanPhone.startsWith("1") && cleanPhone.length === 11)
+  ) {
+    return "USD";
+  }
+  if (cleanPhone.startsWith("+61") || cleanPhone.startsWith("0061")) {
+    return "AUD";
+  }
+
+  // 2. Country name detection
+  if (normCountry === "india" || normCountry === "in" || normCountry === "ind") {
+    return "INR";
+  }
+  if (
+    normCountry === "uk" ||
+    normCountry === "united kingdom" ||
+    normCountry === "gb" ||
+    normCountry === "great britain" ||
+    normCountry === "england"
+  ) {
+    return "GBP";
+  }
+  if (
+    normCountry === "usa" ||
+    normCountry === "us" ||
+    normCountry === "united states" ||
+    normCountry === "united states of america"
+  ) {
+    return "USD";
+  }
+  if (normCountry === "australia" || normCountry === "au" || normCountry === "aus") {
+    return "AUD";
+  }
+  if (normCountry === "canada" || normCountry === "ca") {
+    return "CAD";
+  }
+  if (
+    normCountry === "europe" ||
+    normCountry === "eu" ||
+    normCountry === "germany" ||
+    normCountry === "france" ||
+    normCountry === "spain" ||
+    normCountry === "italy"
+  ) {
+    return "EUR";
+  }
+
+  // 3. Explicit currency if not default USD, or if explicit
+  if (currency && currency.trim() !== "") {
+    return currency.trim().toUpperCase();
+  }
+
+  return "USD";
+};
+
 type Props = {
   leadId: string;
   hitApi: boolean;
   setHitApi: React.Dispatch<React.SetStateAction<boolean>>;
   isCreateOpen?: boolean;
   onCloseCreate?: () => void;
+  leadCurrency?: string;
+  leadCountry?: string;
+  leadPhone?: string;
 };
 
 // ==================== MAIN COMPONENT ====================
@@ -55,7 +165,27 @@ export default function LeadOrdersTab({
   setHitApi,
   isCreateOpen = false,
   onCloseCreate,
+  leadCurrency,
+  leadCountry,
+  leadPhone,
 }: Props) {
+  // Effective currency from lead phone, country, or currency
+  const resolvedCurrency = detectCurrencyFromLead(
+    leadCountry,
+    leadCurrency,
+    leadPhone
+  );
+
+  const currencyMultiplier = EXCHANGE_RATES[resolvedCurrency] || 1.0;
+
+  // Format amount: round figure for INR or integer amounts, otherwise 2 decimal places
+  const formatAmount = (val: number | string) => {
+    const num = Number(val) || 0;
+    if (resolvedCurrency === "INR" || Number.isInteger(num)) {
+      return Math.round(num).toString();
+    }
+    return num.toFixed(2);
+  };
   // ---------------- State Management ----------------
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [editingOrder, setEditingOrder] = useState<OrderData | null>(null);
@@ -65,7 +195,7 @@ export default function LeadOrdersTab({
 
   // Form State
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
-    { medicine_name: "", unit: "Strip", quantity: 1, rate: 0 },
+    { medicine_name: "", unit: "", quantity: 1, rate: 0 },
   ]);
   const [paymentStatus, setPaymentStatus] = useState<string>("Pending");
   const [paymentMode, setPaymentMode] = useState<string>("COD");
@@ -133,13 +263,13 @@ export default function LeadOrdersTab({
         ord.items.map((it) => ({
           id: it.id,
           medicine_name: it.medicine_name,
-          unit: it.unit || "Strip",
+          unit: it.unit || "",
           quantity: it.quantity,
           rate: it.rate,
         }))
       );
     } else {
-      setOrderItems([{ medicine_name: "", unit: "Strip", quantity: 1, rate: 0 }]);
+      setOrderItems([{ medicine_name: "", unit: "", quantity: 1, rate: 0 }]);
     }
   };
 
@@ -212,11 +342,21 @@ export default function LeadOrdersTab({
 
   const selectSuggestion = (index: number, item: any) => {
     const updated = [...orderItems];
+    const rawUsdPrice = Number(item.rate) || 0;
+    const rawConverted = rawUsdPrice * currencyMultiplier;
+    // In INR, price is always a clean round figure (no decimals)
+    const convertedRate =
+      rawUsdPrice > 0
+        ? (resolvedCurrency === "INR"
+            ? Math.round(rawConverted)
+            : Number(rawConverted.toFixed(2)))
+        : 0;
+
     updated[index] = {
       ...updated[index],
       medicine_name: item.medicine_name,
-      unit: item.unit || "Strip",
-      rate: item.rate != null && Number(item.rate) > 0 ? Number(item.rate) : updated[index].rate,
+      unit: item.unit || "",
+      rate: convertedRate > 0 ? convertedRate : (updated[index].rate || 0),
     };
     setOrderItems(updated);
     setActiveSugIndex(null);
@@ -225,7 +365,7 @@ export default function LeadOrdersTab({
   const addItemRow = () => {
     setOrderItems([
       ...orderItems,
-      { medicine_name: "", unit: "Strip", quantity: 1, rate: 0 },
+      { medicine_name: "", unit: "", quantity: 1, rate: 0 },
     ]);
   };
 
@@ -268,7 +408,7 @@ export default function LeadOrdersTab({
         items: validItems.map((it) => ({
           id: it.id || undefined,
           medicine_name: it.medicine_name.trim(),
-          unit: it.unit || "Strip",
+          unit: it.unit || "",
           quantity: Number(it.quantity) || 1,
           rate: Number(it.rate) || 0,
         })),
@@ -295,7 +435,7 @@ export default function LeadOrdersTab({
           type="button"
           onClick={() => {
             setEditingOrder(null);
-            setOrderItems([{ medicine_name: "", unit: "Strip", quantity: 1, rate: 0 }]);
+            setOrderItems([{ medicine_name: "", unit: "", quantity: 1, rate: 0 }]);
             setPaymentStatus("Pending");
             setPaymentMode("COD");
             setOrderStatus("Pending");
@@ -356,7 +496,7 @@ export default function LeadOrdersTab({
                     </span>
                   </td>
                   <td className="py-2 px-3 text-right font-bold text-white text-xs align-middle whitespace-nowrap">
-                    {Number(ord.grand_total).toFixed(2)}
+                    {formatAmount(ord.grand_total)}
                   </td>
                   <td className="py-2 px-3 text-center align-middle whitespace-nowrap">
                     <span
@@ -543,23 +683,25 @@ export default function LeadOrdersTab({
                                     e.preventDefault();
                                     selectSuggestion(idx, sug);
                                   }}
-                                  className="p-2.5 text-xs text-white hover:bg-primary-600 cursor-pointer flex items-center transition-colors"
+                                  className="p-2.5 text-xs text-white hover:bg-primary-600 cursor-pointer transition-colors"
                                 >
-                                  <span className="font-medium text-gray-100">{sug.medicine_name}</span>
+                                  <span className="font-semibold text-white block truncate">
+                                    {sug.medicine_name}
+                                  </span>
                                 </div>
                               ))}
                             </div>
                           )}
                         </div>
 
-                        {/* Unit */}
+                        {/* Package */}
                         <div className="col-span-4 sm:col-span-2">
-                          <p className="text-xs text-gray-400 mb-1">Unit</p>
+                          <p className="text-xs text-gray-400 mb-1">Package</p>
                           <input
                             type="text"
                             value={item.unit}
                             onChange={(e) => handleItemChange(idx, "unit", e.target.value)}
-                            placeholder="Strip/Box"
+                            placeholder="e.g. 10 TAB"
                             className="w-full bg-black border border-gray-700 rounded text-xs p-2 text-white outline-none"
                           />
                         </div>
@@ -576,15 +718,16 @@ export default function LeadOrdersTab({
                           />
                         </div>
 
-                        {/* Rate */}
+                        {/* Price */}
                         <div className="col-span-3 sm:col-span-2">
-                          <p className="text-xs text-gray-400 mb-1">Rate</p>
+                          <p className="text-xs text-gray-400 mb-1">Price</p>
                           <input
                             type="number"
                             step="0.01"
                             min="0"
                             value={item.rate}
                             onChange={(e) => handleItemChange(idx, "rate", e.target.value)}
+                            placeholder="0.00"
                             className="w-full bg-black border border-gray-700 rounded text-xs p-2 text-white text-right outline-none"
                           />
                         </div>
@@ -603,7 +746,7 @@ export default function LeadOrdersTab({
                       </div>
 
                       <div className="mt-1.5 text-right text-xs text-gray-400">
-                        Total: <span className="text-primary-300 font-bold">{lineTotal.toFixed(2)}</span>
+                        Total: <span className="text-primary-300 font-bold">{formatAmount(lineTotal)}</span>
                       </div>
                     </div>
                   );
@@ -663,7 +806,7 @@ export default function LeadOrdersTab({
             {/* Grand Total Footer */}
             <div className="flex justify-between items-center p-3 bg-primary-900/20 border border-primary-500/40 rounded-lg">
               <span className="text-sm font-semibold text-gray-200">Grand Total:</span>
-              <span className="text-xl font-black text-primary-400">{grandTotal.toFixed(2)}</span>
+              <span className="text-xl font-black text-primary-400">{formatAmount(grandTotal)}</span>
             </div>
 
             {/* Submit buttons */}

@@ -123,6 +123,9 @@ export default function LeadDetailsPage() {
           leadId={leadId || ""}
           hitApi={hitApi}
           setHitApi={setHitApi}
+          leadCurrency={data?.currency}
+          leadCountry={data?.country}
+          leadPhone={data?.phone || data?.phone_number}
         />
       ),
     },
