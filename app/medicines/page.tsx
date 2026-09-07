@@ -293,7 +293,7 @@ export default function MedicinesPage() {
                       </td>
 
                       {/* Price (USD) */}
-                      <td className="px-4 py-3 text-emerald-400 font-medium">
+                      <td className="px-4 py-3 text-gray-300">
                         {row.price !== null && row.price !== undefined && row.price !== ""
                           ? `$${Number(row.price).toFixed(2)}`
                           : "—"}
@@ -594,7 +594,7 @@ export default function MedicinesPage() {
                   </div>
                   <div>
                     <p className="text-xs text-gray-400">Price (USD)</p>
-                    <p className="text-sm font-semibold text-emerald-400 mt-0.5">
+                    <p className="text-sm font-semibold text-gray-200 mt-0.5">
                       {selectedData.price !== null && selectedData.price !== undefined && selectedData.price !== ""
                         ? `$${Number(selectedData.price).toFixed(2)}`
                         : "—"}
