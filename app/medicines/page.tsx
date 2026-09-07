@@ -20,7 +20,9 @@ import { useAuthRedirect } from "../component/hooks/useAuthRedirect";
 
 const medicineSchema = Yup.object({
   name: Yup.string().trim().required("Medicine name is required").max(255),
-  description: Yup.string().nullable().optional(),
+  generic_name: Yup.string().trim().nullable().optional().max(255),
+  packing: Yup.string().trim().nullable().optional().max(100),
+  price: Yup.number().typeError("Price must be a valid number").nullable().optional().min(0),
 });
 
 export default function MedicinesPage() {
@@ -126,8 +128,14 @@ export default function MedicinesPage() {
 
       const fd = new FormData();
       fd.append("name", values.name.trim());
-      if (values.description !== undefined && values.description !== null) {
-        fd.append("description", values.description.trim());
+      if (values.generic_name !== undefined && values.generic_name !== null) {
+        fd.append("generic_name", values.generic_name.trim());
+      }
+      if (values.packing !== undefined && values.packing !== null) {
+        fd.append("packing", values.packing.trim());
+      }
+      if (values.price !== undefined && values.price !== null && values.price !== "") {
+        fd.append("price", values.price);
       }
       if (selectedFile) {
         fd.append("image", selectedFile);
@@ -196,31 +204,43 @@ export default function MedicinesPage() {
             <table className="w-full text-xs text-left text-white whitespace-nowrap">
               <thead className="text-xs text-[#999999] talbleheaderBg">
                 <tr>
-                  <th scope="col" className="px-4 py-3 w-[6%] text-center">
+                  <th scope="col" className="px-4 py-3 w-[5%] text-center">
                     <span className="font-bold text-white text-xs tracking-wide">
                       #
                     </span>
                   </th>
 
-                  <th scope="col" className="px-4 py-3 w-[26%]">
+                  <th scope="col" className="px-4 py-3 w-[22%]">
                     <span className="font-bold text-white text-xs tracking-wide">
                       Medicine Name
                     </span>
                   </th>
 
-                  <th scope="col" className="px-4 py-3 w-[36%]">
+                  <th scope="col" className="px-4 py-3 w-[20%]">
                     <span className="font-bold text-white text-xs tracking-wide">
-                      Description
+                      Generic Name
                     </span>
                   </th>
 
-                  <th scope="col" className="px-4 py-3 w-[16%] text-center">
+                  <th scope="col" className="px-4 py-3 w-[14%]">
+                    <span className="font-bold text-white text-xs tracking-wide">
+                      Packing
+                    </span>
+                  </th>
+
+                  <th scope="col" className="px-4 py-3 w-[14%]">
+                    <span className="font-bold text-white text-xs tracking-wide">
+                      Price (USD)
+                    </span>
+                  </th>
+
+                  <th scope="col" className="px-4 py-3 w-[12%] text-center">
                     <span className="font-bold text-white text-xs tracking-wide">
                       Image
                     </span>
                   </th>
 
-                  <th scope="col" className="px-4 py-3 w-[16%] text-center">
+                  <th scope="col" className="px-4 py-3 w-[13%] text-center">
                     <div className="flex items-center justify-center gap-2">
                       <MdOutlineSettings className="w-4 h-4 text-white" />
                       <span className="font-bold text-white text-xs tracking-wide">
@@ -234,14 +254,14 @@ export default function MedicinesPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="text-center py-8 text-white">
+                    <td colSpan={7} className="text-center py-8 text-white">
                       <div className="animate-pulse">Loading medicines...</div>
                     </td>
                   </tr>
                 ) : data.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={7}
                       className="text-center text-xl py-8 text-white"
                     >
                       <div>Data not found</div>
@@ -262,12 +282,24 @@ export default function MedicinesPage() {
                         {row.name}
                       </td>
 
-                      {/* Description */}
-                      <td className="px-4 py-3 text-gray-300 text-xs max-w-sm truncate">
-                        {row.description || "—"}
+                      {/* Generic Name */}
+                      <td className="px-4 py-3 text-gray-300">
+                        {row.generic_name || "—"}
                       </td>
 
-                      {/* Medicine Image (centered with balanced spacing) */}
+                      {/* Packing */}
+                      <td className="px-4 py-3 text-gray-300">
+                        {row.packing || "—"}
+                      </td>
+
+                      {/* Price (USD) */}
+                      <td className="px-4 py-3 text-emerald-400 font-medium">
+                        {row.price !== null && row.price !== undefined && row.price !== ""
+                          ? `$${Number(row.price).toFixed(2)}`
+                          : "—"}
+                      </td>
+
+                      {/* Medicine Image (centered, after Price) */}
                       <td className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center">
                           {row.image_url ? (
@@ -375,7 +407,12 @@ export default function MedicinesPage() {
             <Formik
               initialValues={{
                 name: selectedData?.name || "",
-                description: selectedData?.description || "",
+                generic_name: selectedData?.generic_name || "",
+                packing: selectedData?.packing || "",
+                price:
+                  selectedData?.price !== undefined && selectedData?.price !== null
+                    ? selectedData.price
+                    : "",
               }}
               validationSchema={medicineSchema}
               onSubmit={handleSubmit}
@@ -401,13 +438,65 @@ export default function MedicinesPage() {
                     />
                   </div>
 
+                  {/* Generic Name */}
+                  <div>
+                    <p className="text-white text-xs mb-1.5 font-medium">
+                      Generic Name
+                    </p>
+                    <Field
+                      name="generic_name"
+                      placeholder="e.g. Paracetamol"
+                      className="hover:shadow-hoverInputShadow focus:border-primary-600 w-full h-[38px] border border-gray-700 rounded-[4px] text-white text-xs placeholder-gray-400 px-3 bg-black outline-none"
+                    />
+                    <ErrorMessage
+                      name="generic_name"
+                      component="div"
+                      className="text-red-500 text-xs mt-1"
+                    />
+                  </div>
+
+                  {/* Packing & Price (USD) Side-by-Side */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-white text-xs mb-1.5 font-medium">
+                        Packing
+                      </p>
+                      <Field
+                        name="packing"
+                        placeholder="e.g. 10 TAB"
+                        className="hover:shadow-hoverInputShadow focus:border-primary-600 w-full h-[38px] border border-gray-700 rounded-[4px] text-white text-xs placeholder-gray-400 px-3 bg-black outline-none"
+                      />
+                      <ErrorMessage
+                        name="packing"
+                        component="div"
+                        className="text-red-500 text-xs mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <p className="text-white text-xs mb-1.5 font-medium">
+                        Price (USD)
+                      </p>
+                      <Field
+                        name="price"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="e.g. 1.50"
+                        className="hover:shadow-hoverInputShadow focus:border-primary-600 w-full h-[38px] border border-gray-700 rounded-[4px] text-white text-xs placeholder-gray-400 px-3 bg-black outline-none"
+                      />
+                      <ErrorMessage
+                        name="price"
+                        component="div"
+                        className="text-red-500 text-xs mt-1"
+                      />
+                    </div>
+                  </div>
+
                   {/* Medicine Image Upload */}
                   <div>
                     <p className="text-white text-xs mb-1.5 font-medium">
-                      Medicine Image{" "}
-                      <span className="text-gray-400 font-normal">
-                        (Optional)
-                      </span>
+                      Medicine Image
                     </p>
                     <input
                       ref={fileInputRef}
@@ -430,23 +519,6 @@ export default function MedicinesPage() {
                         />
                       </div>
                     )}
-                  </div>
-
-                  {/* Medicine Description */}
-                  <div>
-                    <p className="text-white text-xs mb-1.5 font-medium">
-                      Description{" "}
-                      <span className="text-gray-400 font-normal">
-                        (Optional)
-                      </span>
-                    </p>
-                    <Field
-                      as="textarea"
-                      name="description"
-                      rows={4}
-                      placeholder="Enter details, usage instructions, dosage notes..."
-                      className="w-full border border-gray-700 rounded-[4px] text-xs p-3 bg-black text-white outline-none focus:border-primary-600 resize-none placeholder-gray-400"
-                    />
                   </div>
 
                   <div className="pt-4">
@@ -508,10 +580,26 @@ export default function MedicinesPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400">Description</p>
-                  <p className="text-xs text-gray-200 mt-0.5 whitespace-pre-line leading-relaxed">
-                    {selectedData.description || "No description provided."}
+                  <p className="text-xs text-gray-400">Generic Name</p>
+                  <p className="text-sm font-semibold text-gray-200 mt-0.5">
+                    {selectedData.generic_name || "—"}
                   </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-400">Packing</p>
+                    <p className="text-sm font-semibold text-gray-200 mt-0.5">
+                      {selectedData.packing || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Price (USD)</p>
+                    <p className="text-sm font-semibold text-emerald-400 mt-0.5">
+                      {selectedData.price !== null && selectedData.price !== undefined && selectedData.price !== ""
+                        ? `$${Number(selectedData.price).toFixed(2)}`
+                        : "—"}
+                    </p>
+                  </div>
                 </div>
                 <div>
                   <p className="text-xs text-gray-400">Added Date</p>
