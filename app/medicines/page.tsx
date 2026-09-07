@@ -278,12 +278,18 @@ export default function MedicinesPage() {
                       </td>
 
                       {/* Medicine Name */}
-                      <td className="px-4 py-3 font-semibold text-white">
+                      <td
+                        className="px-4 py-3 font-semibold text-white max-w-[200px] truncate"
+                        title={row.name}
+                      >
                         {row.name}
                       </td>
 
                       {/* Generic Name */}
-                      <td className="px-4 py-3 text-gray-300">
+                      <td
+                        className="px-4 py-3 text-gray-300 max-w-[250px] truncate"
+                        title={row.generic_name || ""}
+                      >
                         {row.generic_name || "—"}
                       </td>
 
