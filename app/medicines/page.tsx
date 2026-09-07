@@ -44,7 +44,7 @@ export default function MedicinesPage() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const res = await AxiosProvider.get(`/medicines?page=${page}&limit=50`);
+      const res = await AxiosProvider.get(`/medicines?page=${page}&limit=100`);
       if (res.data?.success) {
         setData(Array.isArray(res.data.data) ? res.data.data : []);
         setTotalPages(res.data.pagination?.totalPages || 1);
@@ -274,7 +274,7 @@ export default function MedicinesPage() {
                       className="hover:bg-primary-700 border-b border-[#E7E7E7] odd:bg-[#404040]"
                     >
                       <td className="px-4 py-3 text-center text-gray-300 font-medium">
-                        {(page - 1) * 50 + idx + 1}
+                        {(page - 1) * 100 + idx + 1}
                       </td>
 
                       {/* Medicine Name */}
