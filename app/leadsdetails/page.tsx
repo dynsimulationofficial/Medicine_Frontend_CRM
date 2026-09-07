@@ -183,7 +183,7 @@ export default function LeadDetailsPage() {
                         className="flex w-auto gap-2 py-3 px-6 rounded-[12px] border border-[#E7E7E7] cursor-pointer bg-primary-600 items-center hover:bg-primary-700 active:bg-primary-800 transition"
                       >
                         <p className="text-white text-base font-medium">
-                          Next Leads
+                          Next Unassign Leads
                         </p>
                         <BiSkipNextCircle className="w-5 h-5 text-white" />
                       </div>
