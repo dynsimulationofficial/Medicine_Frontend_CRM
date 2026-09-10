@@ -92,6 +92,8 @@ export default function LeadDetailsPage() {
       content: (
         <LeadActivityTab
           leadId={leadId || ""}
+          leadPhone={data?.phone || data?.whatsapp_number}
+          leadName={data?.full_name}
           hitApi={hitApi}
           setHitApi={setHitApi}
         />

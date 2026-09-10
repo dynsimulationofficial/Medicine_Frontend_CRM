@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { MdEdit } from "react-icons/md";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoCloseOutline } from "react-icons/io5";
-import { FiPlusCircle } from "react-icons/fi";
+import { FiPlusCircle, FiPhoneCall } from "react-icons/fi";
 import { HiChevronDoubleLeft, HiChevronDoubleRight } from "react-icons/hi";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
@@ -87,6 +87,9 @@ export interface ActivityData {
   conversation: string;
   disposition: string;
   disposition_id: string;
+  recording_url?: string | null;
+  duration_seconds?: number | null;
+  call_id?: string | null;
   agent_id?: string | null;
   agent_name?: string | null;
   occurred_at?: string | null;
@@ -97,6 +100,8 @@ export interface ActivityData {
 
 type Props = {
   leadId: string;
+  leadPhone?: string;
+  leadName?: string;
   hitApi?: boolean;
   setHitApi?: React.Dispatch<React.SetStateAction<boolean>>;
 };
@@ -108,12 +113,15 @@ const activitySchema = Yup.object({
 
 export default function LeadActivityTab({
   leadId,
+  leadPhone,
+  leadName,
   hitApi,
   setHitApi,
 }: Props) {
   const [activities, setActivities] = useState<ActivityData[]>([]);
   const [dispositions, setDispositions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isCalling, setIsCalling] = useState<boolean>(false);
 
   const [isCreateOpen, setIsCreateOpen] = useState<boolean>(false);
   const [editingActivity, setEditingActivity] = useState<ActivityData | null>(null);
@@ -226,12 +234,106 @@ export default function LeadActivityTab({
     setIsExpandedConv((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const handleCallLead = async () => {
+    if (!leadPhone) {
+      toast.warn("Lead has no phone number to call");
+      return;
+    }
+    setIsCalling(true);
+    try {
+      const res = await AxiosProvider.post("/cloudtalk/call", { lead_id: leadId });
+      const dialLink = res.data?.data?.dialLink;
+      const fallbackTel = res.data?.data?.fallbackTel;
+
+      toast.success(res.data?.message || `Calling ${leadName || leadPhone} via CloudTalk...`);
+
+      if (dialLink) {
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        iframe.src = dialLink;
+        document.body.appendChild(iframe);
+        setTimeout(() => {
+          try {
+            document.body.removeChild(iframe);
+          } catch {}
+        }, 3000);
+      } else if (fallbackTel) {
+        window.location.href = fallbackTel;
+      }
+
+      setTimeout(() => {
+        fetchActivities();
+        if (setHitApi) setHitApi((prev) => !prev);
+      }, 2000);
+    } catch (err: any) {
+      console.error("CloudTalk call error:", err);
+      const isOffline =
+        err?.response?.data?.isOffline ||
+        err?.response?.data?.message?.toLowerCase()?.includes("offline") ||
+        err?.response?.data?.message?.toLowerCase()?.includes("online");
+
+      if (isOffline) {
+        Swal.fire({
+          title: "CloudTalk Phone Offline",
+          html: `
+            <div style="text-align: left; font-size: 13px; color: #d1d5db; line-height: 1.5;">
+              <p style="margin-bottom: 10px;">Your CloudTalk agent is not online right now. To talk to leads from <b>+1 239-329-0248</b>, your CloudTalk Phone must be open with status set to <b>Online</b>.</p>
+              <div style="background-color: #1f2937; padding: 12px; border-radius: 6px; border: 1px solid #374151;">
+                <p style="font-weight: 600; color: #38bdf8; margin-bottom: 6px;">How to connect:</p>
+                <ol style="margin-left: 18px; padding: 0;">
+                  <li>Click <b>"Open CloudTalk Phone"</b> below.</li>
+                  <li>Log in with your agent account (<b>info@medicos-pharma.com</b>).</li>
+                  <li>Ensure your status toggle is green (<b>Online</b>).</li>
+                  <li>Click <b>"Call Lead"</b> again to dial!</li>
+                </ol>
+              </div>
+            </div>
+          `,
+          icon: "warning",
+          background: "#181818",
+          color: "#ffffff",
+          iconColor: "#f59e0b",
+          showCancelButton: true,
+          confirmButtonColor: "#0284c7",
+          cancelButtonColor: "#374151",
+          confirmButtonText: "🌐 Open CloudTalk Phone",
+          cancelButtonText: "Close",
+          customClass: {
+            popup: "border border-gray-700 rounded-2xl shadow-2xl",
+          },
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.open("https://phone.cloudtalk.io", "_blank", "width=460,height=750,noopener,noreferrer");
+          }
+        });
+        return;
+      }
+
+      toast.error(err?.response?.data?.message || err?.response?.data?.msg || "Failed to trigger call");
+    } finally {
+      setIsCalling(false);
+    }
+  };
+
   const isDrawerVisible = isCreateOpen || Boolean(editingActivity);
 
   return (
     <div className="w-full">
-      {/* Top Add Activity Button */}
-      <div className="flex justify-end items-center mb-4">
+      {/* Top Actions: Call Lead & Add Activity Buttons */}
+      <div className="flex justify-end items-center gap-3 mb-4">
+        <button
+          type="button"
+          onClick={handleCallLead}
+          disabled={isCalling || !leadPhone}
+          title={!leadPhone ? "No phone number available" : `Call ${leadPhone} via CloudTalk`}
+          className={`flex items-center justify-center gap-2 px-4 h-[38px] rounded-[4px] border border-emerald-500 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold tracking-wide transition shadow-sm ${
+            isCalling || !leadPhone ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+          }`}
+        >
+          <FiPhoneCall className={`w-4 h-4 text-white ${isCalling ? "animate-pulse" : ""}`} />
+          <span>{isCalling ? "Calling..." : "Call Lead"}</span>
+        </button>
+
         <button
           type="button"
           onClick={() => {
@@ -287,19 +389,41 @@ export default function LeadActivityTab({
                       {act.disposition || "—"} {act.is_edited ? <span className="text-[10px] text-gray-400 font-normal">(Edited)</span> : ""}
                     </td>
                     <td className="py-2 px-3 text-xs text-gray-100 max-w-xs">
-                      <p>
-                        {isLong && !isExpanded
-                          ? act.conversation.substring(0, 100) + "..."
-                          : act.conversation}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                        <p className="font-medium text-white">
+                          {isLong && !isExpanded
+                            ? act.conversation.substring(0, 100) + "..."
+                            : act.conversation}
+                        </p>
+                        {act.duration_seconds ? (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/60 text-emerald-300 font-mono border border-emerald-500/30">
+                            ⏱️ {Math.floor(act.duration_seconds / 60)}m {act.duration_seconds % 60}s
+                          </span>
+                        ) : null}
+                      </div>
                       {isLong && (
                         <button
                           type="button"
                           onClick={() => toggleConversation(act.id)}
-                          className="text-primary-300 underline text-[11px] mt-0.5 cursor-pointer"
+                          className="text-primary-300 underline text-[11px] mt-0.5 cursor-pointer block"
                         >
                           {isExpanded ? "Show less" : "Show more"}
                         </button>
+                      )}
+                      {act.recording_url && (
+                        <div className="mt-2 pt-1 border-t border-gray-600/50">
+                          <span className="text-[10px] text-gray-300 font-semibold block mb-1">
+                            🎧 Call Recording:
+                          </span>
+                          <audio
+                            controls
+                            preload="none"
+                            src={act.recording_url}
+                            className="h-7 w-full max-w-[220px] rounded"
+                          >
+                            Your browser does not support audio playback.
+                          </audio>
+                        </div>
                       )}
                     </td>
                     <td className="py-2 px-3 text-center">
