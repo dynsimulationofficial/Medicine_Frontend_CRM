@@ -285,7 +285,7 @@ const AssignedLeadsTable = ({
       await fetchLeads(page, filterData);
       if (onRefresh) onRefresh();
     } catch (error: any) {
-      toast.error(error?.response?.data?.msg || "Failed to assign leads");
+      toast.error(error?.response?.data?.message || error?.response?.data?.msg || "Failed to assign leads");
     }
   };
 

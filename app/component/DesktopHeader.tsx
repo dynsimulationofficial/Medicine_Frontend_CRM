@@ -206,44 +206,6 @@ const DesktopHeader = () => {
               <FaSearch className="w-3.5 h-3.5" />
             </button>
           </div>
-
-          {/* Bell icon (Hidden / Display None) */}
-          {false && (
-            <div
-              className="relative hidden items-center cursor-pointer"
-              style={{ display: "none" }}
-              onClick={() => {
-                setIsLeftSideBar(true);
-                fetchNotification();
-              }}
-              title="Notifications"
-            >
-              <div className="w-[36px] h-[36px] bg-primary-600 hover:bg-primary-700 rounded-full flex items-center justify-center transition shrink-0 relative">
-                <IoIosNotificationsOutline className="text-white w-[20px] h-[20px]" />
-                {notificationData?.length > 0 && (
-                  <div className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-600 rounded-full border border-black"></div>
-                )}
-              </div>
-
-              {/* Notification list */}
-              {isHovered && (notificationData?.length || 0) > 0 && (
-                <div className="absolute top-[42px] right-0 w-96 shadow-lg rounded-md z-50 bg-[#171717]">
-                  <ul className="divide-y divide-gray-200">
-                    {(notificationData || []).map((notification, index) => (
-                      <li
-                        onClick={() => navigateLeadDetails(notification.lead_id)}
-                        key={index}
-                        className="px-3 py-3 text-sm hover:cursor-pointer hover:bg-primary-800"
-                      >
-                        {notification.body}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-          {/* END BELL ICON */}
           {/* <div className=" w-[50px] h-[50px]  rounded-full flex justify-center items-center z-10">
             <Image
               src="/images/dummy-image.jpg"

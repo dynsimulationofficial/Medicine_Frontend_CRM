@@ -140,10 +140,13 @@ export default function AgentDashboardPage() {
         .catch(async () => {
           // Fallback to /leads/assigned if needed
           const fallbackRes = await AxiosProvider.get(`/leads/assigned?page=${page}&pageSize=50`);
-          const list = fallbackRes.data?.data?.data || [];
+          const list = Array.isArray(fallbackRes.data?.data)
+            ? fallbackRes.data.data
+            : (fallbackRes.data?.data?.data || fallbackRes.data?.data?.leads || []);
+          const pag = fallbackRes.data?.pagination || fallbackRes.data?.data?.pagination;
           setAssignedLeads(list);
-          setTotalPages(fallbackRes.data?.data?.pagination?.totalPages || 1);
-          setTotalLeads(fallbackRes.data?.data?.pagination?.total || list.length);
+          setTotalPages(pag?.totalPages || 1);
+          setTotalLeads(pag?.total || list.length);
         });
 
       // API 8: Agent Tasks Details & Lists

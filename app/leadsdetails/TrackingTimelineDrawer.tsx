@@ -83,7 +83,7 @@ export default function TrackingTimelineDrawer({
         if (onStatusUpdated) onStatusUpdated();
       }
     } catch (e: any) {
-      toast.error(e?.response?.data?.msg || "Failed to sync tracking");
+      toast.error(e?.response?.data?.message || e?.response?.data?.msg || "Failed to sync tracking");
     } finally {
       setIsSyncing(false);
     }

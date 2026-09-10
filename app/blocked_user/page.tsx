@@ -110,7 +110,7 @@ export default function Home() {
       showCancelButton: true,
       confirmButtonText: "Block",
       cancelButtonText: "Cancel",
-      confirmButtonColor: "##3085d6",
+      confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
       preConfirm: (reason) => {
         if (!reason) {
@@ -140,12 +140,11 @@ export default function Home() {
     try {
       await AxiosProvider.post("/unblockuser", { user_id: id });
 
-      toast.success("Successfully Deleted");
+      toast.success("User unblocked successfully");
       setShouldRefetch((prev) => !prev);
-      // await activityLogger.userDelete(userID);
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      toast.error("Failed to delete user");
+    } catch (error: any) {
+      console.error("Error unblocking user:", error);
+      toast.error(error?.response?.data?.message || error?.response?.data?.msg || "Failed to unblock user");
     }
   };
 

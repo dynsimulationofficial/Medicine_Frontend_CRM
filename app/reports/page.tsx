@@ -53,7 +53,10 @@ export default function ReportsPage() {
     const fetchAgents = async () => {
       try {
         const res = await AxiosProvider.get("/allagents");
-        setAgentsList(res.data?.data?.data || []);
+        const list = Array.isArray(res.data?.data)
+          ? res.data.data
+          : (res.data?.data?.data || []);
+        setAgentsList(list);
       } catch (err) {
         console.error("Error fetching agents:", err);
       }
@@ -124,7 +127,7 @@ export default function ReportsPage() {
       }
     } catch (err: any) {
       console.error("Error fetching KPI report:", err);
-      toast.error(err.response?.data?.msg || "Failed to load KPI reports");
+      toast.error(err.response?.data?.message || err.response?.data?.msg || "Failed to load KPI reports");
     } finally {
       setLoading(false);
     }
