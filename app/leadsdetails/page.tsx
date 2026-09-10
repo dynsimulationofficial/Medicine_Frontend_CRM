@@ -74,10 +74,14 @@ export default function LeadDetailsPage() {
       if (nextId) {
         router.push(`/leadsdetails?id=${nextId}`);
       } else {
-        toast.info("No more unassigned leads available");
+        toast.info(res.data?.message || "No unassigned leads found");
       }
-    } catch {
-      toast.error("Error fetching next lead");
+    } catch (err: any) {
+      if (err?.response?.status === 404 || err?.response?.data?.message?.toLowerCase().includes("no unassigned")) {
+        toast.info(err?.response?.data?.message || "No unassigned leads found");
+      } else {
+        toast.error(err?.response?.data?.message || err?.response?.data?.msg || "Error fetching next lead");
+      }
     }
   };
 
