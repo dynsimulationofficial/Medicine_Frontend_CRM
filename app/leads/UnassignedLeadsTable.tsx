@@ -192,7 +192,8 @@ const UnassignedLeadsTable = ({
       if (response.data?.success) {
         const leadList = response.data.data?.data ?? (Array.isArray(response.data.data) ? response.data.data : []);
         setData(leadList);
-        setTotalPages(response.data.data?.pagination?.totalPages || 1);
+        const totalP = response.data?.pagination?.totalPages ?? response.data?.data?.pagination?.totalPages ?? 1;
+        setTotalPages(totalP);
       }
     } catch (error) {
       console.error("Error fetching unassigned leads:", error);
@@ -324,12 +325,12 @@ const UnassignedLeadsTable = ({
 
     if (res.isConfirmed) {
       try {
-        await AxiosProvider.post("/leads/soft-delete", { lead_id: leadId });
+        await AxiosProvider.post("/leads/soft-delete", { id: leadId, lead_id: leadId });
         toast.success("Successfully Deleted");
         await fetchLeads(page, filterData);
         if (onRefresh) onRefresh();
       } catch (error: any) {
-        toast.error(error.response?.data?.msg || "Failed to delete lead");
+        toast.error(error.response?.data?.message || error.response?.data?.msg || "Failed to delete lead");
       }
     }
   };

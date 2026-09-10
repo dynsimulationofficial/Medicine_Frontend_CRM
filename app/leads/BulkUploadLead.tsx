@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { toast } from "react-toastify";
+import { FaFileExcel } from "react-icons/fa";
+import { FiDownload } from "react-icons/fi";
 import AxiosProvider, { getBaseURL } from "../../provider/AxiosProvider";
 
 interface BulkUploadLeadProps {
@@ -198,9 +200,28 @@ export default function BulkUploadLead({
         },
       });
 
-      const successMessage = res.data?.message || res.data?.msg || "Bulk upload successful!";
-      toast.success(successMessage);
+      const inserted = res.data?.data?.inserted ?? 0;
+      const skipped = res.data?.data?.skipped ?? 0;
 
+      if (inserted === 0) {
+        toast.error("Lead already exists (Phone number or Email ID already exists)");
+        return;
+      }
+
+      if (inserted > 0 && skipped > 0) {
+        toast.success(`Successfully imported ${inserted} leads!`);
+        toast.error("Some leads skipped: Phone number or Email ID already exists");
+        setExcelFile(null);
+        setSelectedSource(null);
+        setSelectedCampaign(null);
+        setSelectedAgent(null);
+        formEl.reset();
+        closeFlyout();
+        onSuccess();
+        return;
+      }
+
+      toast.success(res.data?.message || `Successfully imported ${inserted} leads!`);
       setExcelFile(null);
       setSelectedSource(null);
       setSelectedCampaign(null);
@@ -213,13 +234,8 @@ export default function BulkUploadLead({
       const errorMsg =
         err.response?.data?.message ||
         err.response?.data?.msg ||
-        err.message ||
-        "Bulk upload failed";
-      if (errorMsg.toLowerCase().includes("invalid")) {
-        toast.error("Bulk upload failed - all rows invalid");
-      } else {
-        toast.error(errorMsg);
-      }
+        "Lead already exists (Phone number or Email ID already exists)";
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -227,6 +243,28 @@ export default function BulkUploadLead({
 
   return (
     <form onSubmit={handleUploadFile} className="space-y-4">
+      {/* Sample Template Download Card */}
+      <div className="p-3 bg-[#181818] border border-gray-700/80 rounded-lg flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-md bg-emerald-950/60 border border-emerald-700/60 flex items-center justify-center shrink-0">
+            <FaFileExcel className="w-4 h-4 text-emerald-400" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-white truncate">Sample Excel Template</p>
+            <p className="text-[11px] text-gray-400">Download template with Full Name, Phone, and Email</p>
+          </div>
+        </div>
+        <a
+          href="/sample_leads_template.xlsx"
+          download="sample_leads_template.xlsx"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white rounded text-xs font-medium transition cursor-pointer shrink-0 shadow-sm"
+          title="Download Sample Excel File"
+        >
+          <FiDownload className="w-3.5 h-3.5" />
+          Download Sample
+        </a>
+      </div>
+
       <div>
         <p className="text-white text-xs font-medium mb-1.5">CSV / Excel File *</p>
         <input
