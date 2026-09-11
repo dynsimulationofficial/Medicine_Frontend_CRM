@@ -208,43 +208,49 @@ export default function MedicinesPage() {
             <table className="w-full text-xs text-left text-white whitespace-nowrap">
               <thead className="text-xs text-[#999999] talbleheaderBg">
                 <tr>
-                  <th scope="col" className="px-4 py-3 w-[5%] text-center">
+                  <th scope="col" className="px-4 py-3 w-[4%] text-center">
                     <span className="font-bold text-white text-xs tracking-wide">
                       #
                     </span>
                   </th>
 
-                  <th scope="col" className="px-4 py-3 w-[22%]">
+                  <th scope="col" className="px-4 py-3 w-[18%]">
                     <span className="font-bold text-white text-xs tracking-wide">
                       Medicine Name
                     </span>
                   </th>
 
-                  <th scope="col" className="px-4 py-3 w-[20%]">
+                  <th scope="col" className="px-4 py-3 w-[16%]">
                     <span className="font-bold text-white text-xs tracking-wide">
                       Generic Name
                     </span>
                   </th>
 
-                  <th scope="col" className="px-4 py-3 w-[14%]">
+                  <th scope="col" className="px-4 py-3 w-[10%]">
                     <span className="font-bold text-white text-xs tracking-wide">
                       Packing
                     </span>
                   </th>
 
-                  <th scope="col" className="px-4 py-3 w-[14%]">
+                  <th scope="col" className="px-4 py-3 w-[10%]">
                     <span className="font-bold text-white text-xs tracking-wide">
                       Price (USD)
                     </span>
                   </th>
 
-                  <th scope="col" className="px-4 py-3 w-[12%] text-center">
+                  <th scope="col" className="px-4 py-3 w-[22%]">
+                    <span className="font-bold text-white text-xs tracking-wide">
+                      Description
+                    </span>
+                  </th>
+
+                  <th scope="col" className="px-4 py-3 w-[8%] text-center">
                     <span className="font-bold text-white text-xs tracking-wide">
                       Image
                     </span>
                   </th>
 
-                  <th scope="col" className="px-4 py-3 w-[13%] text-center">
+                  <th scope="col" className="px-4 py-3 w-[12%] text-center">
                     <div className="flex items-center justify-center gap-2">
                       <MdOutlineSettings className="w-4 h-4 text-white" />
                       <span className="font-bold text-white text-xs tracking-wide">
@@ -258,14 +264,14 @@ export default function MedicinesPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-8 text-white">
+                    <td colSpan={8} className="text-center py-8 text-white">
                       <div className="animate-pulse">Loading medicines...</div>
                     </td>
                   </tr>
                 ) : data.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="text-center text-xl py-8 text-white"
                     >
                       <div>Data not found</div>
@@ -283,7 +289,7 @@ export default function MedicinesPage() {
 
                       {/* Medicine Name */}
                       <td
-                        className="px-4 py-3 font-semibold text-white max-w-[200px] truncate"
+                        className="px-4 py-3 font-semibold text-white max-w-[180px] truncate"
                         title={row.name}
                       >
                         {row.name}
@@ -291,7 +297,7 @@ export default function MedicinesPage() {
 
                       {/* Generic Name */}
                       <td
-                        className="px-4 py-3 text-gray-300 max-w-[250px] truncate"
+                        className="px-4 py-3 text-gray-300 max-w-[180px] truncate"
                         title={row.generic_name || ""}
                       >
                         {row.generic_name || "—"}
@@ -309,7 +315,15 @@ export default function MedicinesPage() {
                           : "—"}
                       </td>
 
-                      {/* Medicine Image (centered, after Price) */}
+                      {/* Description */}
+                      <td
+                        className="px-4 py-3 text-gray-300 max-w-[220px] truncate"
+                        title={row.description || ""}
+                      >
+                        {row.description || "—"}
+                      </td>
+
+                      {/* Medicine Image (centered) */}
                       <td className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center">
                           {row.image_url ? (
