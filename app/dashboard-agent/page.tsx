@@ -127,7 +127,7 @@ export default function AgentDashboardPage() {
         .catch((e) => console.error("Error fetching Card 6:", e));
 
       // API 7: Assigned Leads Queue Table (Section 7)
-      const api7 = AxiosProvider.get(`/leads/agent/dashboard/assigned-leads?page=${page}&pageSize=50`)
+      const api7 = AxiosProvider.get(`/leads/agent/dashboard/assigned-leads?page=${page}&pageSize=500`)
         .then((res) => {
           if (res.data?.success) {
             const list = res.data.data?.leads || [];
@@ -139,7 +139,7 @@ export default function AgentDashboardPage() {
         })
         .catch(async () => {
           // Fallback to /leads/assigned if needed
-          const fallbackRes = await AxiosProvider.get(`/leads/assigned?page=${page}&pageSize=50`);
+          const fallbackRes = await AxiosProvider.get(`/leads/assigned?page=${page}&pageSize=500`);
           const list = Array.isArray(fallbackRes.data?.data)
             ? fallbackRes.data.data
             : (fallbackRes.data?.data?.data || fallbackRes.data?.data?.leads || []);
