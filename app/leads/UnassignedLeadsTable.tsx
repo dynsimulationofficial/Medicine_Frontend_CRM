@@ -758,9 +758,9 @@ const UnassignedLeadsTable = ({
                               setFieldValue("phone", numberPart ? newPrefix + numberPart : newPrefix);
                             }}
                           >
-                            <option value="+1">+1 (USA)</option>
-                            <option value="+44">+44 (UK)</option>
-                            <option value="+91">+91 (India)</option>
+                            <option value="+1">+1</option>
+                            <option value="+44">+44</option>
+                            <option value="+91">+91</option>
                           </select>
                           <input
                             type="text"
@@ -795,9 +795,9 @@ const UnassignedLeadsTable = ({
                               setFieldValue("whatsapp_number", e.target.value + numberPart);
                             }}
                           >
-                            <option value="+1">+1 (USA)</option>
-                            <option value="+44">+44 (UK)</option>
-                            <option value="+91">+91 (India)</option>
+                            <option value="+1">+1</option>
+                            <option value="+44">+44</option>
+                            <option value="+91">+91</option>
                           </select>
                           <input
                             type="text"
