@@ -510,6 +510,8 @@ export default function LeadActivityTab({
 
                       const autoFillList = [
                         "blank call",
+                        "dnd",
+                        "do not disturb",
                         "not interested",
                         "ringing",
                         "no answer",
