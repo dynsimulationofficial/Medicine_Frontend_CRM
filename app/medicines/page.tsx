@@ -23,6 +23,7 @@ const medicineSchema = Yup.object({
   generic_name: Yup.string().trim().nullable().optional().max(255),
   packing: Yup.string().trim().nullable().optional().max(100),
   price: Yup.number().typeError("Price must be a valid number").nullable().optional().min(0),
+  description: Yup.string().trim().nullable().optional(),
 });
 
 export default function MedicinesPage() {
@@ -136,6 +137,9 @@ export default function MedicinesPage() {
       }
       if (values.price !== undefined && values.price !== null && values.price !== "") {
         fd.append("price", values.price);
+      }
+      if (values.description !== undefined && values.description !== null) {
+        fd.append("description", values.description.trim());
       }
       if (selectedFile) {
         fd.append("image", selectedFile);
@@ -419,6 +423,7 @@ export default function MedicinesPage() {
                   selectedData?.price !== undefined && selectedData?.price !== null
                     ? selectedData.price
                     : "",
+                description: selectedData?.description || "",
               }}
               validationSchema={medicineSchema}
               onSubmit={handleSubmit}
@@ -497,6 +502,25 @@ export default function MedicinesPage() {
                         className="text-red-500 text-xs mt-1"
                       />
                     </div>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <p className="text-white text-xs mb-1.5 font-medium">
+                      Description
+                    </p>
+                    <Field
+                      as="textarea"
+                      rows={3}
+                      name="description"
+                      placeholder="Enter medicine description, notes, or details..."
+                      className="hover:shadow-hoverInputShadow focus:border-primary-600 w-full border border-gray-700 rounded-[4px] text-white text-xs placeholder-gray-400 p-2.5 bg-black outline-none resize-none"
+                    />
+                    <ErrorMessage
+                      name="description"
+                      component="div"
+                      className="text-red-500 text-xs mt-1"
+                    />
                   </div>
 
                   {/* Medicine Image Upload */}
@@ -606,6 +630,12 @@ export default function MedicinesPage() {
                         : "—"}
                     </p>
                   </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Description</p>
+                  <p className="text-sm font-medium text-gray-200 mt-0.5 whitespace-pre-wrap bg-black/40 p-2.5 rounded-[4px] border border-gray-800">
+                    {selectedData.description || "—"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-400">Added Date</p>
