@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { FaRegCheckCircle, FaSearchPlus, FaBullhorn } from "react-icons/fa";
 import { RxAvatar } from "react-icons/rx";
 import { IoMailOpenOutline, IoCloseOutline } from "react-icons/io5";
@@ -226,6 +226,8 @@ const AssignedLeadsTable = ({
     setSelectedIds((prev) => prev.filter((id) => valid.has(id)));
   }, [data]);
 
+  const selectedIdsSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+
   const toggleRow = (id: string, checked: boolean) => {
     setSelectedIds((prev) => (checked ? [...prev, id] : prev.filter((x) => x !== id)));
   };
@@ -234,7 +236,7 @@ const AssignedLeadsTable = ({
     setSelectedIds(checked ? data.map((i: any) => i.id) : []);
   };
 
-  const areAllSelected = !!data?.length && data.every((i: any) => selectedIds.includes(i.id));
+  const areAllSelected = !!data?.length && selectedIds.length === data.length;
 
   // --- Edit Lead Submit ---
   
@@ -270,25 +272,37 @@ const AssignedLeadsTable = ({
   };
 
   // --- Bulk Assign Agent Submit ---
+  const [isAssigning, setIsAssigning] = useState<boolean>(false);
+
   const handleBulkAssignAgent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAgent) {
       toast.error("Please select an agent");
       return;
     }
+    if (!selectedIds.length) {
+      toast.error("Please select at least one lead");
+      return;
+    }
+    setIsAssigning(true);
     try {
       await AxiosProvider.post("/leads/assigned/bulk", {
         lead_ids: selectedIds,
         agent_id: selectedAgent.id,
       });
-      toast.success("Leads assigned successfully");
+      toast.success(`${selectedIds.length} leads assigned successfully`);
       setSelectedIds([]);
       setSelectedAgent(null);
       closeFlyout();
-      await fetchLeads(page, filterData);
-      if (onRefresh) onRefresh();
+      if (onRefresh) {
+        onRefresh();
+      } else {
+        await fetchLeads(page, filterData);
+      }
     } catch (error: any) {
       toast.error(error?.response?.data?.message || error?.response?.data?.msg || "Failed to assign leads");
+    } finally {
+      setIsAssigning(false);
     }
   };
 
@@ -478,7 +492,7 @@ const AssignedLeadsTable = ({
                   <input
                     type="checkbox"
                     className="accent-primary-600"
-                    checked={selectedIds.includes(item.id)}
+                    checked={selectedIdsSet.has(item.id)}
                     onChange={(e) => toggleRow(item.id, e.target.checked)}
                   />
                 </td>
@@ -500,7 +514,6 @@ const AssignedLeadsTable = ({
                         </div>`}
                         className="text-white leading-normal relative top-[5.3px] capitalize"
                       />
-                      <Tooltip id="my-tooltip" place="right" float className="box" />
                     </div>
                     <div className="cursor-pointer">
                       <p className="text-primary-400 text-xs font-semibold leading-tight capitalize hover:underline">
@@ -575,6 +588,9 @@ const AssignedLeadsTable = ({
         </tbody>
       </table>
 
+      {/* Global Tooltip for all table rows (rendered once for ultra-fast performance) */}
+      <Tooltip id="my-tooltip" place="right" float className="box" />
+
       {/* Pagination */}
       {data && data.length > 0 && (
         <div className="flex justify-center items-center my-10 relative">
@@ -643,9 +659,17 @@ const AssignedLeadsTable = ({
 
               <button
                 type="submit"
-                className="py-[13px] px-[26px] bg-primary-600 rounded-[4px] text-base font-medium leading-6 text-white hover:bg-primary-700 w-full cursor-pointer"
+                disabled={isAssigning}
+                className="py-[13px] px-[26px] bg-primary-600 rounded-[4px] text-base font-medium leading-6 text-white hover:bg-primary-700 w-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Assign Selected Leads ({selectedIds.length})
+                {isAssigning ? (
+                  <>
+                    <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    Assigning {selectedIds.length} Leads...
+                  </>
+                ) : (
+                  `Assign Selected Leads (${selectedIds.length})`
+                )}
               </button>
             </form>
           </div>
