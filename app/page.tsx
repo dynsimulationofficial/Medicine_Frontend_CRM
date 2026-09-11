@@ -139,15 +139,15 @@ export default function LoginHome() {
         />
       </div> */}
     <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6">
-      <div className="w-full max-w-[480px] shadow-loginBoxShadow px-6 sm:px-10 py-8 sm:py-10 rounded-xl mainContainerBg border border-gray-800">
+      <div className="w-full max-w-[410px] shadow-loginBoxShadow px-6 sm:px-7 py-7 rounded-xl mainContainerBg border border-gray-800">
         <Image
           src="/images/crmlogo.png"
           alt="CRM Logo"
-          width={180}
-          height={130}
-          className="mx-auto mb-4 object-contain"
+          width={150}
+          height={100}
+          className="mx-auto mb-3 object-contain"
         />
-        <p className="font-bold text-lg sm:text-xl leading-normal text-center text-white mb-6">
+        <p className="font-semibold text-base sm:text-lg leading-normal text-center text-white mb-5">
           Login to LEAD CRM
         </p>
         <Formik
@@ -159,13 +159,13 @@ export default function LoginHome() {
             <Form className="w-full space-y-4">
               {/* Email Field */}
               <div>
-                <p className="text-white text-sm font-medium mb-1.5">Email</p>
+                <p className="text-gray-200 text-sm font-medium mb-1.5">Email</p>
                 <Field
                   type="text"
                   name="email"
                   autoComplete="username"
                   placeholder="Enter your User ID/Email"
-                  className="focus:outline-none w-full h-[48px] border border-gray-700 rounded-[6px] text-[15px] px-4 text-white hover:border-gray-500 focus:border-primary-500 bg-black transition-colors"
+                  className="focus:outline-none w-full h-[40px] border border-gray-700 rounded-md text-sm px-3.5 text-white hover:border-gray-500 focus:border-primary-500 bg-black transition-colors placeholder:text-gray-500 placeholder:text-sm"
                 />
                 <ErrorMessage
                   name="email"
@@ -176,7 +176,7 @@ export default function LoginHome() {
 
               {/* Password Field */}
               <div>
-                <p className="text-white text-sm font-medium mb-1.5">Password</p>
+                <p className="text-gray-200 text-sm font-medium mb-1.5">Password</p>
                 <div className="relative">
                   <Field
                     type={showPassword ? "text" : "password"}
@@ -186,7 +186,7 @@ export default function LoginHome() {
                     }
                     autoComplete="current-password"
                     placeholder="Enter your password"
-                    className="focus:outline-none w-full h-[48px] border border-gray-700 rounded-[6px] text-[15px] pl-4 pr-11 text-white hover:border-gray-500 focus:border-primary-500 bg-black transition-colors"
+                    className="focus:outline-none w-full h-[40px] border border-gray-700 rounded-md text-sm pl-3.5 pr-10 text-white hover:border-gray-500 focus:border-primary-500 bg-black transition-colors placeholder:text-gray-500 placeholder:text-sm"
                   />
                   <button
                     type="button"
@@ -210,16 +210,16 @@ export default function LoginHome() {
                     type="checkbox"
                     name="terms"
                     id="terms"
-                    className="mt-0.5 mr-2.5 w-4 h-4 accent-primary-600 cursor-pointer"
+                    className="mr-2 w-3.5 h-3.5 rounded accent-primary-600 cursor-pointer shrink-0"
                   />
-                  <label htmlFor="terms" className="text-xs sm:text-sm text-gray-300 cursor-pointer">
+                  <label htmlFor="terms" className="text-[11px] text-gray-300 cursor-pointer whitespace-nowrap">
                     I agree to the{" "}
                     <a
                       href="/"
                       target="_blank"
                       className="underline text-primary-500 hover:text-primary-400"
                     >
-                      Terms and Conditions
+                      Terms & Conditions
                     </a>{" "}
                     and{" "}
                     <a
@@ -243,7 +243,7 @@ export default function LoginHome() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-primary-600 rounded-[6px] w-full h-[48px] text-center text-white text-base font-semibold leading-normal hover:bg-primary-700 active:bg-primary-800 transition duration-150 shadow-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="bg-primary-600 rounded-md w-full h-[40px] text-center text-white text-sm font-semibold leading-normal hover:bg-primary-700 active:bg-primary-800 transition duration-150 shadow-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading ? "Logging in..." : "Login"}
                 </button>
