@@ -180,7 +180,7 @@ export default function LeadProfileSidebar({
               full_name: data?.full_name ?? "",
               email: data?.email ?? "",
               phone: data?.phone ?? "",
-              country: data?.address?.country ?? data?.country ?? "India",
+              country: data?.address?.country ?? data?.country ?? "USA",
               state: data?.address?.state ?? data?.state ?? "",
               city: data?.address?.city ?? data?.city ?? "",
               address_line1: data?.address?.line1 ?? data?.address_line1 ?? "",
@@ -288,18 +288,18 @@ export default function LeadProfileSidebar({
                       <select
                         className="bg-black text-white text-xs border-r border-white/30 px-2 py-2 outline-none cursor-pointer"
                         value={
-                          values.phone?.startsWith("+1")
-                            ? "+1"
+                          values.phone?.startsWith("+91")
+                            ? "+91"
                             : values.phone?.startsWith("+44")
                             ? "+44"
-                            : "+91"
+                            : "+1"
                         }
                         onChange={(e) => {
-                          const currentCode = values.phone?.startsWith("+1")
-                            ? "+1"
+                          const currentCode = values.phone?.startsWith("+91")
+                            ? "+91"
                             : values.phone?.startsWith("+44")
                             ? "+44"
-                            : "+91";
+                            : "+1";
                           const numberPart = (values.phone || "").replace(
                             currentCode,
                             "",
@@ -310,29 +310,29 @@ export default function LeadProfileSidebar({
                           );
                         }}
                       >
-                        <option value="+91">+91</option>
-                        <option value="+1">+1</option>
-                        <option value="+44">+44</option>
+                        <option value="+1">+1 (USA)</option>
+                        <option value="+44">+44 (UK)</option>
+                        <option value="+91">+91 (India)</option>
                       </select>
                       <input
                         type="text"
-                        maxLength={10}
+                        maxLength={15}
                         className="h-full w-full bg-transparent text-white text-xs px-3 outline-none placeholder-gray-300"
                         placeholder="Enter mobile number"
                         value={(() => {
-                          const code = values.phone?.startsWith("+1")
-                            ? "+1"
+                          const code = values.phone?.startsWith("+91")
+                            ? "+91"
                             : values.phone?.startsWith("+44")
                             ? "+44"
-                            : "+91";
+                            : "+1";
                           return (values.phone || "").substring(code.length);
                         })()}
                         onChange={(e) => {
-                          const code = values.phone?.startsWith("+1")
-                            ? "+1"
+                          const code = values.phone?.startsWith("+91")
+                            ? "+91"
                             : values.phone?.startsWith("+44")
                             ? "+44"
-                            : "+91";
+                            : "+1";
                           const digitsOnly = e.target.value.replace(/\D/g, "");
                           setFieldValue("phone", digitsOnly ? code + digitsOnly : "");
                         }}

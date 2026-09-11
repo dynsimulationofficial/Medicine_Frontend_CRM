@@ -8,9 +8,9 @@ import Select from "react-select";
 import { toast } from 'react-toastify';
 
 export const countryOptions = [
-  { id: "India", name: "India 🇮🇳" },
   { id: "USA", name: "USA 🇺🇸" },
   { id: "UK", name: "UK 🇬🇧" },
+  { id: "India", name: "India 🇮🇳" },
 ];
 
 export const statesByCountry: Record<string, { id: string; name: string }[]> = {
@@ -309,7 +309,7 @@ const CreateLead = ({ closeFlyOut }: any) => {
           address_line1: "",
           address_line2: "",
           city: "",
-          country: "India",
+          country: "USA",
           state: "",
           postal_code: "",
           best_time_to_call: "",
@@ -362,27 +362,27 @@ const CreateLead = ({ closeFlyOut }: any) => {
                   <div className="flex w-full h-[38px] border border-gray-700 rounded-[4px] bg-black overflow-hidden hover:shadow-hoverInputShadow focus-within:border-primary-600">
                     <select 
                       className="h-full bg-black text-white text-xs border-r border-gray-700 px-2 outline-none cursor-pointer"
-                      value={values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91"}
+                      value={values.phone?.startsWith("+91") ? "+91" : values.phone?.startsWith("+44") ? "+44" : "+1"}
                       onChange={(e) => {
                         const newPrefix = e.target.value;
-                        const currentCode = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
+                        const currentCode = values.phone?.startsWith("+91") ? "+91" : values.phone?.startsWith("+44") ? "+44" : "+1";
                         const numberPart = (values.phone || "").replace(currentCode, "");
                         setFieldValue("phone", numberPart ? newPrefix + numberPart : newPrefix);
                         if (newPrefix === "+44") {
                           setFieldValue("country", "UK");
                           setFieldValue("currency", "GBP");
-                        } else if (newPrefix === "+1") {
-                          setFieldValue("country", "USA");
-                          setFieldValue("currency", "USD");
-                        } else {
+                        } else if (newPrefix === "+91") {
                           setFieldValue("country", "India");
                           setFieldValue("currency", "INR");
+                        } else {
+                          setFieldValue("country", "USA");
+                          setFieldValue("currency", "USD");
                         }
                       }}
                     >
-                      <option value="+91">+91</option>
-                      <option value="+44">+44</option>
-                      <option value="+1">+1</option>
+                      <option value="+1">+1 (USA)</option>
+                      <option value="+44">+44 (UK)</option>
+                      <option value="+91">+91 (India)</option>
                     </select>
                     <input
                       type="text"
@@ -390,22 +390,22 @@ const CreateLead = ({ closeFlyOut }: any) => {
                       className="h-full w-full bg-transparent text-white text-xs px-3 outline-none placeholder-gray-400"
                       placeholder="Enter phone number"
                       value={(() => {
-                        const code = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
+                        const code = values.phone?.startsWith("+91") ? "+91" : values.phone?.startsWith("+44") ? "+44" : "+1";
                         return (values.phone || "").substring(code.length);
                       })()}
                       onChange={(e) => {
-                        const code = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
+                        const code = values.phone?.startsWith("+91") ? "+91" : values.phone?.startsWith("+44") ? "+44" : "+1";
                         const digitsOnly = e.target.value.replace(/\D/g, "");
                         setFieldValue("phone", digitsOnly ? code + digitsOnly : "");
                         if (code === "+44") {
                           setFieldValue("country", "UK");
                           setFieldValue("currency", "GBP");
-                        } else if (code === "+1") {
-                          setFieldValue("country", "USA");
-                          setFieldValue("currency", "USD");
-                        } else {
+                        } else if (code === "+91") {
                           setFieldValue("country", "India");
                           setFieldValue("currency", "INR");
+                        } else {
+                          setFieldValue("country", "USA");
+                          setFieldValue("currency", "USD");
                         }
                       }}
                       onBlur={() => setFieldTouched("phone", true)}
@@ -420,16 +420,16 @@ const CreateLead = ({ closeFlyOut }: any) => {
                   <div className="flex w-full h-[38px] border border-gray-700 rounded-[4px] bg-black overflow-hidden hover:shadow-hoverInputShadow focus-within:border-primary-600">
                     <select 
                       className="h-full bg-black text-white text-xs border-r border-gray-700 px-2 outline-none cursor-pointer"
-                      value={values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91'}
+                      value={values.whatsapp_number?.startsWith('+91') ? '+91' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+1'}
                       onChange={(e) => {
-                        const currentCode = values.whatsapp_number?.startsWith('+1') ? '+1' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+91';
+                        const currentCode = values.whatsapp_number?.startsWith('+91') ? '+91' : values.whatsapp_number?.startsWith('+44') ? '+44' : '+1';
                         const numberPart = (values.whatsapp_number || '').replace(currentCode, '');
                         setFieldValue('whatsapp_number', e.target.value + numberPart);
                       }}
                     >
-                      <option value="+91">+91</option>
-                      <option value="+1">+1</option>
-                      <option value="+44">+44</option>
+                      <option value="+1">+1 (USA)</option>
+                      <option value="+44">+44 (UK)</option>
+                      <option value="+91">+91 (India)</option>
                     </select>
                     <input
                       type="text"

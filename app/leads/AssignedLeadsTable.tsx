@@ -651,7 +651,7 @@ const AssignedLeadsTable = ({
                 address_line1: selectedData?.address?.line1 ?? selectedData?.address_line1 ?? "",
                 address_line2: selectedData?.address?.line2 ?? selectedData?.address_line2 ?? "",
                 city: selectedData?.address?.city ?? selectedData?.city ?? "",
-                country: selectedData?.address?.country ?? selectedData?.country ?? "India",
+                country: selectedData?.address?.country ?? selectedData?.country ?? "USA",
                 state: selectedData?.address?.state ?? selectedData?.state ?? "",
                 postal_code: selectedData?.address?.postal_code ?? selectedData?.postal_code ?? "",
                 best_time_to_call: selectedData?.best_time_to_call ?? "",
@@ -736,17 +736,17 @@ const AssignedLeadsTable = ({
                         <div className="flex w-full h-[38px] border border-gray-700 rounded-[4px] bg-black overflow-hidden focus-within:border-primary-600">
                           <select
                             className="h-full bg-black text-white text-xs border-r border-gray-700 px-2 outline-none cursor-pointer"
-                            value={values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91"}
+                            value={values.phone?.startsWith("+91") ? "+91" : values.phone?.startsWith("+44") ? "+44" : "+1"}
                             onChange={(e) => {
                               const newPrefix = e.target.value;
-                              const currentCode = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
+                              const currentCode = values.phone?.startsWith("+91") ? "+91" : values.phone?.startsWith("+44") ? "+44" : "+1";
                               const numberPart = (values.phone || "").replace(currentCode, "");
                               setFieldValue("phone", numberPart ? newPrefix + numberPart : newPrefix);
                             }}
                           >
-                            <option value="+91">+91</option>
-                            <option value="+44">+44</option>
-                            <option value="+1">+1</option>
+                            <option value="+1">+1 (USA)</option>
+                            <option value="+44">+44 (UK)</option>
+                            <option value="+91">+91 (India)</option>
                           </select>
                           <input
                             type="text"
@@ -754,11 +754,11 @@ const AssignedLeadsTable = ({
                             className="h-full w-full bg-transparent text-white text-xs px-3 outline-none placeholder-gray-400"
                             placeholder="Enter phone number"
                             value={(() => {
-                              const code = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
+                              const code = values.phone?.startsWith("+91") ? "+91" : values.phone?.startsWith("+44") ? "+44" : "+1";
                               return (values.phone || "").substring(code.length);
                             })()}
                             onChange={(e) => {
-                              const code = values.phone?.startsWith("+1") ? "+1" : values.phone?.startsWith("+44") ? "+44" : "+91";
+                              const code = values.phone?.startsWith("+91") ? "+91" : values.phone?.startsWith("+44") ? "+44" : "+1";
                               const digitsOnly = e.target.value.replace(/\D/g, "");
                               setFieldValue("phone", digitsOnly ? code + digitsOnly : "");
                             }}
@@ -774,16 +774,16 @@ const AssignedLeadsTable = ({
                         <div className="flex w-full h-[38px] border border-gray-700 rounded-[4px] bg-black overflow-hidden focus-within:border-primary-600">
                           <select
                             className="h-full bg-black text-white text-xs border-r border-gray-700 px-2 outline-none cursor-pointer"
-                            value={values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91"}
+                            value={values.whatsapp_number?.startsWith("+91") ? "+91" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+1"}
                             onChange={(e) => {
-                              const currentCode = values.whatsapp_number?.startsWith("+1") ? "+1" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+91";
+                              const currentCode = values.whatsapp_number?.startsWith("+91") ? "+91" : values.whatsapp_number?.startsWith("+44") ? "+44" : "+1";
                               const numberPart = (values.whatsapp_number || "").replace(currentCode, "");
                               setFieldValue("whatsapp_number", e.target.value + numberPart);
                             }}
                           >
-                            <option value="+91">+91</option>
-                            <option value="+44">+44</option>
-                            <option value="+1">+1</option>
+                            <option value="+1">+1 (USA)</option>
+                            <option value="+44">+44 (UK)</option>
+                            <option value="+91">+91 (India)</option>
                           </select>
                           <input
                             type="text"
