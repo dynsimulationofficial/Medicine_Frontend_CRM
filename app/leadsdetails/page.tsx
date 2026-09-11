@@ -66,7 +66,7 @@ export default function LeadDetailsPage() {
     }
   }, [leadId, hitApi]);
 
-  // Next Leads action for Agents
+  // Next Leads action for Agents (Unassigned Pool)
   const nextLeads = async () => {
     try {
       const res = await AxiosProvider.get("/leads/random");
@@ -82,6 +82,27 @@ export default function LeadDetailsPage() {
       } else {
         toast.error(err?.response?.data?.message || err?.response?.data?.msg || "Error fetching next lead");
       }
+    }
+  };
+
+  // Next Assigned Lead action for Agents
+  const nextAssignedLead = async () => {
+    try {
+      const res = await AxiosProvider.get("/leads/assigned/next", {
+        params: { current_lead_id: leadId },
+      });
+      const nextId = res.data?.data?.id;
+      const isLoop = res.data?.is_loop;
+      if (nextId) {
+        if (isLoop) {
+          toast.info("Reached end, starting from first lead");
+        }
+        router.push(`/leadsdetails?id=${nextId}`);
+      } else {
+        toast.info(res.data?.message || "No other assigned leads found");
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || err?.response?.data?.msg || "Error fetching next assigned lead");
     }
   };
 
@@ -183,10 +204,22 @@ export default function LeadDetailsPage() {
                 {userRole === "Agent" && (
                   <>
                     <div className="w-full flex justify-center border-b border-gray-700/60 my-6"></div>
-                    <div className="w-full flex justify-center">
+                    <div className="w-full flex justify-center items-center gap-3.5 flex-wrap">
+                      {/* Next Assigned Lead Button (Primary Blue) */}
+                      <div
+                        onClick={nextAssignedLead}
+                        className="flex w-auto gap-2 py-2.5 px-5 rounded-[4px] border border-primary-500 cursor-pointer bg-primary-600 items-center hover:bg-primary-700 active:bg-primary-800 transition shadow-sm"
+                      >
+                        <p className="text-white text-sm font-medium">
+                          Next Assigned Lead
+                        </p>
+                        <BiSkipNextCircle className="w-5 h-5 text-white" />
+                      </div>
+
+                      {/* Next Unassign Leads Button (Dark Gray) */}
                       <div
                         onClick={nextLeads}
-                        className="flex w-auto gap-2 py-2.5 px-5 rounded-[4px] border border-[#E7E7E7] cursor-pointer bg-primary-600 items-center hover:bg-primary-700 active:bg-primary-800 transition shadow-sm"
+                        className="flex w-auto gap-2 py-2.5 px-5 rounded-[4px] border border-gray-600 cursor-pointer bg-gray-800 items-center hover:bg-gray-700 active:bg-gray-600 transition shadow-sm"
                       >
                         <p className="text-white text-sm font-medium">
                           Next Unassign Leads
