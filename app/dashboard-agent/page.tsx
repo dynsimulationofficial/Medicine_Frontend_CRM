@@ -8,6 +8,7 @@ import { useAuthRedirect } from "../component/hooks/useAuthRedirect";
 import AxiosProvider from "../../provider/AxiosProvider";
 import { useEffect, useState } from "react";
 import StorageManager from "../../provider/StorageManager";
+import { useAutoDialer } from "../../provider/AutoDialerContext";
 import React from "react";
 import { useRouter } from "next/navigation";
 import { HiChevronDoubleLeft, HiChevronDoubleRight } from "react-icons/hi";
@@ -25,6 +26,7 @@ export default function AgentDashboardPage() {
   const router = useRouter();
   const storage = new StorageManager();
   const userRole = storage.getUserRole();
+  const { startAutoDialer } = useAutoDialer();
 
   // 1. Leads Table State (API 7)
   const [assignedLeads, setAssignedLeads] = useState<any[]>([]);
@@ -222,7 +224,7 @@ export default function AgentDashboardPage() {
 
         <div className="rounded-3xl shadow-lastTransaction p-6 relative min-h-[600px] z-10 w-full mainContainerBg mt-4">
           {/* Header Title */}
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
             <div>
               <h1 className="text-2xl font-bold text-white">
                 Agent Workstation
@@ -231,6 +233,17 @@ export default function AgentDashboardPage() {
                 My Assigned Leads, Multi-Orders Performance &amp; Daily Tasks
               </p>
             </div>
+
+            {/* Quick Auto-Dialer Button */}
+            <button
+              type="button"
+              onClick={() => startAutoDialer()}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-amber-500 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-xs font-bold tracking-wide shadow-lg shadow-amber-900/30 transition cursor-pointer"
+              title="Start Automated Calling Queue for My Assigned Leads"
+            >
+              <span className="text-sm">⚡</span>
+              <span>Start Auto-Dialer</span>
+            </button>
           </div>
 
           {/* ==================== 6 KPI METRIC CARDS (APIs 1 to 6) ==================== */}

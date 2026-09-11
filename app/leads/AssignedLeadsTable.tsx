@@ -18,6 +18,7 @@ import * as Yup from "yup";
 import Select from "react-select";
 
 import AxiosProvider from "../../provider/AxiosProvider";
+import { useAutoDialer } from "../../provider/AutoDialerContext";
 import { statesByCountry, countryOptions, leadStatusOptions } from "./CreateLead";
 
 
@@ -122,6 +123,8 @@ const AssignedLeadsTable = ({
   const [pageSize] = useState<number>(500);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
+
+  const { startAutoDialer } = useAutoDialer();
 
   // Checkbox selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -338,6 +341,27 @@ const AssignedLeadsTable = ({
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Start Auto-Dialer Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (selectedIds.length > 0) {
+                startAutoDialer(selectedIds);
+              } else {
+                startAutoDialer();
+              }
+            }}
+            className="flex items-center justify-center gap-2 h-[38px] px-4 rounded-[4px] border border-amber-500 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-xs font-semibold tracking-wide transition cursor-pointer shadow-sm"
+            title={selectedIds.length > 0 ? `Auto-Dial ${selectedIds.length} Selected Leads` : "Start Auto-Dialer for Assigned Leads"}
+          >
+            <span>⚡</span>
+            <span>
+              {selectedIds.length > 0
+                ? `Auto-Dial Selected (${selectedIds.length})`
+                : "Start Auto-Dialer"}
+            </span>
+          </button>
+
           {filterData && (
             <button
               onClick={handleClearFilter}

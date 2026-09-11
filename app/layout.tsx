@@ -15,6 +15,14 @@ const AppProvider = dynamic(
   () => import("./AppContext").then((mod) => mod.AppProvider),
   { ssr: false }
 );
+const AutoDialerProvider = dynamic(
+  () => import("../provider/AutoDialerContext").then((mod) => mod.AutoDialerProvider),
+  { ssr: false }
+);
+const AutoDialerBar = dynamic(
+  () => import("./component/AutoDialerBar"),
+  { ssr: false }
+);
 const ToastContainer = dynamic(
   () => import("react-toastify").then((mod) => mod.ToastContainer),
   { ssr: false }
@@ -40,28 +48,33 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <body className={inter.className}>
         <ErrorBoundary>
           <AppProvider>
-            {/* Page shell: sidebar + main content */}
-            <div className="min-h-dvh flex">
-              {/* Sidebar column */}
-              {!hideSidebar && <LeftSideBar />}
+            <AutoDialerProvider>
+              {/* Page shell: sidebar + main content */}
+              <div className="min-h-dvh flex">
+                {/* Sidebar column */}
+                {!hideSidebar && <LeftSideBar />}
 
-              {/* Main content column */}
-              <main className="flex-1 min-w-0">{children}</main>
-            </div>
+                {/* Main content column */}
+                <main className="flex-1 min-w-0">{children}</main>
+              </div>
 
-            {/* Toasts */}
-            <ToastContainer
-              position="top-right"
-              autoClose={3000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="light"
-            />
+              {/* Global Floating Auto-Dialer Widget */}
+              <AutoDialerBar />
+
+              {/* Toasts */}
+              <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+              />
+            </AutoDialerProvider>
           </AppProvider>
         </ErrorBoundary>
 
