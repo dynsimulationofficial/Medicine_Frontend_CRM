@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import AxiosProvider, { getBaseURL } from "../../provider/AxiosProvider";
 import { toast } from "react-toastify";
 import { MdEdit } from "react-icons/md";
@@ -293,11 +293,6 @@ export default function LeadActivityTab({
       } else if (fallbackTel) {
         window.location.href = fallbackTel;
       }
-
-      setTimeout(() => {
-        fetchActivities();
-        if (setHitApi) setHitApi((prev) => !prev);
-      }, 2000);
     } catch (err: any) {
       console.error("CloudTalk call error:", err);
       const isOffline =
@@ -420,6 +415,7 @@ export default function LeadActivityTab({
                 <th className="py-2.5 px-3">Date / Time</th>
                 <th className="py-2.5 px-3">Disposition</th>
                 <th className="py-2.5 px-3">Conversation</th>
+                <th className="py-2.5 px-3 min-w-[220px]">Recording</th>
                 <th className="py-2.5 px-3 text-center w-24">Action</th>
               </tr>
             </thead>
@@ -447,65 +443,61 @@ export default function LeadActivityTab({
                     <td className="py-2 px-3 font-semibold text-primary-300 text-xs">
                       {act.disposition || "—"} {act.is_edited ? <span className="text-[10px] text-gray-400 font-normal">(Edited)</span> : ""}
                     </td>
-                    <td className="py-2 px-3 text-xs text-gray-100 max-w-xs">
-                      <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                        <p className="font-medium text-white">
-                          {isLong && !isExpanded
-                            ? act.conversation.substring(0, 100) + "..."
-                            : act.conversation}
-                        </p>
-                        {act.duration_seconds ? (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/60 text-emerald-300 font-mono border border-emerald-500/30">
-                            ⏱️ {Math.floor(act.duration_seconds / 60)}m {act.duration_seconds % 60}s
-                          </span>
-                        ) : null}
-                      </div>
+                    <td className="py-2 px-3 text-xs text-gray-100 max-w-sm">
+                      <p className="font-medium text-white break-words">
+                        {isLong && !isExpanded
+                          ? act.conversation.substring(0, 100) + "..."
+                          : act.conversation}
+                      </p>
                       {isLong && (
                         <button
                           type="button"
                           onClick={() => toggleConversation(act.id)}
-                          className="text-primary-300 underline text-[11px] mt-0.5 cursor-pointer block"
+                          className="text-primary-300 underline text-[11px] cursor-pointer inline-block mt-0.5"
                         >
                           {isExpanded ? "Show less" : "Show more"}
                         </button>
                       )}
+                    </td>
+                    <td className="py-2 px-3 whitespace-nowrap min-w-[220px]">
                       {(() => {
                         const audioSrc = getAudioRecordingSrc(act.recording_url, act.call_id);
-                        if (!audioSrc) return null;
+                        if (!audioSrc) {
+                          return <span className="text-gray-500 text-xs">—</span>;
+                        }
                         return (
-                          <div className="mt-2 pt-1.5 border-t border-gray-700/60 flex flex-col gap-1">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-                                <span>🎧</span> Call Recording
+                          <div className="flex items-center gap-2">
+                            {act.duration_seconds ? (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/60 text-emerald-300 font-mono border border-emerald-500/30 flex-shrink-0">
+                                ⏱️ {Math.floor(act.duration_seconds / 60)}m {act.duration_seconds % 60}s
                               </span>
-                              {act.call_id && (
-                                <span className="text-[9px] text-gray-400 font-mono">
-                                  ID: {act.call_id}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <audio
-                                controls
-                                preload="none"
-                                src={audioSrc}
-                                className="h-7 w-full max-w-[220px] rounded focus:outline-none"
-                                onError={() => {
-                                  console.warn("Call recording not ready or unavailable:", audioSrc);
-                                }}
-                              >
-                                Your browser does not support audio playback.
-                              </audio>
-                              <a
-                                href={audioSrc}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                title="Open audio recording in new tab / download"
-                                className="text-gray-400 hover:text-white text-xs px-1.5 py-1 rounded bg-gray-800 hover:bg-gray-700 border border-gray-600 transition"
-                              >
-                                ↗
-                              </a>
-                            </div>
+                            ) : null}
+                            <audio
+                              controls
+                              preload="none"
+                              src={audioSrc}
+                              className="h-7 w-44 max-w-[200px] focus:outline-none rounded"
+                              onPlay={(e) => {
+                                // Stop any other playing audio on the page
+                                const currentEl = e.currentTarget;
+                                document.querySelectorAll("audio").forEach((a) => {
+                                  if (a !== currentEl && !a.paused) {
+                                    a.pause();
+                                  }
+                                });
+                              }}
+                            >
+                              Your browser does not support audio playback.
+                            </audio>
+                            <a
+                              href={audioSrc}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Open audio recording in new tab / download"
+                              className="text-gray-400 hover:text-white text-xs px-1.5 py-1 rounded bg-gray-800 hover:bg-gray-700 border border-gray-600 transition flex-shrink-0"
+                            >
+                              ↗
+                            </a>
                           </div>
                         );
                       })()}

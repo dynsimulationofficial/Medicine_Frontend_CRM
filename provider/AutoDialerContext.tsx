@@ -99,6 +99,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [dispositions, setDispositions] = useState<any[]>([]);
   const [lastActivityId, setLastActivityId] = useState<string | null>(null);
+  const [lastCallInfo, setLastCallInfo] = useState<{ call_id?: string | null; recording_url?: string | null }>({});
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
   const [stats, setStats] = useState<AutoDialerStats>({
@@ -180,15 +181,10 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         lead_id: leadId,
       });
 
-      setLastActivityId(res.data?.data?.activity_id || null);
-      setRefreshTrigger((prev) => prev + 1);
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("lead-activity-updated", {
-            detail: { lead_id: leadId },
-          })
-        );
-      }
+      setLastCallInfo({
+        call_id: res.data?.data?.call_id || null,
+        recording_url: res.data?.data?.recording_url || null,
+      });
       const dialLink = res.data?.data?.dialLink;
       const fallbackTel = res.data?.data?.fallbackTel;
 
@@ -464,12 +460,35 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     if (!currentLead) return;
 
     try {
+      const selectedDisp = dispositions.find((d) => d.id === dispositionId);
+      const dispName = (selectedDisp?.name || "").trim().toLowerCase();
+      const nonConnected = [
+        "no answer",
+        "blank call",
+        "dnd",
+        "do not disturb",
+        "busy",
+        "ringing",
+        "switch off",
+        "switched off",
+        "not reachable",
+        "wrong number",
+        "voice mail full",
+        "voice mail not set",
+        "sms conversation",
+        "email conversation",
+        "whatsapp conversation",
+      ].some((k) => dispName === k || dispName.includes(k));
+
       await AxiosProvider.post("/leads/dialer/quick-disposition", {
         lead_id: currentLead.id,
-        activity_id: lastActivityId,
+        activity_id: lastActivityId || undefined,
         disposition_id: dispositionId || undefined,
         conversation: conversationNote || "Auto-dialer call completed",
         lead_status: leadStatus || undefined,
+        call_id: nonConnected ? undefined : (lastCallInfo.call_id || undefined),
+        recording_url: nonConnected ? undefined : (lastCallInfo.recording_url || undefined),
+        duration_seconds: nonConnected ? undefined : (callDuration || undefined),
       });
 
       setStats((s) => ({ ...s, completed: s.completed + 1 }));
@@ -482,11 +501,15 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         );
       }
       toast.success("Activity & disposition saved");
-      startCountdown();
+      setLastCallInfo({});
+      setLastActivityId(null);
+
+      // Immediately advance to next lead!
+      await advanceToNext();
     } catch (err: any) {
       console.error("Failed to save quick disposition:", err);
       toast.error("Failed to save disposition, continuing...");
-      startCountdown();
+      await advanceToNext();
     }
   };
 
