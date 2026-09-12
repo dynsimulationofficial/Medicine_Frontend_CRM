@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
-import { FaStar } from "react-icons/fa";
+import { FaStar, FaWhatsapp } from "react-icons/fa";
 import { MdEdit, MdLocationPin } from "react-icons/md";
 import { IoIosMail, IoIosCall } from "react-icons/io";
 import { PiNotepadLight } from "react-icons/pi";
@@ -32,6 +32,30 @@ export default function LeadProfileSidebar({
   const [agentList, setAgentList] = useState<any[]>([]);
   const [leadSourceData, setLeadSourceData] = useState<any[]>([]);
   const [campaignData, setCampaignData] = useState<any[]>([]);
+
+  // Helper to generate direct WhatsApp click-to-chat URL
+  const getWhatsAppUrl = (phoneStr?: string) => {
+    if (!phoneStr) return null;
+    let clean = String(phoneStr).replace(/[^0-9]/g, "");
+    if (!clean) return null;
+    if (clean.length === 10) {
+      const country = (data?.country || data?.address?.country || "").toLowerCase();
+      if (country === "india" || country === "in" || !country) {
+        clean = "91" + clean;
+      } else if (
+        country === "united states" ||
+        country === "usa" ||
+        country === "us" ||
+        country === "canada" ||
+        country === "ca"
+      ) {
+        clean = "1" + clean;
+      }
+    }
+    return `https://wa.me/${clean}`;
+  };
+
+  const primaryPhoneUrl = getWhatsAppUrl(data?.phone || data?.whatsapp_number);
 
   useEffect(() => {
     const fetchDropdowns = async () => {
@@ -133,12 +157,25 @@ export default function LeadProfileSidebar({
             </p>
           </div>
 
-          {/* Phone / Mobile */}
+          {/* Phone / Mobile with WhatsApp Click-to-Chat Link */}
           <div className="flex text-white items-center gap-2 mb-2">
             <IoIosCall className="text-base flex-shrink-0" />
-            <p className="text-xs font-medium leading-none">
-              {data?.phone || "-"}
-            </p>
+            {primaryPhoneUrl ? (
+              <a
+                href={primaryPhoneUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={`Open WhatsApp chat with ${data?.phone || data?.whatsapp_number}`}
+                className="text-xs font-medium leading-none text-white hover:text-emerald-300 transition flex items-center gap-1.5 group cursor-pointer"
+              >
+                <span className="hover:underline">{data?.phone || data?.whatsapp_number}</span>
+                <FaWhatsapp className="text-emerald-300 group-hover:text-emerald-200 text-sm transition transform group-hover:scale-110" />
+              </a>
+            ) : (
+              <p className="text-xs font-medium leading-none">
+                {data?.phone || "-"}
+              </p>
+            )}
           </div>
 
           {/* Address */}
@@ -631,8 +668,21 @@ export default function LeadProfileSidebar({
                 },
                 { label: "Lead Source", value: data?.lead_source_name || data?.lead_source || "-" },
                 { label: "Campaign", value: data?.campaign_name || data?.campaign?.name || "-" },
-                { label: "Best time to call", value: data?.best_time_to_call },
-                { label: "WhatsApp Number", value: data?.whatsapp_number },
+                {
+                  label: "WhatsApp Number",
+                  value: data?.whatsapp_number ? (
+                    <a
+                      href={getWhatsAppUrl(data.whatsapp_number) || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={`Open WhatsApp chat with ${data.whatsapp_number}`}
+                      className="text-white hover:text-emerald-400 flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                      <span className="hover:underline">{data.whatsapp_number}</span>
+                      <FaWhatsapp className="text-emerald-400 text-sm" />
+                    </a>
+                  ) : "-",
+                },
               ].map((row, idx) => (
                 <tr
                   key={idx}
