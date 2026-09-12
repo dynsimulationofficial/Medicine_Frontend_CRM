@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import AxiosProvider from "../../provider/AxiosProvider";
+import AxiosProvider, { getBaseURL } from "../../provider/AxiosProvider";
 import { toast } from "react-toastify";
 import { MdEdit } from "react-icons/md";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -20,6 +20,16 @@ import { useAutoDialer } from "../../provider/AutoDialerContext";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
 const storage = new StorageManager();
+
+const getAudioRecordingSrc = (recordingUrl?: string | null, callId?: string | null): string => {
+  if (recordingUrl && (recordingUrl.startsWith("http://") || recordingUrl.startsWith("https://"))) {
+    return recordingUrl;
+  }
+  const id = callId || (recordingUrl ? recordingUrl.split("/").pop() : "");
+  if (!id) return "";
+  const base = getBaseURL().replace(/\/+$/, "");
+  return `${base}/cloudtalk/recordings/${id}`;
+};
 
 const customSelectStyles = {
   control: (base: any, { isFocused }: any) => ({
@@ -459,21 +469,46 @@ export default function LeadActivityTab({
                           {isExpanded ? "Show less" : "Show more"}
                         </button>
                       )}
-                      {act.recording_url && (
-                        <div className="mt-2 pt-1 border-t border-gray-600/50">
-                          <span className="text-[10px] text-gray-300 font-semibold block mb-1">
-                            🎧 Call Recording:
-                          </span>
-                          <audio
-                            controls
-                            preload="none"
-                            src={act.recording_url}
-                            className="h-7 w-full max-w-[220px] rounded"
-                          >
-                            Your browser does not support audio playback.
-                          </audio>
-                        </div>
-                      )}
+                      {(() => {
+                        const audioSrc = getAudioRecordingSrc(act.recording_url, act.call_id);
+                        if (!audioSrc) return null;
+                        return (
+                          <div className="mt-2 pt-1.5 border-t border-gray-700/60 flex flex-col gap-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                                <span>🎧</span> Call Recording
+                              </span>
+                              {act.call_id && (
+                                <span className="text-[9px] text-gray-400 font-mono">
+                                  ID: {act.call_id}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <audio
+                                controls
+                                preload="none"
+                                src={audioSrc}
+                                className="h-7 w-full max-w-[220px] rounded focus:outline-none"
+                                onError={() => {
+                                  console.warn("Call recording not ready or unavailable:", audioSrc);
+                                }}
+                              >
+                                Your browser does not support audio playback.
+                              </audio>
+                              <a
+                                href={audioSrc}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Open audio recording in new tab / download"
+                                className="text-gray-400 hover:text-white text-xs px-1.5 py-1 rounded bg-gray-800 hover:bg-gray-700 border border-gray-600 transition"
+                              >
+                                ↗
+                              </a>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="py-2 px-3 text-center">
                       <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1 shadow-sm">
