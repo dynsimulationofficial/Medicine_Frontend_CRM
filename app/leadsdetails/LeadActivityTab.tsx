@@ -7,6 +7,7 @@ import { MdEdit } from "react-icons/md";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { IoCloseOutline } from "react-icons/io5";
 import { FiPlusCircle, FiPhoneCall } from "react-icons/fi";
+import { FaBolt, FaStop } from "react-icons/fa";
 import { HiChevronDoubleLeft, HiChevronDoubleRight } from "react-icons/hi";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
@@ -15,6 +16,7 @@ import dynamic from "next/dynamic";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import StorageManager from "../../provider/StorageManager";
+import { useAutoDialer } from "../../provider/AutoDialerContext";
 
 const Select = dynamic(() => import("react-select"), { ssr: false });
 const storage = new StorageManager();
@@ -128,6 +130,12 @@ export default function LeadActivityTab({
   const [isExpandedConv, setIsExpandedConv] = useState<Record<string, boolean>>({});
 
   const userRole = storage.getUserRole();
+  const {
+    status: dialerStatus,
+    startAutoDialerFromLead,
+    stopAutoDialer,
+  } = useAutoDialer();
+  const isDialerActive = dialerStatus !== "idle" && dialerStatus !== "completed";
 
   // Fetch Dispositions
   useEffect(() => {
@@ -319,8 +327,34 @@ export default function LeadActivityTab({
 
   return (
     <div className="w-full">
-      {/* Top Actions: Call Lead & Add Activity Buttons */}
+      {/* Top Actions: Start Auto-Dialer, Call Lead & Add Activity Buttons */}
       <div className="flex justify-end items-center gap-3 mb-4">
+        {/* Auto-Dialer Button */}
+        {isDialerActive ? (
+          <button
+            type="button"
+            onClick={stopAutoDialer}
+            className="flex items-center justify-center gap-2 px-4 h-[38px] rounded-[4px] border border-red-500 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xs font-semibold tracking-wide transition shadow-sm cursor-pointer"
+            title="Stop active auto-dialer session"
+          >
+            <FaStop className="w-3.5 h-3.5 text-white" />
+            <span>Stop Auto-Dialer</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => startAutoDialerFromLead(leadId, leadName, leadPhone)}
+            disabled={!leadPhone}
+            className={`flex items-center justify-center gap-2 px-4 h-[38px] rounded-[4px] border border-amber-500 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:bg-amber-800 text-white text-xs font-semibold tracking-wide transition shadow-sm ${
+              !leadPhone ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+            }`}
+            title={!leadPhone ? "No phone number available" : `Start Auto-Dialer from ${leadName || "this lead"}`}
+          >
+            <FaBolt className="w-3.5 h-3.5 text-yellow-200 animate-pulse" />
+            <span>Start Auto-Dialer</span>
+          </button>
+        )}
+
         <button
           type="button"
           onClick={handleCallLead}

@@ -8,6 +8,7 @@ import React, {
   useRef,
   ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import AxiosProvider from "./AxiosProvider";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
@@ -36,10 +37,9 @@ export interface AutoDialerLead {
   lead_source_name?: string;
   campaign_name?: string;
   agent_name?: string;
-  latest_activity?: any;
 }
 
-interface AutoDialerStats {
+export interface AutoDialerStats {
   total: number;
   completed: number;
   skipped: number;
@@ -49,8 +49,6 @@ interface AutoDialerContextType {
   isOpen: boolean;
   isMinimized: boolean;
   status: AutoDialerStatus;
-  queue: AutoDialerLead[];
-  currentIndex: number;
   currentLead: AutoDialerLead | null;
   countdown: number;
   callDuration: number;
@@ -58,9 +56,15 @@ interface AutoDialerContextType {
   dispositions: any[];
   isLoading: boolean;
   lastActivityId: string | null;
-  startAutoDialer: (leadIds?: string[], customQueue?: AutoDialerLead[]) => Promise<void>;
+  startAutoDialer: (startLeadId?: string) => Promise<void>;
+  startAutoDialerFromLead: (
+    leadId: string,
+    leadName?: string,
+    leadPhone?: string
+  ) => Promise<void>;
   pauseAutoDialer: () => void;
   resumeAutoDialer: () => void;
+  advanceToNext: () => Promise<void>;
   skipCurrentLead: () => void;
   dialCurrentLead: () => Promise<void>;
   saveDispositionAndNext: (
@@ -71,6 +75,9 @@ interface AutoDialerContextType {
   stopAutoDialer: () => void;
   toggleMinimize: () => void;
   setIsOpen: (open: boolean) => void;
+  // Backwards compatibility properties
+  queue: AutoDialerLead[];
+  currentIndex: number;
 }
 
 const AutoDialerContext = createContext<AutoDialerContextType | undefined>(
@@ -80,11 +87,12 @@ const AutoDialerContext = createContext<AutoDialerContextType | undefined>(
 export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
+  const router = useRouter();
+
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
   const [status, setStatus] = useState<AutoDialerStatus>("idle");
-  const [queue, setQueue] = useState<AutoDialerLead[]>([]);
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [currentLead, setCurrentLead] = useState<AutoDialerLead | null>(null);
   const [countdown, setCountdown] = useState<number>(5);
   const [callDuration, setCallDuration] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -97,19 +105,18 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     skipped: 0,
   });
 
-  // Refs to prevent stale closures in async callbacks and timers
-  const queueRef = useRef<AutoDialerLead[]>([]);
-  const currentIndexRef = useRef<number>(0);
+  const currentLeadRef = useRef<AutoDialerLead | null>(null);
+  const statusRef = useRef<AutoDialerStatus>("idle");
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const callDurationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    queueRef.current = queue;
-  }, [queue]);
+    currentLeadRef.current = currentLead;
+  }, [currentLead]);
 
   useEffect(() => {
-    currentIndexRef.current = currentIndex;
-  }, [currentIndex]);
+    statusRef.current = status;
+  }, [status]);
 
   // Load Dispositions on mount
   useEffect(() => {
@@ -128,8 +135,6 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     };
     fetchDispositions();
   }, []);
-
-  const currentLead = queue[currentIndex] || null;
 
   // Clear timers helper
   const clearTimers = () => {
@@ -152,69 +157,25 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     }, 1000);
   };
 
-  // Advance to Next Lead in Queue
-  const advanceToNext = (fromIndex?: number, explicitQueue?: AutoDialerLead[]) => {
+  // Dial specific lead
+  const dialLead = async (leadId: string, leadName?: string, phone?: string) => {
     clearTimers();
-    const currentQ = explicitQueue || queueRef.current;
-    const currentIdx = fromIndex !== undefined ? fromIndex : currentIndexRef.current;
-    const nextIdx = currentIdx + 1;
 
-    if (nextIdx >= currentQ.length) {
-      setStatus("completed");
-      toast.success("🎉 Auto-Dialer session completed all leads in queue!");
-      return;
-    }
-
-    setCurrentIndex(nextIdx);
-    currentIndexRef.current = nextIdx;
-    dialLeadAtIndex(nextIdx, currentQ);
-  };
-
-  // Start Wrap-up Countdown Timer
-  const startCountdown = () => {
-    clearTimers();
-    setStatus("wrap-up");
-    setCountdown(5);
-
-    countdownTimerRef.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearTimers();
-          advanceToNext();
-          return 5;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  // Dial a Lead at specific index
-  const dialLeadAtIndex = async (index: number, explicitQueue?: AutoDialerLead[]) => {
-    const currentQ = explicitQueue || queueRef.current;
-    const targetLead = currentQ[index];
-
-    if (!targetLead) {
-      if (currentQ.length > 0 && index >= currentQ.length) {
-        setStatus("completed");
-      }
-      return;
-    }
-
-    const phone = targetLead.phone || targetLead.whatsapp_number;
     if (!phone) {
-      toast.warn(`Skipping ${targetLead.full_name || "Lead"} (No phone number)`);
+      toast.warn(`Skipping ${leadName || "Lead"} (No phone number)`);
       setStats((s) => ({ ...s, skipped: s.skipped + 1 }));
-      advanceToNext(index, currentQ);
+      setTimeout(() => {
+        advanceToNext();
+      }, 1500);
       return;
     }
 
     setIsLoading(true);
     setStatus("dialing");
-    clearTimers();
 
     try {
       const res = await AxiosProvider.post("/leads/dialer/call-next", {
-        lead_id: targetLead.id,
+        lead_id: leadId,
       });
 
       setLastActivityId(res.data?.data?.activity_id || null);
@@ -236,7 +197,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         window.location.href = fallbackTel;
       }
 
-      toast.success(`Calling ${targetLead.full_name || phone}...`);
+      toast.success(`Calling ${leadName || phone}...`);
       setStatus("in-call");
       startCallTimer();
     } catch (err: any) {
@@ -301,62 +262,145 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  /**
-   * 1. Start Auto-Dialer Queue
-   */
-  const startAutoDialer = async (
-    leadIds?: string[],
-    customQueue?: AutoDialerLead[]
-  ) => {
+  // Advance to next assigned lead in queue
+  const advanceToNext = async () => {
+    clearTimers();
+    const currentId = currentLeadRef.current?.id;
+    if (!currentId) {
+      stopAutoDialer();
+      return;
+    }
+
     setIsLoading(true);
     try {
-      let leadsToQueue: AutoDialerLead[] = [];
+      const res = await AxiosProvider.get("/leads/assigned/next", {
+        params: { current_lead_id: currentId },
+      });
 
-      if (customQueue && customQueue.length > 0) {
-        leadsToQueue = customQueue;
-      } else {
-        const params: any = { limit: 500 };
-        if (leadIds && leadIds.length > 0) {
-          params.lead_ids = leadIds.join(",");
-        }
+      const nextLead = res.data?.data;
+      const isLoop = res.data?.is_loop;
 
-        const res = await AxiosProvider.get("/leads/dialer/queue", { params });
-        leadsToQueue = res.data?.data?.leads || [];
-      }
-
-      if (leadsToQueue.length === 0) {
-        toast.info("No actionable leads found to auto-dial.");
+      if (!nextLead || isLoop) {
+        setStatus("completed");
+        toast.success("🎉 Auto-Dialer finished! All assigned leads completed.");
         return;
       }
 
-      queueRef.current = leadsToQueue;
-      currentIndexRef.current = 0;
-      setQueue(leadsToQueue);
-      setCurrentIndex(0);
-      setStats({
-        total: leadsToQueue.length,
-        completed: 0,
-        skipped: 0,
-      });
-      setIsOpen(true);
-      setIsMinimized(false);
+      // Smoothly navigate the UI to the next lead details page
+      router.push(`/leadsdetails?id=${nextLead.id}`);
 
-      toast.success(
-        `⚡ Auto-Dialer started with ${leadsToQueue.length} leads in queue!`
+      const nextLeadObj: AutoDialerLead = {
+        id: nextLead.id,
+        lead_number: nextLead.lead_number,
+        full_name: nextLead.full_name,
+        phone: nextLead.phone || nextLead.whatsapp_number,
+        whatsapp_number: nextLead.whatsapp_number,
+        email: nextLead.email,
+        lead_status: nextLead.lead_status,
+        city: nextLead.city,
+        state: nextLead.state,
+        country: nextLead.country,
+        best_time_to_call: nextLead.best_time_to_call,
+        note: nextLead.note,
+      };
+
+      setCurrentLead(nextLeadObj);
+      currentLeadRef.current = nextLeadObj;
+      setStats((s) => ({ ...s, total: s.total + 1 }));
+
+      // Immediately dial the next lead
+      await dialLead(
+        nextLead.id,
+        nextLead.full_name,
+        nextLead.phone || nextLead.whatsapp_number
       );
-      dialLeadAtIndex(0, leadsToQueue);
     } catch (err: any) {
-      console.error("Failed to initialize auto-dialer queue:", err);
-      toast.error(
-        err?.response?.data?.message || "Failed to start auto-dialer"
+      console.error("AutoDialer advance error:", err);
+      toast.error("Failed to fetch next assigned lead");
+      setStatus("paused");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Start Wrap-up Countdown Timer
+  const startCountdown = () => {
+    clearTimers();
+    setStatus("wrap-up");
+    setCountdown(5);
+
+    countdownTimerRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearTimers();
+          advanceToNext();
+          return 5;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  /**
+   * 1. Start Auto-Dialer directly from a Lead Details screen
+   */
+  const startAutoDialerFromLead = async (
+    leadId: string,
+    leadName?: string,
+    leadPhone?: string
+  ) => {
+    clearTimers();
+    setIsOpen(true);
+    setIsMinimized(false);
+
+    const leadObj: AutoDialerLead = {
+      id: leadId,
+      full_name: leadName,
+      phone: leadPhone,
+    };
+    setCurrentLead(leadObj);
+    currentLeadRef.current = leadObj;
+    setStats({ total: 1, completed: 0, skipped: 0 });
+
+    toast.success("⚡ Auto-Dialer started!");
+    await dialLead(leadId, leadName, leadPhone);
+  };
+
+  /**
+   * 2. Start Auto-Dialer (e.g. from Dashboard or generic start)
+   */
+  const startAutoDialer = async (startLeadId?: string) => {
+    if (startLeadId) {
+      await startAutoDialerFromLead(startLeadId);
+      return;
+    }
+
+    // Fetch the first assigned lead in queue
+    setIsLoading(true);
+    try {
+      const res = await AxiosProvider.get("/leads/assigned/next");
+      const firstLead = res.data?.data;
+      if (!firstLead || !firstLead.id) {
+        toast.info("No assigned leads found to auto-dial.");
+        return;
+      }
+
+      router.push(`/leadsdetails?id=${firstLead.id}`);
+      await startAutoDialerFromLead(
+        firstLead.id,
+        firstLead.full_name,
+        firstLead.phone || firstLead.whatsapp_number
       );
+    } catch (err: any) {
+      console.error("Failed to start auto-dialer:", err);
+      toast.error(err?.response?.data?.message || "Failed to start auto-dialer");
     } finally {
       setIsLoading(false);
     }
   };
 
   /**
-   * 2. Pause Auto-Dialer
+   * 3. Pause Auto-Dialer
    */
   const pauseAutoDialer = () => {
     clearTimers();
@@ -365,15 +409,19 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   /**
-   * 3. Resume Auto-Dialer
+   * 4. Resume Auto-Dialer
    */
   const resumeAutoDialer = () => {
     toast.success("▶️ Auto-Dialer resumed.");
-    dialLeadAtIndex(currentIndexRef.current);
+    if (statusRef.current === "wrap-up") {
+      advanceToNext();
+    } else {
+      dialCurrentLead();
+    }
   };
 
   /**
-   * 4. Skip Current Lead
+   * 5. Skip Current Lead
    */
   const skipCurrentLead = () => {
     setStats((s) => ({ ...s, skipped: s.skipped + 1 }));
@@ -382,15 +430,21 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   /**
-   * 5. Dial Current Lead Immediately
+   * 6. Dial Current Lead Immediately
    */
   const dialCurrentLead = async () => {
     clearTimers();
-    await dialLeadAtIndex(currentIndexRef.current);
+    if (currentLead?.id) {
+      await dialLead(
+        currentLead.id,
+        currentLead.full_name,
+        currentLead.phone || currentLead.whatsapp_number
+      );
+    }
   };
 
   /**
-   * 6. Save Disposition & Notes and Advance
+   * 7. Save Disposition & Notes and Advance
    */
   const saveDispositionAndNext = async (
     dispositionId: string,
@@ -403,7 +457,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       await AxiosProvider.post("/leads/dialer/quick-disposition", {
         lead_id: currentLead.id,
         activity_id: lastActivityId,
-        disposition_id: dispositionId,
+        disposition_id: dispositionId || undefined,
         conversation: conversationNote || "Auto-dialer call completed",
         lead_status: leadStatus || undefined,
       });
@@ -413,22 +467,20 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       startCountdown();
     } catch (err: any) {
       console.error("Failed to save quick disposition:", err);
-      toast.error("Failed to save disposition, continuing to next lead...");
+      toast.error("Failed to save disposition, continuing...");
       startCountdown();
     }
   };
 
   /**
-   * 7. Stop / End Auto-Dialer Session
+   * 8. Stop / End Auto-Dialer Session
    */
   const stopAutoDialer = () => {
     clearTimers();
     setStatus("idle");
     setIsOpen(false);
-    setQueue([]);
-    queueRef.current = [];
-    setCurrentIndex(0);
-    currentIndexRef.current = 0;
+    setCurrentLead(null);
+    currentLeadRef.current = null;
     setLastActivityId(null);
     toast.info("Auto-Dialer session ended.");
   };
@@ -443,8 +495,6 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         isOpen,
         isMinimized,
         status,
-        queue,
-        currentIndex,
         currentLead,
         countdown,
         callDuration,
@@ -453,14 +503,18 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         isLoading,
         lastActivityId,
         startAutoDialer,
+        startAutoDialerFromLead,
         pauseAutoDialer,
         resumeAutoDialer,
+        advanceToNext,
         skipCurrentLead,
         dialCurrentLead,
         saveDispositionAndNext,
         stopAutoDialer,
         toggleMinimize,
         setIsOpen,
+        queue: currentLead ? [currentLead] : [],
+        currentIndex: 0,
       }}
     >
       {children}

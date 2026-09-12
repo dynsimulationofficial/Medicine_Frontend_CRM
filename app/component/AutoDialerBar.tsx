@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAutoDialer } from "../../provider/AutoDialerContext";
 import {
   FaPhoneAlt,
@@ -42,11 +43,9 @@ export default function AutoDialerBar() {
   const [quickNote, setQuickNote] = useState<string>("");
   const [showDispositionBox, setShowDispositionBox] = useState<boolean>(false);
 
-  if (!isOpen) return null;
+  const router = useRouter();
 
-  const total = queue.length;
-  const currentNum = currentIndex + 1;
-  const progressPercent = total > 0 ? Math.round((currentNum / total) * 100) : 0;
+  if (!isOpen) return null;
 
   // Format call duration MM:SS
   const formatTime = (secs: number) => {
@@ -64,18 +63,25 @@ export default function AutoDialerBar() {
 
   const openLeadProfile = () => {
     if (currentLead?.id) {
-      window.open(`/leadsdetails?id=${currentLead.id}`, "_blank");
+      router.push(`/leadsdetails?id=${currentLead.id}`);
     }
   };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-3 flex justify-center pointer-events-none animate-slide-up">
       <div className="pointer-events-auto w-full max-w-5xl bg-[#141414]/95 backdrop-blur-md border border-gray-700/80 rounded-2xl shadow-2xl text-white overflow-hidden transition-all duration-300">
-        {/* Top Progress Line */}
+        {/* Top Status Bar Line */}
         <div className="w-full bg-gray-800 h-1">
           <div
-            className="bg-primary-500 h-1 transition-all duration-500 ease-out"
-            style={{ width: `${progressPercent}%` }}
+            className={`h-1 transition-all duration-500 ease-out ${
+              status === "in-call"
+                ? "bg-emerald-500 w-full animate-pulse"
+                : status === "dialing"
+                ? "bg-sky-500 w-full animate-pulse"
+                : status === "wrap-up"
+                ? "bg-amber-500 w-full"
+                : "bg-primary-500 w-full"
+            }`}
           />
         </div>
 
@@ -108,7 +114,7 @@ export default function AutoDialerBar() {
                 <span className="text-white">
                   {currentLead?.full_name || "Lead"}
                 </span>{" "}
-                ({currentNum}/{total})
+                {stats.completed > 0 ? `(${stats.completed} calls done)` : ""}
               </p>
               {status === "in-call" && (
                 <span className="text-xs font-mono bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded">
@@ -234,9 +240,9 @@ export default function AutoDialerBar() {
                   </div>
                 )}
 
-                {/* Queue Progress Badge */}
-                <span className="text-xs text-gray-400 font-medium bg-gray-800/80 px-2.5 py-1.5 rounded-lg border border-gray-700">
-                  {currentNum} / {total} Leads ({progressPercent}%)
+                {/* Progress Badge */}
+                <span className="text-xs text-gray-300 font-medium bg-gray-800/80 px-2.5 py-1.5 rounded-lg border border-gray-700">
+                  ⚡ {stats.completed} Calls Done
                 </span>
               </div>
 
