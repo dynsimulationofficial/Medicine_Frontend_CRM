@@ -6,7 +6,7 @@ import axios, {
 } from "axios";
 import StorageManager from "./StorageManager";
 
-export const LOCAL_API_URL = "http://localhost:8016/api/v1/managelead";
+export const LOCAL_API_URL = "https://medicine-crm-backend-staging.dynsimulation.com/api/v1/managelead";
 export const STAGING_API_URL =
   "https://medicine-crm-backend-staging.dynsimulation.com/api/v1/managelead";
 
