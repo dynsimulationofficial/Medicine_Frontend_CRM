@@ -251,7 +251,7 @@ export default function BulkUploadLead({
           </div>
           <div className="min-w-0">
             <p className="text-xs font-semibold text-white truncate">Sample Excel Template</p>
-            <p className="text-[11px] text-gray-400">Download template with Full Name, Phone, Email, Address, City, State, Zip</p>
+            <p className="text-[11px] text-gray-400">Download template with Full Name, Phone, Email, Address, City, State, Zip, Product, Quantity, Price</p>
           </div>
         </div>
         <a
