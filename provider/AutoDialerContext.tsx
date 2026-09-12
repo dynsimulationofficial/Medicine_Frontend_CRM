@@ -75,6 +75,7 @@ interface AutoDialerContextType {
   stopAutoDialer: () => void;
   toggleMinimize: () => void;
   setIsOpen: (open: boolean) => void;
+  refreshTrigger: number;
   // Backwards compatibility properties
   queue: AutoDialerLead[];
   currentIndex: number;
@@ -98,6 +99,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [dispositions, setDispositions] = useState<any[]>([]);
   const [lastActivityId, setLastActivityId] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
   const [stats, setStats] = useState<AutoDialerStats>({
     total: 0,
@@ -179,6 +181,14 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       });
 
       setLastActivityId(res.data?.data?.activity_id || null);
+      setRefreshTrigger((prev) => prev + 1);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("lead-activity-updated", {
+            detail: { lead_id: leadId },
+          })
+        );
+      }
       const dialLink = res.data?.data?.dialLink;
       const fallbackTel = res.data?.data?.fallbackTel;
 
@@ -463,6 +473,14 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       });
 
       setStats((s) => ({ ...s, completed: s.completed + 1 }));
+      setRefreshTrigger((prev) => prev + 1);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("lead-activity-updated", {
+            detail: { lead_id: currentLead.id },
+          })
+        );
+      }
       toast.success("Activity & disposition saved");
       startCountdown();
     } catch (err: any) {
@@ -513,6 +531,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         stopAutoDialer,
         toggleMinimize,
         setIsOpen,
+        refreshTrigger,
         queue: currentLead ? [currentLead] : [],
         currentIndex: 0,
       }}

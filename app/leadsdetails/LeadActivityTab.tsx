@@ -134,6 +134,7 @@ export default function LeadActivityTab({
     status: dialerStatus,
     startAutoDialerFromLead,
     stopAutoDialer,
+    refreshTrigger,
   } = useAutoDialer();
   const isDialerActive = dialerStatus !== "idle" && dialerStatus !== "completed";
 
@@ -176,7 +177,21 @@ export default function LeadActivityTab({
 
   useEffect(() => {
     fetchActivities();
-  }, [leadId, hitApi]);
+  }, [leadId, hitApi, refreshTrigger]);
+
+  // Global event listener for instant activity updates from AutoDialer or external actions
+  useEffect(() => {
+    const handleActivityUpdated = (e: any) => {
+      if (!e?.detail?.lead_id || e.detail.lead_id === leadId) {
+        fetchActivities();
+        if (setHitApi) setHitApi((prev) => !prev);
+      }
+    };
+    window.addEventListener("lead-activity-updated", handleActivityUpdated);
+    return () => {
+      window.removeEventListener("lead-activity-updated", handleActivityUpdated);
+    };
+  }, [leadId, setHitApi]);
 
   const handleDelete = (activity: ActivityData) => {
     Swal.fire({
@@ -360,7 +375,7 @@ export default function LeadActivityTab({
           onClick={handleCallLead}
           disabled={isCalling || !leadPhone}
           title={!leadPhone ? "No phone number available" : `Call ${leadPhone} via CloudTalk`}
-          className={`flex items-center justify-center gap-2 px-4 h-[38px] rounded-[4px] border border-emerald-500 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold tracking-wide transition shadow-sm ${
+          className={`flex items-center justify-center gap-2 px-8 min-w-[145px] h-[38px] rounded-[4px] border border-emerald-500 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold tracking-wide transition shadow-sm ${
             isCalling || !leadPhone ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
           }`}
         >
