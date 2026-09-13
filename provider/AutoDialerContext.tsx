@@ -230,7 +230,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
           activeCall.lead_id &&
           activeCall.is_connected &&
           activeCall.lead_id !== lastPoppedLeadIdRef.current &&
-          Date.now() - Number(activeCall.timestamp || 0) < 90000
+          Date.now() - Number(activeCall.timestamp || 0) < 120000
         ) {
           lastPoppedLeadIdRef.current = activeCall.lead_id;
           isScreenPoppedCallRef.current = true;
@@ -306,8 +306,8 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       setStatus("in-call");
       startCallTimer();
 
-      // Start 18-second Smart Ring Timeout / Auto-skip (stops immediately when answered)
-      setRingSecondsLeft(18);
+      // Start 35-second Smart Ring Timeout / Auto-skip (stops immediately when answered)
+      setRingSecondsLeft(35);
       let callAnswered = false;
       if (ringTimerRef.current) clearInterval(ringTimerRef.current);
       ringTimerRef.current = setInterval(async () => {
@@ -325,9 +325,9 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
               clearInterval(ringTimerRef.current);
               ringTimerRef.current = null;
             }
-            // Auto-skip unanswered call after 18s ring timeout
+            // Auto-skip unanswered call after 35s ring timeout
             (async () => {
-              toast.info(`Auto-skipping ${leadName || "Lead"} (18s ring timeout)...`);
+              toast.info(`Auto-skipping ${leadName || "Lead"} (35s ring timeout - No answer)...`);
               try {
                 await AxiosProvider.post("/leads/dialer/auto-skip-timeout", {
                   lead_id: leadId,
@@ -354,14 +354,15 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
           const statusRes = await AxiosProvider.get("/leads/dialer/call-status", {
             params: {
               call_id: callId || undefined,
+              lead_id: leadId,
               phone: phone || undefined,
               since: dialedTimestamp,
             },
           });
           const callData = statusRes.data?.data;
 
-          // 1. Customer picked up ("Hello") -> Immediately STOP the 18s drop timer!
-          if (callData?.isAnswered && !callAnswered) {
+          // 1. Customer picked up ("Hello") -> Immediately STOP the 35s drop timer!
+          if ((callData?.isAnswered || callData?.activeCall?.is_connected) && !callAnswered) {
             callAnswered = true;
             if (ringTimerRef.current) {
               clearInterval(ringTimerRef.current);
@@ -371,13 +372,18 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
             setStatus("in-call");
           }
 
-          // 2. Customer hung up / call ended -> Wait 3s and advance to next lead
-          if (callAnswered && callData?.isEnded && Date.now() - dialedTimestamp > 5000) {
+          // 2. Call completed (disposition saved by agent or call ended in CloudTalk) -> Wait 3s and advance to next lead
+          const isDone = callData?.isCompleted || (callAnswered && callData?.isEnded);
+          if (isDone && Date.now() - dialedTimestamp > 5000) {
             if (callStatusPollTimerRef.current) {
               clearInterval(callStatusPollTimerRef.current);
               callStatusPollTimerRef.current = null;
             }
-            toast.info(`Call ended. Moving to next lead...`);
+            if (ringTimerRef.current) {
+              clearInterval(ringTimerRef.current);
+              ringTimerRef.current = null;
+            }
+            toast.info(`Call completed for ${leadName || "Lead"}. Moving to next lead...`);
             setTimeout(() => {
               advanceToNext();
             }, 3000);
