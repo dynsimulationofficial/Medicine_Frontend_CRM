@@ -62,6 +62,13 @@ interface AutoDialerContextType {
     leadName?: string,
     leadPhone?: string
   ) => Promise<void>;
+  startCampaignDialer: (
+    campaignId: string,
+    campaignName?: string
+  ) => Promise<void>;
+  activeCampaignId: string | null;
+  activeCampaignName: string | null;
+  ringSecondsLeft: number;
   pauseAutoDialer: () => void;
   resumeAutoDialer: () => void;
   advanceToNext: () => Promise<void>;
@@ -76,6 +83,7 @@ interface AutoDialerContextType {
   toggleMinimize: () => void;
   setIsOpen: (open: boolean) => void;
   refreshTrigger: number;
+  markCallAsConnected: () => Promise<void>;
   // Backwards compatibility properties
   queue: AutoDialerLead[];
   currentIndex: number;
@@ -108,10 +116,23 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     skipped: 0,
   });
 
+  // Campaign Calling States
+  const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null);
+  const [activeCampaignName, setActiveCampaignName] = useState<string | null>(null);
+  const [campaignQueue, setCampaignQueue] = useState<AutoDialerLead[]>([]);
+  const [campaignIndex, setCampaignIndex] = useState<number>(0);
+  const [ringSecondsLeft, setRingSecondsLeft] = useState<number>(18);
+
   const currentLeadRef = useRef<AutoDialerLead | null>(null);
   const statusRef = useRef<AutoDialerStatus>("idle");
+  const activeCampaignIdRef = useRef<string | null>(null);
+  const activeCampaignNameRef = useRef<string | null>(null);
+  const campaignQueueRef = useRef<AutoDialerLead[]>([]);
+  const campaignIndexRef = useRef<number>(0);
+
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const callDurationTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const ringTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     currentLeadRef.current = currentLead;
@@ -120,6 +141,22 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     statusRef.current = status;
   }, [status]);
+
+  useEffect(() => {
+    activeCampaignIdRef.current = activeCampaignId;
+  }, [activeCampaignId]);
+
+  useEffect(() => {
+    activeCampaignNameRef.current = activeCampaignName;
+  }, [activeCampaignName]);
+
+  useEffect(() => {
+    campaignQueueRef.current = campaignQueue;
+  }, [campaignQueue]);
+
+  useEffect(() => {
+    campaignIndexRef.current = campaignIndex;
+  }, [campaignIndex]);
 
   // Load Dispositions on mount
   useEffect(() => {
@@ -139,6 +176,36 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     fetchDispositions();
   }, []);
 
+  // 🚀 Automatic Screen-Pop: Listen for live connected calls and auto-navigate to lead details
+  const lastPoppedLeadIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (!token) return;
+
+    const interval = setInterval(async () => {
+      try {
+        // If this browser tab is actively managing the campaign dialer, keep it on the campaign view
+        if (activeCampaignIdRef.current) return;
+
+        const res = await AxiosProvider.get("/leads/dialer/active-call");
+        const activeCall = res.data?.data;
+        if (
+          activeCall &&
+          activeCall.lead_id &&
+          activeCall.lead_id !== lastPoppedLeadIdRef.current &&
+          Date.now() - Number(activeCall.timestamp || 0) < 90000
+        ) {
+          lastPoppedLeadIdRef.current = activeCall.lead_id;
+          router.push(`/leadsdetails?id=${activeCall.lead_id}`);
+          toast.info(`📞 Live Call: ${activeCall.full_name || "Customer"}`);
+        }
+      } catch {}
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [router]);
+
+
   // Clear timers helper
   const clearTimers = () => {
     if (countdownTimerRef.current) {
@@ -149,7 +216,12 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       clearInterval(callDurationTimerRef.current);
       callDurationTimerRef.current = null;
     }
+    if (ringTimerRef.current) {
+      clearInterval(ringTimerRef.current);
+      ringTimerRef.current = null;
+    }
   };
+
 
   // Start Call Duration Counter
   const startCallTimer = () => {
@@ -206,6 +278,36 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       toast.success(`Calling ${leadName || phone}...`);
       setStatus("in-call");
       startCallTimer();
+
+      // Start 18-second Smart Ring Timeout / Auto-skip
+      setRingSecondsLeft(18);
+      if (ringTimerRef.current) clearInterval(ringTimerRef.current);
+      ringTimerRef.current = setInterval(async () => {
+        setRingSecondsLeft((prev) => {
+          if (prev <= 1) {
+            if (ringTimerRef.current) {
+              clearInterval(ringTimerRef.current);
+              ringTimerRef.current = null;
+            }
+            // Auto-skip unanswered call after 18s ring timeout
+            (async () => {
+              toast.info(`Auto-skipping ${leadName || "Lead"} (18s ring timeout)...`);
+              try {
+                await AxiosProvider.post("/leads/dialer/auto-skip-timeout", {
+                  lead_id: leadId,
+                  campaign_id: activeCampaignIdRef.current || undefined,
+                });
+                setStats((s) => ({ ...s, skipped: s.skipped + 1 }));
+              } catch (e) {
+                console.warn("Auto skip error:", e);
+              }
+              advanceToNext();
+            })();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     } catch (err: any) {
       console.error("AutoDialer call error:", err);
       const isOffline =
@@ -268,9 +370,37 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  // Advance to next assigned lead in queue
+  // Advance to next assigned lead or campaign lead in queue
   const advanceToNext = async () => {
     clearTimers();
+
+    // 1. Campaign Queue Mode
+    if (activeCampaignIdRef.current) {
+      const q = campaignQueueRef.current;
+      const nextIdx = campaignIndexRef.current + 1;
+      setCampaignIndex(nextIdx);
+      campaignIndexRef.current = nextIdx;
+
+      if (nextIdx < q.length) {
+        const nextLead = q[nextIdx];
+        setCurrentLead(nextLead);
+        currentLeadRef.current = nextLead;
+        setStats((s) => ({ ...s, total: s.total + 1 }));
+
+        // Background dialing: Agent stays on current page while phone rings
+        await dialLead(
+          nextLead.id,
+          nextLead.full_name,
+          nextLead.phone || nextLead.whatsapp_number
+        );
+      } else {
+        setStatus("completed");
+        toast.success(`🎉 Campaign "${activeCampaignNameRef.current || ""}" calling finished! All leads dialed.`);
+      }
+      return;
+    }
+
+    // 2. Standard Assigned Leads Mode
     const currentId = currentLeadRef.current?.id;
     if (!currentId) {
       stopAutoDialer();
@@ -406,7 +536,73 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   /**
-   * 3. Pause Auto-Dialer
+   * 3. Start Auto-Dialer specifically for a Campaign
+   */
+  const startCampaignDialer = async (
+    campaignId: string,
+    campaignName?: string
+  ) => {
+    clearTimers();
+    setIsLoading(true);
+    try {
+      const res = await AxiosProvider.get("/leads/dialer/queue", {
+        params: { campaign_id: campaignId, limit: 200 },
+      });
+      const leadsList: any[] = res.data?.data?.leads || [];
+      if (leadsList.length === 0) {
+        toast.warn(`No active leads found in campaign "${campaignName || "Selected"}"`);
+        return;
+      }
+
+      setActiveCampaignId(campaignId);
+      activeCampaignIdRef.current = campaignId;
+      setActiveCampaignName(campaignName || "Campaign");
+      activeCampaignNameRef.current = campaignName || "Campaign";
+
+      const mappedLeads: AutoDialerLead[] = leadsList.map((l: any) => ({
+        id: l.id,
+        lead_number: l.lead_number,
+        full_name: l.full_name,
+        phone: l.phone || l.whatsapp_number,
+        whatsapp_number: l.whatsapp_number,
+        email: l.email,
+        lead_status: l.lead_status,
+        city: l.city,
+        state: l.state,
+        country: l.country,
+        best_time_to_call: l.best_time_to_call,
+        note: l.note,
+        campaign_name: l.campaign_name || campaignName,
+      }));
+
+      setCampaignQueue(mappedLeads);
+      campaignQueueRef.current = mappedLeads;
+      setCampaignIndex(0);
+      campaignIndexRef.current = 0;
+
+      setIsOpen(true);
+      setIsMinimized(false);
+      setStats({ total: mappedLeads.length, completed: 0, skipped: 0 });
+
+      const firstLead = mappedLeads[0];
+      setCurrentLead(firstLead);
+      currentLeadRef.current = firstLead;
+
+      toast.success(
+        `🚀 Starting Campaign calling for "${campaignName || "Campaign"}" (${mappedLeads.length} leads)...`
+      );
+      // Background dialing: Agent stays on current page while phone rings
+      await dialLead(firstLead.id, firstLead.full_name, firstLead.phone);
+    } catch (err: any) {
+      console.error("startCampaignDialer error:", err);
+      toast.error(err?.response?.data?.message || "Failed to load campaign queue");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * 4. Pause Auto-Dialer
    */
   const pauseAutoDialer = () => {
     clearTimers();
@@ -415,7 +611,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   /**
-   * 4. Resume Auto-Dialer
+   * 5. Resume Auto-Dialer
    */
   const resumeAutoDialer = () => {
     toast.success("▶️ Auto-Dialer resumed.");
@@ -427,16 +623,25 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   /**
-   * 5. Skip Current Lead
+   * 6. Skip Current Lead
    */
-  const skipCurrentLead = () => {
+  const skipCurrentLead = async () => {
+    clearTimers();
+    if (currentLead) {
+      try {
+        await AxiosProvider.post("/leads/dialer/auto-skip-timeout", {
+          lead_id: currentLead.id,
+          campaign_id: activeCampaignIdRef.current || undefined,
+        });
+      } catch {}
+    }
     setStats((s) => ({ ...s, skipped: s.skipped + 1 }));
     toast.info(`Skipped ${currentLead?.full_name || "Lead"}`);
-    advanceToNext();
+    await advanceToNext();
   };
 
   /**
-   * 6. Dial Current Lead Immediately
+   * 7. Dial Current Lead Immediately
    */
   const dialCurrentLead = async () => {
     clearTimers();
@@ -450,7 +655,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   /**
-   * 7. Save Disposition & Notes and Advance
+   * 8. Save Disposition & Notes and Advance
    */
   const saveDispositionAndNext = async (
     dispositionId: string,
@@ -514,7 +719,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   /**
-   * 8. Stop / End Auto-Dialer Session
+   * 9. Stop / End Auto-Dialer Session
    */
   const stopAutoDialer = () => {
     clearTimers();
@@ -522,8 +727,29 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     setIsOpen(false);
     setCurrentLead(null);
     currentLeadRef.current = null;
+    setActiveCampaignId(null);
+    activeCampaignIdRef.current = null;
+    setActiveCampaignName(null);
+    activeCampaignNameRef.current = null;
+    setCampaignQueue([]);
+    campaignQueueRef.current = [];
+    setCampaignIndex(0);
+    campaignIndexRef.current = 0;
     setLastActivityId(null);
     toast.info("Auto-Dialer session ended.");
+  };
+
+  const markCallAsConnected = async () => {
+    try {
+      const leadId = currentLeadRef.current?.id;
+      if (leadId) {
+        await AxiosProvider.post("/leads/dialer/call-connected", { lead_id: leadId });
+        router.push(`/leadsdetails?id=${leadId}`);
+        toast.success(`📞 Connected to ${currentLeadRef.current?.full_name || "Lead"}`);
+      }
+    } catch (err) {
+      console.error("markCallAsConnected error:", err);
+    }
   };
 
   const toggleMinimize = () => {
@@ -545,6 +771,10 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         lastActivityId,
         startAutoDialer,
         startAutoDialerFromLead,
+        startCampaignDialer,
+        activeCampaignId,
+        activeCampaignName,
+        ringSecondsLeft,
         pauseAutoDialer,
         resumeAutoDialer,
         advanceToNext,
@@ -555,6 +785,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         toggleMinimize,
         setIsOpen,
         refreshTrigger,
+        markCallAsConnected,
         queue: currentLead ? [currentLead] : [],
         currentIndex: 0,
       }}

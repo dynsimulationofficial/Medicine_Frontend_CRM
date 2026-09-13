@@ -10,7 +10,7 @@ import { IoCloseOutline } from "react-icons/io5";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
-import { FaEdit, FaEye } from "react-icons/fa";
+import { FaEdit, FaEye, FaPhoneAlt } from "react-icons/fa";
 import { FiPlusCircle } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { RxAvatar } from "react-icons/rx";
@@ -18,6 +18,7 @@ import { MdOutlineSettings, MdDateRange, MdShareLocation } from "react-icons/md"
 import { useAuthRedirect } from "../component/hooks/useAuthRedirect";
 import Swal from "sweetalert2";
 import Select from "react-select";
+import { useAutoDialer } from "../../provider/AutoDialerContext";
 
 const customSelectStyles = {
   control: (base: any, { isFocused }: any) => ({
@@ -86,6 +87,7 @@ const campaignSchema = Yup.object({
 });
 
 export default function CampaignsPage() {
+  const { startCampaignDialer, activeCampaignId, status: dialerStatus } = useAutoDialer();
   const [data, setData] = useState<any[]>([]);
   const [leadSources, setLeadSources] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -250,6 +252,14 @@ export default function CampaignsPage() {
                     </div>
                   </th>
 
+                  <th scope="col" className="px-3 py-2 text-center">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span className="font-bold text-white text-xs tracking-wide">
+                        Total Leads
+                      </span>
+                    </div>
+                  </th>
+
                   <th scope="col" className="px-3 py-2 hidden md:table-cell">
                     <div className="flex items-center gap-2">
                       <MdDateRange className="w-4 h-4 text-white" />
@@ -273,13 +283,13 @@ export default function CampaignsPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="text-center py-8 text-white">
+                    <td colSpan={6} className="text-center py-8 text-white">
                       <div className="animate-pulse">Loading campaigns...</div>
                     </td>
                   </tr>
                 ) : data.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="text-center text-xl py-8 text-white">
+                    <td colSpan={6} className="text-center text-xl py-8 text-white">
                       <div>Data not found</div>
                     </td>
                   </tr>
@@ -298,11 +308,35 @@ export default function CampaignsPage() {
                       <td className="px-3 py-2 font-semibold text-white">
                         {row.name}
                       </td>
+                      <td className="px-3 py-2 text-center">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-950 text-sky-400 border border-sky-800">
+                          {Number(row.total_leads || 0)} Leads
+                        </span>
+                      </td>
                       <td className="px-3 py-2 hidden md:table-cell text-white">
                         {row.created_at ? new Date(row.created_at).toLocaleDateString() : "-"}
                       </td>
                       <td className="px-3 py-2 md:table-cell">
-                        <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1 shadow-sm">
+                        <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1.5 shadow-sm">
+                          {/* 📞 Start Campaign Calling Button */}
+                          <button
+                            type="button"
+                            onClick={() => startCampaignDialer(row.id, row.name)}
+                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold shadow transition cursor-pointer ${
+                              activeCampaignId === row.id && dialerStatus !== "idle" && dialerStatus !== "completed"
+                                ? "bg-amber-600 hover:bg-amber-700 text-white animate-pulse"
+                                : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                            }`}
+                            title="Start Campaign Calling (Auto-Dial to Agents Group)"
+                          >
+                            <FaPhoneAlt className="w-2.5 h-2.5" />
+                            <span>
+                              {activeCampaignId === row.id && dialerStatus !== "idle" && dialerStatus !== "completed"
+                                ? "Calling..."
+                                : "Start Calling"}
+                            </span>
+                          </button>
+
                           <button
                             onClick={() => {
                               setSelectedData(row);

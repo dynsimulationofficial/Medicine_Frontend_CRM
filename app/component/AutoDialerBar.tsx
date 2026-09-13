@@ -30,6 +30,8 @@ export default function AutoDialerBar() {
     callDuration,
     stats,
     dispositions,
+    activeCampaignName,
+    ringSecondsLeft,
     pauseAutoDialer,
     resumeAutoDialer,
     skipCurrentLead,
@@ -37,6 +39,7 @@ export default function AutoDialerBar() {
     saveDispositionAndNext,
     stopAutoDialer,
     toggleMinimize,
+    markCallAsConnected,
   } = useAutoDialer();
 
   const [selectedDispId, setSelectedDispId] = useState<string>("");
@@ -167,6 +170,11 @@ export default function AutoDialerBar() {
                     <p className="text-sm font-bold text-white truncate max-w-[200px] sm:max-w-xs">
                       {currentLead?.full_name || "Unknown Lead"}
                     </p>
+                    {activeCampaignName && (
+                      <span className="text-[10px] font-semibold bg-purple-950 text-purple-300 px-2 py-0.5 rounded border border-purple-800 truncate max-w-[150px]">
+                        Campaign: {activeCampaignName}
+                      </span>
+                    )}
                     {currentLead?.lead_number && (
                       <span className="text-[10px] font-mono bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded border border-gray-700">
                         #{currentLead.lead_number}
@@ -209,7 +217,24 @@ export default function AutoDialerBar() {
                   <div className="flex items-center gap-2 bg-emerald-950/60 border border-emerald-500/40 px-3 py-1.5 rounded-lg text-emerald-300 font-mono text-xs">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                     <span>In Call: {formatTime(callDuration)}</span>
+                    {ringSecondsLeft > 0 && (
+                      <span className="ml-1 text-[10px] text-sky-400 bg-sky-950 px-1.5 py-0.5 rounded border border-sky-800">
+                        ⏳ Ringing ({ringSecondsLeft}s auto-drop)
+                      </span>
+                    )}
                   </div>
+                )}
+
+                {status === "in-call" && (
+                  <button
+                    type="button"
+                    onClick={markCallAsConnected}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-md transition cursor-pointer"
+                    title="Customer answered! Click to open full details page & log notes"
+                  >
+                    <FaExternalLinkAlt className="w-2.5 h-2.5" />
+                    <span>Open Lead Details</span>
+                  </button>
                 )}
 
                 {status === "dialing" && (
