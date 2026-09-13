@@ -316,8 +316,8 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       setStatus("in-call");
       startCallTimer();
 
-      // Start 35-second Smart Ring Timeout / Auto-skip (stops immediately when answered)
-      setRingSecondsLeft(35);
+      // Start 18-second Smart Ring Timeout / Auto-skip (stops immediately when answered)
+      setRingSecondsLeft(18);
       let callAnswered = false;
       if (ringTimerRef.current) clearInterval(ringTimerRef.current);
       ringTimerRef.current = setInterval(async () => {
@@ -335,9 +335,9 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
               clearInterval(ringTimerRef.current);
               ringTimerRef.current = null;
             }
-            // Auto-skip unanswered call after 35s ring timeout
+            // Auto-skip unanswered call after 18s ring timeout
             (async () => {
-              toast.info(`Auto-skipping ${leadName || "Lead"} (35s ring timeout - No answer)...`);
+              toast.info(`Auto-skipping ${leadName || "Lead"} (18s ring timeout - No answer)...`);
               try {
                 await AxiosProvider.post("/leads/dialer/auto-skip-timeout", {
                   lead_id: leadId,
@@ -800,20 +800,14 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       setCurrentLead(firstLead);
       currentLeadRef.current = firstLead;
 
-      // Start CloudTalk True Zero-Waste Parallel Campaign:
-      // CloudTalk dials in background, Agent Shakeel hears 0 seconds of ringing tone!
+      // Start Campaign Calling: Immediately dial Lead 1 and sync campaign to CloudTalk in background
       try {
-        await AxiosProvider.post("/leads/dialer/start-parallel", {
-          campaign_id: campaignId,
-        });
-        setStatus("dialing");
-        toast.success(
-          `🚀 Zero-Waste Campaign active! CloudTalk will dial ${mappedLeads.length} leads in background. Shakeel connects only when customer answers.`
-        );
-      } catch (parErr: any) {
-        console.warn("Parallel start fallback:", parErr?.message);
-        // Fallback to single lead dial if parallel API has any issue
+        AxiosProvider.post("/leads/dialer/start-parallel", { campaign_id: campaignId }).catch(() => {});
+        toast.success(`🚀 Campaign started! Dialing Lead 1: ${firstLead.full_name || firstLead.phone}...`);
         await dialLead(firstLead.id, firstLead.full_name, firstLead.phone);
+      } catch (callErr: any) {
+        console.error("Dial lead error:", callErr);
+        toast.error("Failed to dial first lead: " + (callErr?.message || "Unknown error"));
       }
     } catch (err: any) {
       console.error("startCampaignDialer error:", err);
