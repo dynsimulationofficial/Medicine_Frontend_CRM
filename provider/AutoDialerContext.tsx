@@ -164,16 +164,45 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   // Load Dispositions on mount
   useEffect(() => {
     const fetchDispositions = async () => {
+      const fallbackList = [
+        { id: "fbc5af04-3f2c-41d1-8b65-7c65e84b95a1", name: "Phone Conversation" },
+        { id: "5cfec775-44db-4051-bf7b-b43839b0123a", name: "No Answer" },
+        { id: "b6e6c7df-9c4d-4737-9a42-0fba8c7a04d2", name: "Left A Voice Mail" },
+        { id: "9e2b8a76-d9ed-46c8-8a56-3de9fdaafc7f", name: "Blank Call" },
+        { id: "6f4a283f-3086-442d-b5fb-52c5f82c1c4e", name: "Voice Mail Full" },
+        { id: "ea8fddbc-83f0-4495-83d6-c68f12a7fd5e", name: "Voice Mail Not Set" },
+        { id: "c28b5e4a-9e12-4c28-98e3-0d6e2e5b7b01", name: "DND" },
+        { id: "0d9a2c0f-2b49-4666-8c89-89a9e093c777", name: "WhatsApp Conversation" },
+        { id: "71a29c1b-84ac-4a39-a6dd-7f891f32de52", name: "Email Conversation" },
+        { id: "14d40c0a-5189-49cc-8790-5c9a69e4c5b3", name: "SMS Conversation" },
+        { id: "d7524d2d-57e6-48aa-bcb2-3506fee8a3b4", name: "Others" },
+      ];
+
       try {
-        const res = await AxiosProvider.get("/leads/dispositions");
-        const list = Array.isArray(res.data?.data)
+        let res = await AxiosProvider.get("/leads/dispositions/all");
+        let list = Array.isArray(res.data?.data)
           ? res.data.data
           : Array.isArray(res.data)
           ? res.data
           : [];
-        setDispositions(list);
+
+        if (list.length === 0) {
+          res = await AxiosProvider.get("/leads/dispositions");
+          list = Array.isArray(res.data?.data)
+            ? res.data.data
+            : Array.isArray(res.data)
+            ? res.data
+            : [];
+        }
+
+        if (list.length > 0) {
+          setDispositions(list);
+        } else {
+          setDispositions(fallbackList);
+        }
       } catch (err) {
-        console.error("AutoDialer: Error fetching dispositions:", err);
+        console.warn("AutoDialer: Error fetching dispositions, using fallback list:", err);
+        setDispositions(fallbackList);
       }
     };
     fetchDispositions();

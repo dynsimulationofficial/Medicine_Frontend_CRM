@@ -46,6 +46,16 @@ export default function AutoDialerBar() {
   const [quickNote, setQuickNote] = useState<string>("");
   const [showDispositionBox, setShowDispositionBox] = useState<boolean>(true);
 
+  React.useEffect(() => {
+    if (dispositions.length > 0 && !selectedDispId) {
+      const defaultPhoneConv =
+        dispositions.find((d: any) =>
+          d.name?.toLowerCase()?.includes("phone")
+        ) || dispositions[0];
+      setSelectedDispId(defaultPhoneConv?.id || "");
+    }
+  }, [dispositions, selectedDispId]);
+
   const router = useRouter();
   const pathname = usePathname();
   const isAlreadyOnLeadDetails = pathname === "/leadsdetails";
