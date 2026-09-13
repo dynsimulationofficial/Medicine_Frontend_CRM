@@ -133,6 +133,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const callDurationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const ringTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const callStatusPollTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     currentLeadRef.current = currentLead;
@@ -162,12 +163,12 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     const fetchDispositions = async () => {
       try {
-        const res = await AxiosProvider.get("/leads/dispositions/all");
-        const list =
-          res.data?.data?.items ||
-          res.data?.data?.data ||
-          res.data?.data ||
-          [];
+        const res = await AxiosProvider.get("/leads/dispositions");
+        const list = Array.isArray(res.data?.data)
+          ? res.data.data
+          : Array.isArray(res.data)
+          ? res.data
+          : [];
         setDispositions(list);
       } catch (err) {
         console.error("AutoDialer: Error fetching dispositions:", err);
@@ -222,6 +223,10 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     if (ringTimerRef.current) {
       clearInterval(ringTimerRef.current);
       ringTimerRef.current = null;
+    }
+    if (callStatusPollTimerRef.current) {
+      clearInterval(callStatusPollTimerRef.current);
+      callStatusPollTimerRef.current = null;
     }
   };
 
@@ -282,8 +287,9 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       setStatus("in-call");
       startCallTimer();
 
-      // Start 18-second Smart Ring Timeout / Auto-skip
+      // Start 18-second Smart Ring Timeout / Auto-skip (stops immediately when answered)
       setRingSecondsLeft(18);
+      let callAnswered = false;
       if (ringTimerRef.current) clearInterval(ringTimerRef.current);
       ringTimerRef.current = setInterval(async () => {
         setRingSecondsLeft((prev) => {
@@ -311,6 +317,40 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
           return prev - 1;
         });
       }, 1000);
+
+      // Real-time CloudTalk Status Poller (Stops ring timeout when answered & advances when ended)
+      const callId = res.data?.data?.call_id;
+      if (callStatusPollTimerRef.current) clearInterval(callStatusPollTimerRef.current);
+      callStatusPollTimerRef.current = setInterval(async () => {
+        try {
+          const statusRes = await AxiosProvider.get("/leads/dialer/call-status", {
+            params: { call_id: callId || undefined },
+          });
+          const callData = statusRes.data?.data;
+
+          // 1. Customer picked up ("Hello") -> Immediately STOP the 18s drop timer!
+          if (callData?.isAnswered && !callAnswered) {
+            callAnswered = true;
+            if (ringTimerRef.current) {
+              clearInterval(ringTimerRef.current);
+              ringTimerRef.current = null;
+            }
+            setRingSecondsLeft(0);
+          }
+
+          // 2. Customer hung up / call ended -> Wait 3s and advance to next lead
+          if (callAnswered && callData?.isEnded) {
+            if (callStatusPollTimerRef.current) {
+              clearInterval(callStatusPollTimerRef.current);
+              callStatusPollTimerRef.current = null;
+            }
+            toast.info(`Call ended. Moving to next lead...`);
+            setTimeout(() => {
+              advanceToNext();
+            }, 3000);
+          }
+        } catch {}
+      }, 2000);
     } catch (err: any) {
       console.error("AutoDialer call error:", err);
       const isOffline =
@@ -360,6 +400,19 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
           }
         });
       } else {
+        const errorMsg = String(
+          err?.response?.data?.message || err?.response?.data?.msg || err?.message || ""
+        ).toLowerCase();
+
+        // If agent is currently on a call, wait 6s and retry (do not skip remaining leads!)
+        if (errorMsg.includes("already calling")) {
+          toast.info("⏳ Agent is finishing call / wrap-up. Next call will start shortly...");
+          setTimeout(() => {
+            dialCurrentLead();
+          }, 6000);
+          return;
+        }
+
         toast.error(
           err?.response?.data?.message ||
             err?.response?.data?.msg ||
