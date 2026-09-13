@@ -312,6 +312,14 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       if (ringTimerRef.current) clearInterval(ringTimerRef.current);
       ringTimerRef.current = setInterval(async () => {
         setRingSecondsLeft((prev) => {
+          if (callAnswered) {
+            if (ringTimerRef.current) {
+              clearInterval(ringTimerRef.current);
+              ringTimerRef.current = null;
+            }
+            return 0;
+          }
+
           if (prev <= 1) {
             if (ringTimerRef.current) {
               clearInterval(ringTimerRef.current);
@@ -339,11 +347,16 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
 
       // Real-time CloudTalk Status Poller (Stops ring timeout when answered & advances when ended)
       const callId = res.data?.data?.call_id;
+      const dialedTimestamp = Date.now();
       if (callStatusPollTimerRef.current) clearInterval(callStatusPollTimerRef.current);
       callStatusPollTimerRef.current = setInterval(async () => {
         try {
           const statusRes = await AxiosProvider.get("/leads/dialer/call-status", {
-            params: { call_id: callId || undefined },
+            params: {
+              call_id: callId || undefined,
+              phone: phone || undefined,
+              since: dialedTimestamp,
+            },
           });
           const callData = statusRes.data?.data;
 
@@ -355,10 +368,11 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
               ringTimerRef.current = null;
             }
             setRingSecondsLeft(0);
+            setStatus("in-call");
           }
 
           // 2. Customer hung up / call ended -> Wait 3s and advance to next lead
-          if (callAnswered && callData?.isEnded) {
+          if (callAnswered && callData?.isEnded && Date.now() - dialedTimestamp > 5000) {
             if (callStatusPollTimerRef.current) {
               clearInterval(callStatusPollTimerRef.current);
               callStatusPollTimerRef.current = null;
@@ -470,6 +484,8 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         );
       } else {
         setStatus("completed");
+        setActiveCampaignId(null);
+        activeCampaignIdRef.current = null;
         toast.success(`🎉 Campaign "${activeCampaignNameRef.current || ""}" calling finished! All leads dialed.`);
       }
       return;

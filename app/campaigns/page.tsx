@@ -87,7 +87,7 @@ const campaignSchema = Yup.object({
 });
 
 export default function CampaignsPage() {
-  const { startCampaignDialer, activeCampaignId, status: dialerStatus } = useAutoDialer();
+  const { startCampaignDialer, stopAutoDialer, activeCampaignId, status: dialerStatus } = useAutoDialer();
   const [data, setData] = useState<any[]>([]);
   const [leadSources, setLeadSources] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -318,21 +318,31 @@ export default function CampaignsPage() {
                       </td>
                       <td className="px-3 py-2 md:table-cell">
                         <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1.5 shadow-sm">
-                          {/* 📞 Start Campaign Calling Button */}
+                          {/* 📞 Start / Stop Campaign Calling Button */}
                           <button
                             type="button"
-                            onClick={() => startCampaignDialer(row.id, row.name)}
+                            onClick={() => {
+                              if (activeCampaignId === row.id && dialerStatus !== "idle" && dialerStatus !== "completed") {
+                                stopAutoDialer();
+                              } else {
+                                startCampaignDialer(row.id, row.name);
+                              }
+                            }}
                             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold shadow transition cursor-pointer ${
                               activeCampaignId === row.id && dialerStatus !== "idle" && dialerStatus !== "completed"
-                                ? "bg-amber-600 hover:bg-amber-700 text-white animate-pulse"
+                                ? "bg-red-600 hover:bg-red-700 text-white animate-pulse"
                                 : "bg-emerald-600 hover:bg-emerald-700 text-white"
                             }`}
-                            title="Start Campaign Calling (Auto-Dial to Agents Group)"
+                            title={
+                              activeCampaignId === row.id && dialerStatus !== "idle" && dialerStatus !== "completed"
+                                ? "Stop Campaign Calling"
+                                : "Start Campaign Calling (Auto-Dial to Agents Group)"
+                            }
                           >
                             <FaPhoneAlt className="w-2.5 h-2.5" />
                             <span>
                               {activeCampaignId === row.id && dialerStatus !== "idle" && dialerStatus !== "completed"
-                                ? "Calling..."
+                                ? "Stop Calling"
                                 : "Start Calling"}
                             </span>
                           </button>
