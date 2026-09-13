@@ -177,39 +177,6 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     fetchDispositions();
   }, []);
 
-  // 🚀 Automatic Screen-Pop: Listen for live connected calls and auto-navigate to lead details
-  const lastPoppedLeadIdRef = useRef<string | null>(null);
-  useEffect(() => {
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("accessToken") || localStorage.getItem("token")
-        : null;
-    if (!token) return;
-
-    const interval = setInterval(async () => {
-      try {
-        // If this browser tab is actively managing the campaign dialer, keep it on the campaign view
-        if (activeCampaignIdRef.current) return;
-
-        const res = await AxiosProvider.get("/leads/dialer/active-call");
-        const activeCall = res.data?.data;
-        if (
-          activeCall &&
-          activeCall.lead_id &&
-          activeCall.lead_id !== lastPoppedLeadIdRef.current &&
-          Date.now() - Number(activeCall.timestamp || 0) < 90000
-        ) {
-          lastPoppedLeadIdRef.current = activeCall.lead_id;
-          router.push(`/leadsdetails?id=${activeCall.lead_id}`);
-          toast.info(`📞 Live Call: ${activeCall.full_name || "Customer"}`);
-        }
-      } catch {}
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [router]);
-
-
   // Clear timers helper
   const clearTimers = () => {
     if (countdownTimerRef.current) {
@@ -230,7 +197,6 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-
   // Start Call Duration Counter
   const startCallTimer = () => {
     if (callDurationTimerRef.current) clearInterval(callDurationTimerRef.current);
@@ -239,6 +205,59 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       setCallDuration((prev) => prev + 1);
     }, 1000);
   };
+
+  // Track if current active call on agent was popped from screen-pop
+  const isScreenPoppedCallRef = useRef<boolean>(false);
+
+  // 🚀 Automatic Screen-Pop: Listen for live connected calls and auto-navigate to lead details
+  const lastPoppedLeadIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken") || localStorage.getItem("token")
+        : null;
+    if (!token) return;
+
+    const interval = setInterval(async () => {
+      try {
+        // If this browser tab is actively managing the campaign dialer, keep it on the campaign view
+        if (activeCampaignIdRef.current) return;
+
+        const res = await AxiosProvider.get("/leads/dialer/active-call");
+        const activeCall = res.data?.data;
+        if (
+          activeCall &&
+          activeCall.lead_id &&
+          activeCall.is_connected &&
+          activeCall.lead_id !== lastPoppedLeadIdRef.current &&
+          Date.now() - Number(activeCall.timestamp || 0) < 90000
+        ) {
+          lastPoppedLeadIdRef.current = activeCall.lead_id;
+          isScreenPoppedCallRef.current = true;
+
+          // Set active lead in context so bottom bar shows customer name, phone, etc.
+          const connectedLead: AutoDialerLead = {
+            id: activeCall.lead_id,
+            lead_number: activeCall.lead_number,
+            full_name: activeCall.full_name,
+            phone: activeCall.phone,
+          };
+          setCurrentLead(connectedLead);
+          currentLeadRef.current = connectedLead;
+          setStatus("in-call");
+          setIsOpen(true);
+          setIsMinimized(false);
+          startCallTimer();
+
+          // Auto-navigate Agent screen to the lead details
+          router.push(`/leadsdetails?id=${activeCall.lead_id}`);
+          toast.info(`📞 Live Call: ${activeCall.full_name || "Customer"}`);
+        }
+      } catch {}
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [router]);
 
   // Dial specific lead
   const dialLead = async (leadId: string, leadName?: string, phone?: string) => {
@@ -768,14 +787,24 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       }
       toast.success("Activity & disposition saved");
       setLastCallInfo({});
-      setLastActivityId(null);
+      // If this call was an incoming campaign call popped for the agent, do not advance personal assigned leads queue
+      if (isScreenPoppedCallRef.current && !activeCampaignIdRef.current) {
+        isScreenPoppedCallRef.current = false;
+        clearTimers();
+        setStatus("idle");
+        setIsOpen(false);
+        toast.success("Disposition & notes saved! Ready for next call.");
+        return;
+      }
 
       // Immediately advance to next lead!
       await advanceToNext();
     } catch (err: any) {
       console.error("Failed to save quick disposition:", err);
       toast.error("Failed to save disposition, continuing...");
-      await advanceToNext();
+      if (!isScreenPoppedCallRef.current || activeCampaignIdRef.current) {
+        await advanceToNext();
+      }
     }
   };
 

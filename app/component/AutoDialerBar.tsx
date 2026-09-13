@@ -44,7 +44,7 @@ export default function AutoDialerBar() {
 
   const [selectedDispId, setSelectedDispId] = useState<string>("");
   const [quickNote, setQuickNote] = useState<string>("");
-  const [showDispositionBox, setShowDispositionBox] = useState<boolean>(false);
+  const [showDispositionBox, setShowDispositionBox] = useState<boolean>(true);
 
   const router = useRouter();
 
