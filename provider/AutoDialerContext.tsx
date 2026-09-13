@@ -305,6 +305,94 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     return () => clearInterval(interval);
   }, [router]);
 
+  // Start active call monitoring (18s ring countdown + CloudTalk status poller)
+  const startCallSession = (
+    leadId: string,
+    leadName?: string,
+    phone?: string,
+    callId?: string | null
+  ) => {
+    setStatus("in-call");
+    startCallTimer();
+
+    // Start 18-second Smart Ring Timeout / Auto-skip (stops immediately when answered)
+    setRingSecondsLeft(18);
+    let callAnswered = false;
+    if (ringTimerRef.current) clearInterval(ringTimerRef.current);
+    ringTimerRef.current = setInterval(() => {
+      setRingSecondsLeft((prev) => {
+        if (callAnswered) {
+          if (ringTimerRef.current) {
+            clearInterval(ringTimerRef.current);
+            ringTimerRef.current = null;
+          }
+          return 0;
+        }
+
+        if (prev <= 1) {
+          if (ringTimerRef.current) {
+            clearInterval(ringTimerRef.current);
+            ringTimerRef.current = null;
+          }
+          // Auto-skip unanswered call after 18s ring timeout
+          (async () => {
+            toast.info(`Auto-skipping ${leadName || "Lead"} (18s ring timeout - No answer)...`);
+            try {
+              await AxiosProvider.post("/leads/dialer/auto-skip-timeout", {
+                lead_id: leadId,
+                campaign_id: activeCampaignIdRef.current || undefined,
+              });
+              setStats((s) => ({ ...s, skipped: s.skipped + 1 }));
+            } catch (e) {
+              console.warn("Auto skip error:", e);
+            }
+            advanceToNext();
+          })();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // Real-time CloudTalk Status Poller (Stops ring timeout when answered & advances when ended)
+    const dialedTimestamp = Date.now();
+    if (callStatusPollTimerRef.current) clearInterval(callStatusPollTimerRef.current);
+    callStatusPollTimerRef.current = setInterval(async () => {
+      try {
+        const statusRes = await AxiosProvider.get("/leads/dialer/call-status", {
+          params: {
+            call_id: callId || undefined,
+            lead_id: leadId,
+            phone: phone || undefined,
+            since: dialedTimestamp,
+          },
+        });
+        const callData = statusRes.data?.data;
+
+        // 1. Customer picked up ("Hello") -> Immediately STOP the 18s ring timeout!
+        if ((callData?.isAnswered || callData?.activeCall?.is_connected) && !callAnswered) {
+          callAnswered = true;
+          if (ringTimerRef.current) {
+            clearInterval(ringTimerRef.current);
+            ringTimerRef.current = null;
+          }
+          setRingSecondsLeft(0);
+          setStatus("in-call");
+        }
+
+        // 2. If call was answered and has now ended, enter wrap-up mode so agent can save disposition
+        if (callAnswered && callData?.isEnded) {
+          if (callStatusPollTimerRef.current) {
+            clearInterval(callStatusPollTimerRef.current);
+            callStatusPollTimerRef.current = null;
+          }
+          setStatus("wrap-up");
+          toast.info(`Call ended with ${leadName || "Lead"}. Please save disposition to advance.`);
+        }
+      } catch {}
+    }, 2000);
+  };
+
   // Dial specific lead
   const dialLead = async (leadId: string, leadName?: string, phone?: string) => {
     clearTimers();
@@ -349,86 +437,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       toast.success(`Calling ${leadName || phone}...`);
-      setStatus("in-call");
-      startCallTimer();
-
-      // Start 18-second Smart Ring Timeout / Auto-skip (stops immediately when answered)
-      setRingSecondsLeft(18);
-      let callAnswered = false;
-      if (ringTimerRef.current) clearInterval(ringTimerRef.current);
-      ringTimerRef.current = setInterval(async () => {
-        setRingSecondsLeft((prev) => {
-          if (callAnswered) {
-            if (ringTimerRef.current) {
-              clearInterval(ringTimerRef.current);
-              ringTimerRef.current = null;
-            }
-            return 0;
-          }
-
-          if (prev <= 1) {
-            if (ringTimerRef.current) {
-              clearInterval(ringTimerRef.current);
-              ringTimerRef.current = null;
-            }
-            // Auto-skip unanswered call after 18s ring timeout
-            (async () => {
-              toast.info(`Auto-skipping ${leadName || "Lead"} (18s ring timeout - No answer)...`);
-              try {
-                await AxiosProvider.post("/leads/dialer/auto-skip-timeout", {
-                  lead_id: leadId,
-                  campaign_id: activeCampaignIdRef.current || undefined,
-                });
-                setStats((s) => ({ ...s, skipped: s.skipped + 1 }));
-              } catch (e) {
-                console.warn("Auto skip error:", e);
-              }
-              advanceToNext();
-            })();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      // Real-time CloudTalk Status Poller (Stops ring timeout when answered & advances when ended)
-      const callId = res.data?.data?.call_id;
-      const dialedTimestamp = Date.now();
-      if (callStatusPollTimerRef.current) clearInterval(callStatusPollTimerRef.current);
-      callStatusPollTimerRef.current = setInterval(async () => {
-        try {
-          const statusRes = await AxiosProvider.get("/leads/dialer/call-status", {
-            params: {
-              call_id: callId || undefined,
-              lead_id: leadId,
-              phone: phone || undefined,
-              since: dialedTimestamp,
-            },
-          });
-          const callData = statusRes.data?.data;
-
-          // 1. Customer picked up ("Hello") -> Immediately STOP the 35s drop timer!
-          if ((callData?.isAnswered || callData?.activeCall?.is_connected) && !callAnswered) {
-            callAnswered = true;
-            if (ringTimerRef.current) {
-              clearInterval(ringTimerRef.current);
-              ringTimerRef.current = null;
-            }
-            setRingSecondsLeft(0);
-            setStatus("in-call");
-          }
-
-          // 2. If call was answered and has now ended, enter wrap-up mode so agent can save disposition
-          if (callAnswered && callData?.isEnded) {
-            if (callStatusPollTimerRef.current) {
-              clearInterval(callStatusPollTimerRef.current);
-              callStatusPollTimerRef.current = null;
-            }
-            setStatus("wrap-up");
-            toast.info(`Call ended with ${leadName || "Lead"}. Please save disposition to advance.`);
-          }
-        } catch {}
-      }, 2000);
+      startCallSession(leadId, leadName, phone, res.data?.data?.call_id);
     } catch (err: any) {
       console.error("AutoDialer call error:", err);
       const isOffline =
@@ -943,6 +952,9 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   ) => {
     if (!currentLead) return;
 
+    clearTimers();
+    setIsLoading(true);
+
     try {
       const selectedDisp = dispositions.find((d) => d.id === dispositionId);
       const dispName = (selectedDisp?.name || "").trim().toLowerCase();
@@ -964,12 +976,15 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         "whatsapp conversation",
       ].some((k) => dispName === k || dispName.includes(k));
 
-      await AxiosProvider.post("/leads/dialer/quick-disposition", {
+      const campId = activeCampaignIdRef.current || currentLeadRef.current?.campaign_id;
+
+      const res = await AxiosProvider.post("/leads/dialer/save-and-advance", {
         lead_id: currentLead.id,
         activity_id: lastActivityId || undefined,
         disposition_id: dispositionId || undefined,
         conversation: conversationNote || "Auto-dialer call completed",
         lead_status: leadStatus || undefined,
+        campaign_id: campId || undefined,
         call_id: nonConnected ? undefined : (lastCallInfo.call_id || undefined),
         recording_url: nonConnected ? undefined : (lastCallInfo.recording_url || undefined),
         duration_seconds: nonConnected ? undefined : (callDuration || undefined),
@@ -986,12 +1001,66 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       }
       toast.success("Activity & disposition saved");
       setLastCallInfo({});
-      // Immediately advance to next lead!
-      await advanceToNext();
+
+      const data = res.data;
+      if (data?.has_next && data?.data?.next_lead) {
+        const next = data.data.next_lead;
+        const nextLeadObj: AutoDialerLead = {
+          id: next.id,
+          lead_number: next.lead_number,
+          full_name: next.full_name,
+          phone: next.phone,
+          whatsapp_number: next.whatsapp_number,
+          email: next.email,
+          campaign_id: next.campaign_id || campId,
+          campaign_name: activeCampaignNameRef.current || undefined,
+        };
+
+        setCurrentLead(nextLeadObj);
+        currentLeadRef.current = nextLeadObj;
+        setStats((s) => ({ ...s, total: s.total + 1 }));
+
+        // Connect via CloudTalk protocol if dialLink exists
+        if (next.dialLink) {
+          const iframe = document.createElement("iframe");
+          iframe.style.display = "none";
+          iframe.src = next.dialLink;
+          document.body.appendChild(iframe);
+          setTimeout(() => {
+            try {
+              document.body.removeChild(iframe);
+            } catch {}
+          }, 3000);
+        }
+
+        setLastCallInfo({
+          call_id: next.call_id || null,
+          recording_url: next.recording_url || null,
+        });
+
+        toast.info(`📞 Calling next lead: ${next.full_name || next.phone}...`);
+        startCallSession(next.id, next.full_name, next.phone, next.call_id);
+
+        // Smoothly navigate the UI to the next lead details page (Agents only)
+        const userRole = typeof window !== "undefined" ? (localStorage.getItem("userRole") || "").toLowerCase() : "";
+        if (userRole !== "admin") {
+          router.push(`/leadsdetails?id=${next.id}`);
+        }
+      } else if (data?.completed || !data?.has_next) {
+        setStatus("completed");
+        setActiveCampaignId(null);
+        activeCampaignIdRef.current = null;
+        toast.success(`🎉 Campaign "${activeCampaignNameRef.current || "Campaign"}" calling finished! All leads dialed.`);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("campaign-dialer-finished"));
+        }
+      }
     } catch (err: any) {
-      console.error("Failed to save quick disposition:", err);
-      toast.error("Failed to save disposition, continuing...");
+      console.error("Failed to save and advance:", err);
+      toast.error("Error saving disposition, trying fallback advance...");
       await advanceToNext();
+    } finally {
+      setIsLoading(false);
     }
   };
 
