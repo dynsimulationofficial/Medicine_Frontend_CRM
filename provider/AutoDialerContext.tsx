@@ -237,9 +237,8 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         if (
           activeCall &&
           activeCall.lead_id &&
-          activeCall.is_connected &&
           activeCall.lead_id !== lastPoppedLeadIdRef.current &&
-          Date.now() - Number(activeCall.timestamp || 0) < 120000
+          Date.now() - Number(activeCall.timestamp || 0) < 900000
         ) {
           lastPoppedLeadIdRef.current = activeCall.lead_id;
           isScreenPoppedCallRef.current = true;
@@ -453,7 +452,13 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         ).toLowerCase();
 
         // If agent is currently on a call, wait 6s and retry (do not skip remaining leads!)
-        if (errorMsg.includes("already calling")) {
+        if (
+          errorMsg.includes("already calling") ||
+          errorMsg.includes("busy") ||
+          errorMsg.includes("in a call") ||
+          errorMsg.includes("on call") ||
+          errorMsg.includes("another call")
+        ) {
           toast.info("⏳ Agent is finishing call / wrap-up. Next call will start shortly...");
           setTimeout(() => {
             dialCurrentLead();
@@ -768,11 +773,12 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
    */
   const dialCurrentLead = async () => {
     clearTimers();
-    if (currentLead?.id) {
+    const targetLead = currentLeadRef.current || currentLead;
+    if (targetLead?.id) {
       await dialLead(
-        currentLead.id,
-        currentLead.full_name,
-        currentLead.phone || currentLead.whatsapp_number
+        targetLead.id,
+        targetLead.full_name,
+        targetLead.phone || targetLead.whatsapp_number
       );
     }
   };
