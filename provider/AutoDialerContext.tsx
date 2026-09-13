@@ -411,43 +411,72 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         setStatus("paused");
         clearTimers();
 
-        Swal.fire({
-          title: "CloudTalk Phone Offline",
-          html: `
-            <div style="text-align: left; font-size: 13px; color: #d1d5db; line-height: 1.5;">
-              <p style="margin-bottom: 10px;">Your CloudTalk agent is not online. To auto-dial leads, your CloudTalk Phone app must be open and status set to <b>Online</b>.</p>
-              <div style="background-color: #1f2937; padding: 12px; border-radius: 6px; border: 1px solid #374151;">
-                <p style="font-weight: 600; color: #38bdf8; margin-bottom: 6px;">How to continue:</p>
-                <ol style="margin-left: 18px; padding: 0;">
-                  <li>Click <b>"Open CloudTalk Phone"</b> below.</li>
-                  <li>Log in with your agent account.</li>
-                  <li>Set status toggle to green (<b>Online</b>).</li>
-                  <li>Click <b>"Resume Auto-Dialer"</b>!</li>
-                </ol>
+        const userRole = typeof window !== "undefined" ? (localStorage.getItem("userRole") || "").toLowerCase() : "";
+
+        if (userRole === "admin") {
+          Swal.fire({
+            title: "Agent Shakeel is Offline in CloudTalk",
+            html: `
+              <div style="text-align: left; font-size: 13px; color: #d1d5db; line-height: 1.6;">
+                <p style="margin-bottom: 10px;">
+                  Campaign calls connect karne ke liye CloudTalk par aapka agent <b style="color:#10b981;">Online</b> hona zaroori hai.
+                </p>
+                <div style="background-color: #1f2937; padding: 12px; border-radius: 8px; border: 1px solid #374151;">
+                  <p style="font-weight: 600; color: #f59e0b; margin-bottom: 6px;">⚠️ Current Status:</p>
+                  <p style="color: #e5e7eb;">Agent <b>Shakeel Ahmed (Extension 1001)</b> abhi CloudTalk Phone app me <b>Offline</b> hai.</p>
+                  <p style="margin-top: 8px; color: #38bdf8;">👉 <b>Solution:</b> Agent PC par Shakeel ko boliye ki wo apna CloudTalk Phone app open kare aur status toggle ko <b>Online (Green)</b> karein. Fir aap yahan se Start Calling dabayein.</p>
+                </div>
               </div>
-            </div>
-          `,
-          icon: "warning",
-          background: "#181818",
-          color: "#ffffff",
-          iconColor: "#f59e0b",
-          showCancelButton: true,
-          confirmButtonColor: "#0284c7",
-          cancelButtonColor: "#374151",
-          confirmButtonText: "🌐 Open CloudTalk Phone",
-          cancelButtonText: "Close",
-          customClass: {
-            popup: "border border-gray-700 rounded-2xl shadow-2xl",
-          },
-        }).then((result) => {
-          if (result.isConfirmed) {
-            window.open(
-              "https://phone.cloudtalk.io",
-              "_blank",
-              "width=460,height=750,noopener,noreferrer"
-            );
-          }
-        });
+            `,
+            icon: "warning",
+            background: "#181818",
+            color: "#ffffff",
+            iconColor: "#f59e0b",
+            confirmButtonColor: "#0284c7",
+            confirmButtonText: "Theek Hai, Samajh Gaya",
+            customClass: {
+              popup: "border border-gray-700 rounded-2xl shadow-2xl",
+            },
+          });
+        } else {
+          Swal.fire({
+            title: "Your CloudTalk Phone is Offline",
+            html: `
+              <div style="text-align: left; font-size: 13px; color: #d1d5db; line-height: 1.5;">
+                <p style="margin-bottom: 10px;">Your CloudTalk agent is not online. To auto-dial leads, your CloudTalk Phone app must be open and status set to <b>Online</b>.</p>
+                <div style="background-color: #1f2937; padding: 12px; border-radius: 6px; border: 1px solid #374151;">
+                  <p style="font-weight: 600; color: #38bdf8; margin-bottom: 6px;">How to continue:</p>
+                  <ol style="margin-left: 18px; padding: 0;">
+                    <li>Click <b>"Open CloudTalk Phone"</b> below.</li>
+                    <li>Log in with your agent account.</li>
+                    <li>Set status toggle to green (<b>Online</b>).</li>
+                    <li>Click <b>"Resume Auto-Dialer"</b>!</li>
+                  </ol>
+                </div>
+              </div>
+            `,
+            icon: "warning",
+            background: "#181818",
+            color: "#ffffff",
+            iconColor: "#f59e0b",
+            showCancelButton: true,
+            confirmButtonColor: "#0284c7",
+            cancelButtonColor: "#374151",
+            confirmButtonText: "🌐 Open CloudTalk Phone",
+            cancelButtonText: "Close",
+            customClass: {
+              popup: "border border-gray-700 rounded-2xl shadow-2xl",
+            },
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.open(
+                "https://phone.cloudtalk.io",
+                "_blank",
+                "width=460,height=750,noopener,noreferrer"
+              );
+            }
+          });
+        }
       } else {
         const errorMsg = String(
           err?.response?.data?.message || err?.response?.data?.msg || err?.message || ""
@@ -673,6 +702,40 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     clearTimers();
     setIsLoading(true);
     try {
+      // 1. Verify that CloudTalk agent (Shakeel) is Online
+      try {
+        const agentCheck = await AxiosProvider.get("/leads/dialer/agent-status");
+        const agentData = agentCheck.data?.data;
+        if (agentData && agentData.isOnline === false) {
+          setIsLoading(false);
+          Swal.fire({
+            title: "Agent Shakeel is Offline in CloudTalk",
+            html: `
+              <div style="text-align: left; font-size: 13px; color: #d1d5db; line-height: 1.6;">
+                <p style="margin-bottom: 10px;">
+                  Campaign calls connect karne ke liye CloudTalk par aapka agent <b style="color:#10b981;">Online</b> hona zaroori hai.
+                </p>
+                <div style="background-color: #1f2937; padding: 12px; border-radius: 8px; border: 1px solid #374151;">
+                  <p style="font-weight: 600; color: #f59e0b; margin-bottom: 6px;">⚠️ Current Status:</p>
+                  <p style="color: #e5e7eb;">Agent <b>${agentData.agentName || "Shakeel Ahmed"} (Extension 1001)</b> abhi CloudTalk Phone app me <b>Offline</b> hai.</p>
+                  <p style="margin-top: 8px; color: #38bdf8;">👉 <b>Solution:</b> Agent PC par Shakeel ko boliye ki wo apna CloudTalk Phone app open kare aur status toggle ko <b>Online (Green)</b> karein. Fir aap yahan se Start Calling dabayein.</p>
+                </div>
+              </div>
+            `,
+            icon: "warning",
+            background: "#181818",
+            color: "#ffffff",
+            iconColor: "#f59e0b",
+            confirmButtonColor: "#0284c7",
+            confirmButtonText: "Theek Hai, Samajh Gaya",
+            customClass: {
+              popup: "border border-gray-700 rounded-2xl shadow-2xl",
+            },
+          });
+          return;
+        }
+      } catch {}
+
       const res = await AxiosProvider.get("/leads/dialer/queue", {
         params: { campaign_id: campaignId, limit: 200 },
       });
