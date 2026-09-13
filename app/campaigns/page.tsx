@@ -87,7 +87,17 @@ const campaignSchema = Yup.object({
 });
 
 export default function CampaignsPage() {
-  const { startCampaignDialer, stopAutoDialer, activeCampaignId, status: dialerStatus } = useAutoDialer();
+  const {
+    startCampaignDialer,
+    stopAutoDialer,
+    activeCampaignId,
+    activeCampaignName,
+    campaignQueue,
+    campaignIndex,
+    currentLead,
+    callDuration,
+    status: dialerStatus,
+  } = useAutoDialer();
   const [data, setData] = useState<any[]>([]);
   const [leadSources, setLeadSources] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -96,6 +106,13 @@ export default function CampaignsPage() {
 
   const [flyout, setFlyout] = useState<"add" | "edit" | "view" | "">("");
   const [selectedData, setSelectedData] = useState<any | null>(null);
+
+  // Format call duration MM:SS
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
 
   const fetchLeadSources = async () => {
     try {
@@ -135,6 +152,49 @@ export default function CampaignsPage() {
   useEffect(() => {
     fetchData();
   }, [page]);
+
+  // Real-time table refresh on dialer events
+  useEffect(() => {
+    const handleDialerFinished = () => {
+      fetchData();
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("campaign-dialer-finished", handleDialerFinished);
+      window.addEventListener("lead-activity-updated", handleDialerFinished);
+      return () => {
+        window.removeEventListener("campaign-dialer-finished", handleDialerFinished);
+        window.removeEventListener("lead-activity-updated", handleDialerFinished);
+      };
+    }
+  }, []);
+
+  const handleResetDialer = async (campaignId: string, campaignName: string) => {
+    const confirm = await Swal.fire({
+      title: "Re-dial Campaign?",
+      text: `Do you want to reset unanswered leads in "${campaignName}" so they can be dialed again?`,
+      icon: "question",
+      background: "#181818",
+      color: "#ffffff",
+      showCancelButton: true,
+      confirmButtonColor: "#0284c7",
+      cancelButtonColor: "#374151",
+      confirmButtonText: "Yes, Reset & Allow Re-dial",
+      cancelButtonText: "Cancel",
+      customClass: {
+        popup: "border border-gray-700 rounded-2xl shadow-2xl",
+      },
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        await AxiosProvider.post(`/campaigns/${campaignId}/reset-dialer`);
+        toast.success("Campaign leads reset for re-dialing!");
+        fetchData();
+      } catch (e) {
+        toast.error("Failed to reset campaign dialer");
+      }
+    }
+  };
 
   const closeFlyout = () => {
     setFlyout("");
@@ -209,6 +269,85 @@ export default function CampaignsPage() {
 
           {/* ---------------- Main Container ----------------------- */}
           <div className="relative overflow-x-auto shadow-lastTransaction rounded-xl sm:rounded-3xl px-1 py-6 md:p-6 z-10 mainContainerBg">
+            {/* 🔴 LIVE CAMPAIGN CALLING STATUS BANNER (Admin Progress Tracker) */}
+            {activeCampaignId && dialerStatus !== "idle" && dialerStatus !== "completed" && (
+              <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-[#0b1b2b] via-[#112233] to-[#0a1926] border border-sky-500/40 shadow-2xl animate-fade-in text-white">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  {/* Left: Campaign & Current Lead Info */}
+                  <div className="flex items-center gap-4">
+                    <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-sky-500/20 border border-sky-400/40 text-sky-400 flex-shrink-0">
+                      <span className="animate-ping absolute inline-flex h-8 w-8 rounded-full bg-sky-400 opacity-40"></span>
+                      <FaPhoneAlt className="w-5 h-5 relative z-10" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 uppercase tracking-wider">
+                          Active Campaign Calling
+                        </span>
+                        <span className="text-xs text-gray-400 font-medium">
+                          {activeCampaignName || "Campaign"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                        <p className="text-base font-bold text-white">
+                          {currentLead?.full_name || "Connecting..."}
+                        </p>
+                        {currentLead?.phone && (
+                          <span className="text-xs font-mono text-gray-300 bg-black/50 px-2 py-0.5 rounded border border-gray-700">
+                            {currentLead.phone}
+                          </span>
+                        )}
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          {dialerStatus === "in-call" ? "📞 Live with Agent" : "⏳ Dialing..."}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Middle / Right: Live 2/3 Counter & Progress */}
+                  <div className="flex flex-col items-start md:items-end justify-center">
+                    <div className="flex items-center gap-4">
+                      <div className="text-left md:text-right">
+                        <p className="text-[11px] text-gray-400">Current Lead</p>
+                        <p className="text-lg font-extrabold text-emerald-400 font-mono">
+                          {campaignIndex + 1} / {campaignQueue.length || 1}
+                        </p>
+                      </div>
+                      <div className="h-8 w-[1px] bg-gray-700"></div>
+                      <div className="text-left md:text-right">
+                        <p className="text-[11px] text-gray-400">Duration</p>
+                        <p className="text-lg font-extrabold text-white font-mono flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                          {formatTime(callDuration)}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={stopAutoDialer}
+                        className="ml-2 px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-lg transition flex items-center gap-1.5 cursor-pointer border border-red-500/50"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-white"></span>
+                        Stop Calling
+                      </button>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="w-full md:w-56 mt-2 bg-gray-800 rounded-full h-1.5 overflow-hidden border border-gray-700">
+                      <div
+                        className="bg-gradient-to-r from-sky-400 to-emerald-400 h-1.5 transition-all duration-500 rounded-full"
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            Math.round(((campaignIndex + 1) / (campaignQueue.length || 1)) * 100)
+                          )}%`,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Top Action Button (Create Campaign) */}
             <div className="flex justify-end items-center mb-6 w-full mx-auto gap-4">
               <button
@@ -309,43 +448,77 @@ export default function CampaignsPage() {
                         {row.name}
                       </td>
                       <td className="px-3 py-2 text-center">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-950 text-sky-400 border border-sky-800">
-                          {Number(row.total_leads || 0)} Leads
-                        </span>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-950 text-sky-400 border border-sky-800">
+                            {Number(row.total_leads || 0)} Total
+                          </span>
+                          {/* Dialed vs Pending Badges */}
+                          {Number(row.total_leads || 0) > 0 && (
+                            Number(row.pending_leads ?? (row.total_leads - (row.dialed_leads || 0))) <= 0 ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">
+                                ✅ {Number(row.dialed_leads || row.total_leads)}/{Number(row.total_leads)} Dialed
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-800 text-gray-300 border border-gray-700">
+                                {Number(row.dialed_leads || 0)}/{Number(row.total_leads)} Dialed ({Number(row.pending_leads ?? (row.total_leads - (row.dialed_leads || 0)))} Pending)
+                              </span>
+                            )
+                          )}
+                          {/* Live Calling Indicator */}
+                          {activeCampaignId === row.id && dialerStatus !== "idle" && dialerStatus !== "completed" && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                              Calling: {campaignIndex + 1}/{campaignQueue.length || row.total_leads}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-3 py-2 hidden md:table-cell text-white">
                         {row.created_at ? new Date(row.created_at).toLocaleDateString() : "-"}
                       </td>
                       <td className="px-3 py-2 md:table-cell">
                         <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1.5 shadow-sm">
-                          {/* 📞 Start / Stop Campaign Calling Button */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (activeCampaignId === row.id && dialerStatus !== "idle" && dialerStatus !== "completed") {
-                                stopAutoDialer();
-                              } else {
-                                startCampaignDialer(row.id, row.name);
-                              }
-                            }}
-                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold shadow transition cursor-pointer ${
-                              activeCampaignId === row.id && dialerStatus !== "idle" && dialerStatus !== "completed"
-                                ? "bg-red-600 hover:bg-red-700 text-white animate-pulse"
-                                : "bg-emerald-600 hover:bg-emerald-700 text-white"
-                            }`}
-                            title={
-                              activeCampaignId === row.id && dialerStatus !== "idle" && dialerStatus !== "completed"
-                                ? "Stop Campaign Calling"
-                                : "Start Campaign Calling (Auto-Dial to Agents Group)"
-                            }
-                          >
-                            <FaPhoneAlt className="w-2.5 h-2.5" />
-                            <span>
-                              {activeCampaignId === row.id && dialerStatus !== "idle" && dialerStatus !== "completed"
-                                ? "Stop Calling"
-                                : "Start Calling"}
-                            </span>
-                          </button>
+                          {/* 📞 Start / Stop / Completed Campaign Calling Button */}
+                          {activeCampaignId === row.id && dialerStatus !== "idle" && dialerStatus !== "completed" ? (
+                            <button
+                              type="button"
+                              onClick={stopAutoDialer}
+                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-red-600 hover:bg-red-700 text-white animate-pulse shadow transition cursor-pointer"
+                              title="Stop Calling"
+                            >
+                              <FaPhoneAlt className="w-2.5 h-2.5" />
+                              <span>Stop ({campaignIndex + 1}/{campaignQueue.length || row.total_leads})</span>
+                            </button>
+                          ) : Number(row.total_leads || 0) > 0 && Number(row.pending_leads ?? (row.total_leads - (row.dialed_leads || 0))) <= 0 ? (
+                            <div className="inline-flex items-center gap-1">
+                              <button
+                                type="button"
+                                disabled
+                                className="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-950/80 text-emerald-400 border border-emerald-800 cursor-not-allowed opacity-90"
+                                title="All leads in this campaign have already been dialed"
+                              >
+                                <span>✅ All Dialed</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleResetDialer(row.id, row.name)}
+                                className="p-1 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition cursor-pointer"
+                                title="Re-dial Campaign (Reset unanswered leads)"
+                              >
+                                🔄
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => startCampaignDialer(row.id, row.name)}
+                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow transition cursor-pointer"
+                              title="Start Calling Pending Leads"
+                            >
+                              <FaPhoneAlt className="w-2.5 h-2.5" />
+                              <span>Start ({Number(row.pending_leads ?? (row.total_leads || 0))})</span>
+                            </button>
+                          )}
 
                           <button
                             onClick={() => {

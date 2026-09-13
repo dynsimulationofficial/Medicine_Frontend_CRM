@@ -84,6 +84,8 @@ interface AutoDialerContextType {
   setIsOpen: (open: boolean) => void;
   refreshTrigger: number;
   markCallAsConnected: () => Promise<void>;
+  campaignQueue: AutoDialerLead[];
+  campaignIndex: number;
   // Backwards compatibility properties
   queue: AutoDialerLead[];
   currentIndex: number;
@@ -507,6 +509,9 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         setActiveCampaignId(null);
         activeCampaignIdRef.current = null;
         toast.success(`🎉 Campaign "${activeCampaignNameRef.current || ""}" calling finished! All leads dialed.`);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("campaign-dialer-finished"));
+        }
       }
       return;
     }
@@ -673,7 +678,23 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       });
       const leadsList: any[] = res.data?.data?.leads || [];
       if (leadsList.length === 0) {
-        toast.warn(`No active leads found in campaign "${campaignName || "Selected"}"`);
+        Swal.fire({
+          title: "All Leads Already Dialed",
+          html: `
+            <div style="text-align: left; font-size: 13px; color: #d1d5db; line-height: 1.5;">
+              <p>All leads in campaign <b>"${campaignName || "Campaign"}"</b> have already been dialed.</p>
+              <p style="margin-top: 8px; color: #10b981;">✅ No pending leads left to call (Anti-spam protection).</p>
+            </div>
+          `,
+          icon: "info",
+          background: "#181818",
+          color: "#ffffff",
+          confirmButtonColor: "#0284c7",
+          confirmButtonText: "Got It",
+          customClass: {
+            popup: "border border-gray-700 rounded-2xl shadow-2xl",
+          },
+        });
         return;
       }
 
@@ -930,9 +951,11 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         toggleMinimize,
         setIsOpen,
         refreshTrigger,
-        markCallAsConnected,
+        markCallAsConnected: async () => {},
+        campaignQueue,
+        campaignIndex,
         queue: currentLead ? [currentLead] : [],
-        currentIndex: 0,
+        currentIndex: campaignIndex,
       }}
     >
       {children}
