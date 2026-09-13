@@ -800,11 +800,21 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       setCurrentLead(firstLead);
       currentLeadRef.current = firstLead;
 
-      toast.success(
-        `🚀 Starting Campaign calling for "${campaignName || "Campaign"}" (${mappedLeads.length} leads)...`
-      );
-      // Background dialing: Agent stays on current page while phone rings
-      await dialLead(firstLead.id, firstLead.full_name, firstLead.phone);
+      // Start CloudTalk True Zero-Waste Parallel Campaign:
+      // CloudTalk dials in background, Agent Shakeel hears 0 seconds of ringing tone!
+      try {
+        await AxiosProvider.post("/leads/dialer/start-parallel", {
+          campaign_id: campaignId,
+        });
+        setStatus("dialing");
+        toast.success(
+          `🚀 Zero-Waste Campaign active! CloudTalk will dial ${mappedLeads.length} leads in background. Shakeel connects only when customer answers.`
+        );
+      } catch (parErr: any) {
+        console.warn("Parallel start fallback:", parErr?.message);
+        // Fallback to single lead dial if parallel API has any issue
+        await dialLead(firstLead.id, firstLead.full_name, firstLead.phone);
+      }
     } catch (err: any) {
       console.error("startCampaignDialer error:", err);
       toast.error(err?.response?.data?.message || "Failed to load campaign queue");
@@ -816,10 +826,17 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   /**
    * 4. Pause Auto-Dialer
    */
-  const pauseAutoDialer = () => {
+  const pauseAutoDialer = async () => {
     clearTimers();
     setStatus("paused");
-    toast.info("⏸️ Auto-Dialer paused.");
+    if (activeCampaignIdRef.current) {
+      try {
+        await AxiosProvider.post("/leads/dialer/stop-parallel", {
+          campaign_id: activeCampaignIdRef.current,
+        });
+      } catch {}
+    }
+    toast.info("⏸️ Campaign dialing paused.");
   };
 
   /**
