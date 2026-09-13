@@ -48,7 +48,8 @@ export default function AutoDialerBar() {
 
   const router = useRouter();
 
-  if (!isOpen) return null;
+  const userRole = typeof window !== "undefined" ? (localStorage.getItem("userRole") || "").toLowerCase() : "";
+  if (!isOpen || (userRole === "admin" && activeCampaignName)) return null;
 
   // Format call duration MM:SS
   const formatTime = (secs: number) => {

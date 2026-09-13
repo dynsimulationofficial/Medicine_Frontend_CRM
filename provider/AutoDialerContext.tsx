@@ -179,7 +179,10 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   // 🚀 Automatic Screen-Pop: Listen for live connected calls and auto-navigate to lead details
   const lastPoppedLeadIdRef = useRef<string | null>(null);
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken") || localStorage.getItem("token")
+        : null;
     if (!token) return;
 
     const interval = setInterval(async () => {
@@ -200,7 +203,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
           toast.info(`📞 Live Call: ${activeCall.full_name || "Customer"}`);
         }
       } catch {}
-    }, 3000);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [router]);
@@ -580,8 +583,13 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       setCampaignIndex(0);
       campaignIndexRef.current = 0;
 
-      setIsOpen(true);
-      setIsMinimized(false);
+      const userRole = typeof window !== "undefined" ? (localStorage.getItem("userRole") || "").toLowerCase() : "";
+      if (userRole !== "admin") {
+        setIsOpen(true);
+        setIsMinimized(false);
+      } else {
+        setIsOpen(false);
+      }
       setStats({ total: mappedLeads.length, completed: 0, skipped: 0 });
 
       const firstLead = mappedLeads[0];
