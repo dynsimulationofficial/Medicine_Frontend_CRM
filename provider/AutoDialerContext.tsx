@@ -411,21 +411,14 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
             setStatus("in-call");
           }
 
-          // 2. Call completed (disposition saved by agent or call ended in CloudTalk) -> Wait 3s and advance to next lead
-          const isDone = callData?.isCompleted || (callAnswered && callData?.isEnded);
-          if (isDone && Date.now() - dialedTimestamp > 5000) {
+          // 2. If call was answered and has now ended, enter wrap-up mode so agent can save disposition
+          if (callAnswered && callData?.isEnded) {
             if (callStatusPollTimerRef.current) {
               clearInterval(callStatusPollTimerRef.current);
               callStatusPollTimerRef.current = null;
             }
-            if (ringTimerRef.current) {
-              clearInterval(ringTimerRef.current);
-              ringTimerRef.current = null;
-            }
-            toast.info(`Call completed for ${leadName || "Lead"}. Moving to next lead...`);
-            setTimeout(() => {
-              advanceToNext();
-            }, 3000);
+            setStatus("wrap-up");
+            toast.info(`Call ended with ${leadName || "Lead"}. Please save disposition to advance.`);
           }
         } catch {}
       }, 2000);
