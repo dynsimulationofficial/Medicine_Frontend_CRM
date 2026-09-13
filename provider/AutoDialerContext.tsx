@@ -212,15 +212,24 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   // 🚀 Automatic Screen-Pop: Listen for live connected calls and auto-navigate to lead details
   const lastPoppedLeadIdRef = useRef<string | null>(null);
   useEffect(() => {
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("accessToken") || localStorage.getItem("token")
-        : null;
-    if (!token) return;
-
+    // Continuously monitor active calls for Agents
     const interval = setInterval(async () => {
       try {
-        // If this browser tab is actively managing the campaign dialer, keep it on the campaign view
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("accessToken") || localStorage.getItem("token")
+            : null;
+        if (!token) return;
+
+        const userRole =
+          typeof window !== "undefined"
+            ? (localStorage.getItem("userRole") || "").toLowerCase()
+            : "";
+
+        // STRICT ROLE IMMUNITY: Admin must NEVER screen-pop or be redirected to lead details!
+        if (userRole === "admin") return;
+
+        // If this tab is actively running the campaign dialer, keep it on current view
         if (activeCampaignIdRef.current) return;
 
         const res = await AxiosProvider.get("/leads/dialer/active-call");
@@ -254,7 +263,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
           toast.info(`📞 Live Call: ${activeCall.full_name || "Customer"}`);
         }
       } catch {}
-    }, 2000);
+    }, 1500);
 
     return () => clearInterval(interval);
   }, [router]);
@@ -519,8 +528,14 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         return;
       }
 
-      // Smoothly navigate the UI to the next lead details page
-      router.push(`/leadsdetails?id=${nextLead.id}`);
+      // Smoothly navigate the UI to the next lead details page (Agents only)
+      const userRole =
+        typeof window !== "undefined"
+          ? (localStorage.getItem("userRole") || "").toLowerCase()
+          : "";
+      if (userRole !== "admin") {
+        router.push(`/leadsdetails?id=${nextLead.id}`);
+      }
 
       const nextLeadObj: AutoDialerLead = {
         id: nextLead.id,
@@ -618,7 +633,13 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         return;
       }
 
-      router.push(`/leadsdetails?id=${firstLead.id}`);
+      const userRole =
+        typeof window !== "undefined"
+          ? (localStorage.getItem("userRole") || "").toLowerCase()
+          : "";
+      if (userRole !== "admin") {
+        router.push(`/leadsdetails?id=${firstLead.id}`);
+      }
       await startAutoDialerFromLead(
         firstLead.id,
         firstLead.full_name,
@@ -856,7 +877,13 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       const leadId = currentLeadRef.current?.id;
       if (leadId) {
         await AxiosProvider.post("/leads/dialer/call-connected", { lead_id: leadId });
-        router.push(`/leadsdetails?id=${leadId}`);
+        const userRole =
+          typeof window !== "undefined"
+            ? (localStorage.getItem("userRole") || "").toLowerCase()
+            : "";
+        if (userRole !== "admin") {
+          router.push(`/leadsdetails?id=${leadId}`);
+        }
         toast.success(`📞 Connected to ${currentLeadRef.current?.full_name || "Lead"}`);
       }
     } catch (err) {
