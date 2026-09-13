@@ -36,6 +36,7 @@ export interface AutoDialerLead {
   note?: string;
   lead_source_name?: string;
   campaign_name?: string;
+  campaign_id?: string;
   agent_name?: string;
 }
 
@@ -274,12 +275,18 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
           lastPoppedLeadIdRef.current = activeCall.lead_id;
           isScreenPoppedCallRef.current = true;
 
+          if (activeCall.campaign_id) {
+            setActiveCampaignId(activeCall.campaign_id);
+            activeCampaignIdRef.current = activeCall.campaign_id;
+          }
+
           // Set active lead in context so bottom bar shows customer name, phone, etc.
           const connectedLead: AutoDialerLead = {
             id: activeCall.lead_id,
             lead_number: activeCall.lead_number,
             full_name: activeCall.full_name,
             phone: activeCall.phone,
+            campaign_id: activeCall.campaign_id || undefined,
           };
           setCurrentLead(connectedLead);
           currentLeadRef.current = connectedLead;
@@ -536,20 +543,46 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   const advanceToNext = async () => {
     clearTimers();
 
-    // 1. Campaign Queue Mode
-    if (activeCampaignIdRef.current) {
+    // 1. Campaign Queue Mode (Works across multiple PCs: Admin PC and Agent PC)
+    const campId = activeCampaignIdRef.current || currentLeadRef.current?.campaign_id;
+    if (campId) {
       const q = campaignQueueRef.current;
       const nextIdx = campaignIndexRef.current + 1;
       setCampaignIndex(nextIdx);
       campaignIndexRef.current = nextIdx;
 
-      if (nextIdx < q.length) {
-        const nextLead = q[nextIdx];
+      let nextLead: AutoDialerLead | null = null;
+      if (q && q.length > 0 && nextIdx < q.length) {
+        nextLead = q[nextIdx];
+      } else {
+        // Fetch remaining pending leads for this campaign from DB
+        try {
+          const res = await AxiosProvider.get("/leads/dialer/queue", {
+            params: { campaign_id: campId, limit: 10 },
+          });
+          const pendingLeads: any[] = res.data?.data?.leads || [];
+          const candidate = pendingLeads.find((l: any) => l.id !== currentLeadRef.current?.id);
+          if (candidate) {
+            nextLead = {
+              id: candidate.id,
+              lead_number: candidate.lead_number,
+              full_name: candidate.full_name,
+              phone: candidate.phone || candidate.whatsapp_number,
+              campaign_id: campId,
+              campaign_name: candidate.campaign_name || activeCampaignNameRef.current || undefined,
+            };
+          }
+        } catch (e) {
+          console.error("Failed to query next campaign lead:", e);
+        }
+      }
+
+      if (nextLead) {
         setCurrentLead(nextLead);
         currentLeadRef.current = nextLead;
         setStats((s) => ({ ...s, total: s.total + 1 }));
 
-        // Background dialing: Agent stays on current page while phone rings
+        toast.info(`📞 Dialing next campaign lead: ${nextLead.full_name || nextLead.phone}...`);
         await dialLead(
           nextLead.id,
           nextLead.full_name,
@@ -559,7 +592,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         setStatus("completed");
         setActiveCampaignId(null);
         activeCampaignIdRef.current = null;
-        toast.success(`🎉 Campaign "${activeCampaignNameRef.current || ""}" calling finished! All leads dialed.`);
+        toast.success(`🎉 Campaign "${activeCampaignNameRef.current || "Campaign"}" calling finished! All leads dialed.`);
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("campaign-dialer-finished"));
         }
@@ -953,24 +986,12 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       }
       toast.success("Activity & disposition saved");
       setLastCallInfo({});
-      // If this call was an incoming campaign call popped for the agent, do not advance personal assigned leads queue
-      if (isScreenPoppedCallRef.current && !activeCampaignIdRef.current) {
-        isScreenPoppedCallRef.current = false;
-        clearTimers();
-        setStatus("idle");
-        setIsOpen(false);
-        toast.success("Disposition & notes saved! Ready for next call.");
-        return;
-      }
-
       // Immediately advance to next lead!
       await advanceToNext();
     } catch (err: any) {
       console.error("Failed to save quick disposition:", err);
       toast.error("Failed to save disposition, continuing...");
-      if (!isScreenPoppedCallRef.current || activeCampaignIdRef.current) {
-        await advanceToNext();
-      }
+      await advanceToNext();
     }
   };
 
