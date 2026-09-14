@@ -130,8 +130,8 @@ export default function CampaignsPage() {
     }
   };
 
-  const fetchData = async () => {
-    setIsLoading(true);
+  const fetchData = async (isSilent: boolean = false) => {
+    if (!isSilent) setIsLoading(true);
     try {
       const res = await AxiosProvider.get(`/campaigns?page=${page}&limit=20`);
       if (res.data?.success) {
@@ -139,9 +139,9 @@ export default function CampaignsPage() {
         setTotalPages(res.data.pagination?.totalPages || 1);
       }
     } catch {
-      toast.error("Failed to load campaigns");
+      if (!isSilent) toast.error("Failed to load campaigns");
     } finally {
-      setIsLoading(false);
+      if (!isSilent) setIsLoading(false);
     }
   };
 
@@ -149,14 +149,33 @@ export default function CampaignsPage() {
     fetchLeadSources();
   }, []);
 
+  // Real-time live auto-sync (polls every 3s silently so dialed & pending counts update dynamically without page refresh)
   useEffect(() => {
-    fetchData();
+    fetchData(false);
+
+    const interval = setInterval(() => {
+      fetchData(true);
+    }, 3000);
+
+    const handleFocus = () => {
+      fetchData(true);
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("focus", handleFocus);
+    }
+
+    return () => {
+      clearInterval(interval);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("focus", handleFocus);
+      }
+    };
   }, [page]);
 
-  // Real-time table refresh on dialer events
+  // Immediate table refresh on local dialer events
   useEffect(() => {
     const handleDialerFinished = () => {
-      fetchData();
+      fetchData(true);
     };
     if (typeof window !== "undefined") {
       window.addEventListener("campaign-dialer-finished", handleDialerFinished);
