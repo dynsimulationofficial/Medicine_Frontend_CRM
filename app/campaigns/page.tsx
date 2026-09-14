@@ -103,6 +103,7 @@ export default function CampaignsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [liveActiveCall, setLiveActiveCall] = useState<any | null>(null);
 
   const [flyout, setFlyout] = useState<"add" | "edit" | "view" | "">("");
   const [selectedData, setSelectedData] = useState<any | null>(null);
@@ -133,10 +134,34 @@ export default function CampaignsPage() {
   const fetchData = async (isSilent: boolean = false) => {
     if (!isSilent) setIsLoading(true);
     try {
-      const res = await AxiosProvider.get(`/campaigns?page=${page}&limit=20`);
+      const [res, activeRes] = await Promise.all([
+        AxiosProvider.get(`/campaigns?page=${page}&limit=20`),
+        AxiosProvider.get(`/leads/dialer/active-call`).catch(() => ({ data: { data: null } })),
+      ]);
+
       if (res.data?.success) {
-        setData(Array.isArray(res.data.data) ? res.data.data : []);
+        const campaignsList = Array.isArray(res.data.data) ? res.data.data : [];
+        setData(campaignsList);
         setTotalPages(res.data.pagination?.totalPages || 1);
+
+        const currentActive = activeRes.data?.data;
+        setLiveActiveCall(currentActive || null);
+
+        // If local activeCampaignId has 0 pending leads and no active call, auto-clear local dialer session
+        if (activeCampaignId) {
+          const matchedCampaign = campaignsList.find((c: any) => c.id === activeCampaignId);
+          const pending = Number(
+            matchedCampaign?.pending_leads ??
+              (matchedCampaign ? matchedCampaign.total_leads - (matchedCampaign.dialed_leads || 0) : 0)
+          );
+          if (
+            matchedCampaign &&
+            pending <= 0 &&
+            (!currentActive || currentActive.campaign_id !== matchedCampaign.id)
+          ) {
+            stopAutoDialer();
+          }
+        }
       }
     } catch {
       if (!isSilent) toast.error("Failed to load campaigns");
@@ -452,92 +477,111 @@ export default function CampaignsPage() {
                     </td>
                   </tr>
                 ) : (
-                  data.map((row, idx) => (
-                    <tr
-                      key={row.id || idx}
-                      className="hover:bg-primary-700 border-b border-[#E7E7E7] odd:bg-[#404040]"
-                    >
-                      <td className="px-3 py-2 text-center text-gray-300 font-medium w-14">
-                        {(page - 1) * 20 + idx + 1}
-                      </td>
-                      <td className="px-3 py-2 hidden md:table-cell text-white font-medium">
-                        {row.lead_source_name || "-"}
-                      </td>
-                      <td className="px-3 py-2 font-semibold text-white">
-                        {row.name}
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-950 text-sky-400 border border-sky-800">
-                            {Number(row.total_leads || 0)} Total
-                          </span>
-                          {/* Dialed vs Pending Badges */}
-                          {Number(row.total_leads || 0) > 0 && (
-                            Number(row.pending_leads ?? (row.total_leads - (row.dialed_leads || 0))) <= 0 ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">
-                                ✅ {Number(row.dialed_leads || row.total_leads)}/{Number(row.total_leads)} Dialed
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-800 text-gray-300 border border-gray-700">
-                                {Number(row.dialed_leads || 0)}/{Number(row.total_leads)} Dialed ({Number(row.pending_leads ?? (row.total_leads - (row.dialed_leads || 0)))} Pending)
-                              </span>
-                            )
-                          )}
-                          {/* Live Calling Indicator */}
-                          {activeCampaignId === row.id && dialerStatus !== "idle" && dialerStatus !== "completed" && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                              Calling: {campaignIndex + 1}/{campaignQueue.length || row.total_leads}
+                  data.map((row, idx) => {
+                    const isLive =
+                      (liveActiveCall && liveActiveCall.campaign_id === row.id) ||
+                      (activeCampaignId === row.id &&
+                        dialerStatus !== "idle" &&
+                        dialerStatus !== "completed" &&
+                        Number(row.pending_leads ?? (row.total_leads - (row.dialed_leads || 0))) > 0);
+
+                    const isAllCompleted =
+                      Number(row.total_leads || 0) > 0 &&
+                      Number(row.pending_leads ?? (row.total_leads - (row.dialed_leads || 0))) <= 0 &&
+                      (!liveActiveCall || liveActiveCall.campaign_id !== row.id);
+
+                    const liveCallNum = Math.min(
+                      Number(row.dialed_leads || 0) + (isLive ? 1 : 0),
+                      Number(row.total_leads || 1)
+                    );
+
+                    return (
+                      <tr
+                        key={row.id || idx}
+                        className="hover:bg-primary-700 border-b border-[#E7E7E7] odd:bg-[#404040]"
+                      >
+                        <td className="px-3 py-2 text-center text-gray-300 font-medium w-14">
+                          {(page - 1) * 20 + idx + 1}
+                        </td>
+                        <td className="px-3 py-2 hidden md:table-cell text-white font-medium">
+                          {row.lead_source_name || "-"}
+                        </td>
+                        <td className="px-3 py-2 font-semibold text-white">
+                          {row.name}
+                        </td>
+                        <td className="px-3 py-2 text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-950 text-sky-400 border border-sky-800">
+                              {Number(row.total_leads || 0)} Total
                             </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 hidden md:table-cell text-white">
-                        {row.created_at ? new Date(row.created_at).toLocaleDateString() : "-"}
-                      </td>
-                      <td className="px-3 py-2 md:table-cell">
-                        <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1.5 shadow-sm">
-                          {/* 📞 Start / Stop / Completed Campaign Calling Button */}
-                          {activeCampaignId === row.id && dialerStatus !== "idle" && dialerStatus !== "completed" ? (
-                            <button
-                              type="button"
-                              onClick={stopAutoDialer}
-                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-red-600 hover:bg-red-700 text-white animate-pulse shadow transition cursor-pointer"
-                              title="Stop Calling"
-                            >
-                              <FaPhoneAlt className="w-2.5 h-2.5" />
-                              <span>Stop ({campaignIndex + 1}/{campaignQueue.length || row.total_leads})</span>
-                            </button>
-                          ) : Number(row.total_leads || 0) > 0 && Number(row.pending_leads ?? (row.total_leads - (row.dialed_leads || 0))) <= 0 ? (
-                            <div className="inline-flex items-center gap-1">
+                            {/* Dialed vs Pending Badges */}
+                            {Number(row.total_leads || 0) > 0 && (
+                              isAllCompleted ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">
+                                  ✅ {Number(row.dialed_leads || row.total_leads)}/{Number(row.total_leads)} Dialed
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-800 text-gray-300 border border-gray-700">
+                                  {Number(row.dialed_leads || 0)}/{Number(row.total_leads)} Dialed ({Number(row.pending_leads ?? (row.total_leads - (row.dialed_leads || 0)))} Pending)
+                                </span>
+                              )
+                            )}
+                            {/* Live Calling Indicator */}
+                            {isLive && !isAllCompleted && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                Calling: {liveCallNum}/{Number(row.total_leads)}
+                                {liveActiveCall?.full_name ? ` (${liveActiveCall.full_name})` : ""}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 hidden md:table-cell text-white">
+                          {row.created_at ? new Date(row.created_at).toLocaleDateString() : "-"}
+                        </td>
+                        <td className="px-3 py-2 md:table-cell">
+                          <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1.5 shadow-sm">
+                            {/* 📞 Start / Stop / Completed Campaign Calling Button */}
+                            {isLive && !isAllCompleted ? (
                               <button
                                 type="button"
-                                disabled
-                                className="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-950/80 text-emerald-400 border border-emerald-800 cursor-not-allowed opacity-90"
-                                title="All leads in this campaign have already been dialed"
+                                onClick={stopAutoDialer}
+                                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-red-600 hover:bg-red-700 text-white animate-pulse shadow transition cursor-pointer"
+                                title="Stop Calling"
                               >
-                                <span>✅ All Dialed</span>
+                                <FaPhoneAlt className="w-2.5 h-2.5" />
+                                <span>Stop ({liveCallNum}/{Number(row.total_leads)})</span>
                               </button>
+                            ) : isAllCompleted ? (
+                              <div className="inline-flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  disabled
+                                  className="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-950/80 text-emerald-400 border border-emerald-800 cursor-not-allowed opacity-90"
+                                  title="All leads in this campaign have already been dialed"
+                                >
+                                  <span>✅ All Dialed</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleResetDialer(row.id, row.name)}
+                                  className="p-1 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition cursor-pointer"
+                                  title="Re-dial Campaign (Reset unanswered leads)"
+                                >
+                                  🔄
+                                </button>
+                              </div>
+                            ) : (
                               <button
                                 type="button"
-                                onClick={() => handleResetDialer(row.id, row.name)}
-                                className="p-1 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition cursor-pointer"
-                                title="Re-dial Campaign (Reset unanswered leads)"
+                                onClick={() => startCampaignDialer(row.id, row.name)}
+                                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow transition cursor-pointer"
+                                title="Start Calling Pending Leads"
                               >
-                                🔄
+                                <FaPhoneAlt className="w-2.5 h-2.5" />
+                                <span>Start ({Number(row.pending_leads ?? (row.total_leads || 0))})</span>
                               </button>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => startCampaignDialer(row.id, row.name)}
-                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow transition cursor-pointer"
-                              title="Start Calling Pending Leads"
-                            >
-                              <FaPhoneAlt className="w-2.5 h-2.5" />
-                              <span>Start ({Number(row.pending_leads ?? (row.total_leads || 0))})</span>
-                            </button>
-                          )}
+                            )}
 
                           <button
                             onClick={() => {
@@ -569,9 +613,10 @@ export default function CampaignsPage() {
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
+                  );
+                })
+              )}
+            </tbody>
             </table>
 
             {/* Pagination Controls */}
