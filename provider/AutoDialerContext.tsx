@@ -1069,6 +1069,11 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
    */
   const stopAutoDialer = () => {
     clearTimers();
+    try {
+      AxiosProvider.post("/leads/dialer/stop", {
+        campaign_id: activeCampaignIdRef.current || undefined,
+      }).catch(() => {});
+    } catch {}
     setStatus("idle");
     setIsOpen(false);
     setCurrentLead(null);
@@ -1083,6 +1088,9 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     campaignIndexRef.current = 0;
     setLastActivityId(null);
     toast.info("Auto-Dialer session ended.");
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("campaign-dialer-finished"));
+    }
   };
 
   const markCallAsConnected = async () => {

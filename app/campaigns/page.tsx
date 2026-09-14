@@ -104,6 +104,22 @@ export default function CampaignsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [liveActiveCall, setLiveActiveCall] = useState<any | null>(null);
+  const [manuallyStoppedCampaigns, setManuallyStoppedCampaigns] = useState<string[]>([]);
+
+  const handleStopCampaign = async (campaignId: string) => {
+    setManuallyStoppedCampaigns((prev) => (prev.includes(campaignId) ? prev : [...prev, campaignId]));
+    setLiveActiveCall(null);
+    try {
+      await AxiosProvider.post("/leads/dialer/stop", { campaign_id: campaignId });
+    } catch {}
+    stopAutoDialer();
+    await fetchData(true);
+  };
+
+  const handleStartCampaign = async (campaignId: string, campaignName?: string) => {
+    setManuallyStoppedCampaigns((prev) => prev.filter((id) => id !== campaignId));
+    await startCampaignDialer(campaignId, campaignName);
+  };
 
   const [flyout, setFlyout] = useState<"add" | "edit" | "view" | "">("");
   const [selectedData, setSelectedData] = useState<any | null>(null);
@@ -313,85 +329,6 @@ export default function CampaignsPage() {
 
           {/* ---------------- Main Container ----------------------- */}
           <div className="relative overflow-x-auto shadow-lastTransaction rounded-xl sm:rounded-3xl px-1 py-6 md:p-6 z-10 mainContainerBg">
-            {/* 🔴 LIVE CAMPAIGN CALLING STATUS BANNER (Admin Progress Tracker) */}
-            {activeCampaignId && dialerStatus !== "idle" && dialerStatus !== "completed" && (
-              <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-[#0b1b2b] via-[#112233] to-[#0a1926] border border-sky-500/40 shadow-2xl animate-fade-in text-white">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  {/* Left: Campaign & Current Lead Info */}
-                  <div className="flex items-center gap-4">
-                    <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-sky-500/20 border border-sky-400/40 text-sky-400 flex-shrink-0">
-                      <span className="animate-ping absolute inline-flex h-8 w-8 rounded-full bg-sky-400 opacity-40"></span>
-                      <FaPhoneAlt className="w-5 h-5 relative z-10" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 uppercase tracking-wider">
-                          Active Campaign Calling
-                        </span>
-                        <span className="text-xs text-gray-400 font-medium">
-                          {activeCampaignName || "Campaign"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                        <p className="text-base font-bold text-white">
-                          {currentLead?.full_name || "Connecting..."}
-                        </p>
-                        {currentLead?.phone && (
-                          <span className="text-xs font-mono text-gray-300 bg-black/50 px-2 py-0.5 rounded border border-gray-700">
-                            {currentLead.phone}
-                          </span>
-                        )}
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                          {dialerStatus === "in-call" ? "📞 Live with Agent" : "⏳ Dialing..."}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Middle / Right: Live 2/3 Counter & Progress */}
-                  <div className="flex flex-col items-start md:items-end justify-center">
-                    <div className="flex items-center gap-4">
-                      <div className="text-left md:text-right">
-                        <p className="text-[11px] text-gray-400">Current Lead</p>
-                        <p className="text-lg font-extrabold text-emerald-400 font-mono">
-                          {campaignIndex + 1} / {campaignQueue.length || 1}
-                        </p>
-                      </div>
-                      <div className="h-8 w-[1px] bg-gray-700"></div>
-                      <div className="text-left md:text-right">
-                        <p className="text-[11px] text-gray-400">Duration</p>
-                        <p className="text-lg font-extrabold text-white font-mono flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                          {formatTime(callDuration)}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={stopAutoDialer}
-                        className="ml-2 px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-lg transition flex items-center gap-1.5 cursor-pointer border border-red-500/50"
-                      >
-                        <span className="w-2 h-2 rounded-full bg-white"></span>
-                        Stop Calling
-                      </button>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="w-full md:w-56 mt-2 bg-gray-800 rounded-full h-1.5 overflow-hidden border border-gray-700">
-                      <div
-                        className="bg-gradient-to-r from-sky-400 to-emerald-400 h-1.5 transition-all duration-500 rounded-full"
-                        style={{
-                          width: `${Math.min(
-                            100,
-                            Math.round(((campaignIndex + 1) / (campaignQueue.length || 1)) * 100)
-                          )}%`,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Top Action Button (Create Campaign) */}
             <div className="flex justify-end items-center mb-6 w-full mx-auto gap-4">
               <button
@@ -478,12 +415,14 @@ export default function CampaignsPage() {
                   </tr>
                 ) : (
                   data.map((row, idx) => {
+                    const isManuallyStopped = manuallyStoppedCampaigns.includes(row.id);
                     const isLive =
-                      (liveActiveCall && liveActiveCall.campaign_id === row.id) ||
-                      (activeCampaignId === row.id &&
-                        dialerStatus !== "idle" &&
-                        dialerStatus !== "completed" &&
-                        Number(row.pending_leads ?? (row.total_leads - (row.dialed_leads || 0))) > 0);
+                      !isManuallyStopped &&
+                      ((liveActiveCall && liveActiveCall.campaign_id === row.id) ||
+                        (activeCampaignId === row.id &&
+                          dialerStatus !== "idle" &&
+                          dialerStatus !== "completed" &&
+                          Number(row.pending_leads ?? (row.total_leads - (row.dialed_leads || 0))) > 0));
 
                     const isAllCompleted =
                       Number(row.total_leads || 0) > 0 &&
@@ -545,7 +484,7 @@ export default function CampaignsPage() {
                             {isLive && !isAllCompleted ? (
                               <button
                                 type="button"
-                                onClick={stopAutoDialer}
+                                onClick={() => handleStopCampaign(row.id)}
                                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-red-600 hover:bg-red-700 text-white animate-pulse shadow transition cursor-pointer"
                                 title="Stop Calling"
                               >
@@ -574,7 +513,7 @@ export default function CampaignsPage() {
                             ) : (
                               <button
                                 type="button"
-                                onClick={() => startCampaignDialer(row.id, row.name)}
+                                onClick={() => handleStartCampaign(row.id, row.name)}
                                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow transition cursor-pointer"
                                 title="Start Calling Pending Leads"
                               >
