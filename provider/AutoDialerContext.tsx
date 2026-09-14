@@ -457,12 +457,12 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
             html: `
               <div style="text-align: left; font-size: 13px; color: #d1d5db; line-height: 1.6;">
                 <p style="margin-bottom: 10px;">
-                  Campaign calls connect karne ke liye CloudTalk par aapka agent <b style="color:#10b981;">Online</b> hona zaroori hai.
+                  To connect campaign calls, your CloudTalk agent must be <b style="color:#10b981;">Online</b>.
                 </p>
                 <div style="background-color: #1f2937; padding: 12px; border-radius: 8px; border: 1px solid #374151;">
                   <p style="font-weight: 600; color: #f59e0b; margin-bottom: 6px;">⚠️ Current Status:</p>
-                  <p style="color: #e5e7eb;">Agent <b>Shakeel Ahmed (Extension 1001)</b> abhi CloudTalk Phone app me <b>Offline</b> hai.</p>
-                  <p style="margin-top: 8px; color: #38bdf8;">👉 <b>Solution:</b> Agent PC par Shakeel ko boliye ki wo apna CloudTalk Phone app open kare aur status toggle ko <b>Online (Green)</b> karein. Fir aap yahan se Start Calling dabayein.</p>
+                  <p style="color: #e5e7eb;">Agent <b>Shakeel Ahmed (Extension 1001)</b> is currently <b>Offline</b> in the CloudTalk Phone app.</p>
+                  <p style="margin-top: 8px; color: #38bdf8;">👉 <b>Solution:</b> Please ask agent Shakeel to open the CloudTalk Phone app on their PC and set their status toggle to <b>Online (Green)</b>. Once online, click "Start Calling" again.</p>
                 </div>
               </div>
             `,
@@ -471,7 +471,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
             color: "#ffffff",
             iconColor: "#f59e0b",
             confirmButtonColor: "#0284c7",
-            confirmButtonText: "Theek Hai, Samajh Gaya",
+            confirmButtonText: "Got It, Understood",
             customClass: {
               popup: "border border-gray-700 rounded-2xl shadow-2xl",
             },
@@ -777,12 +777,12 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
             html: `
               <div style="text-align: left; font-size: 13px; color: #d1d5db; line-height: 1.6;">
                 <p style="margin-bottom: 10px;">
-                  Campaign calls connect karne ke liye CloudTalk par aapka agent <b style="color:#10b981;">Online</b> hona zaroori hai.
+                  To connect campaign calls, your CloudTalk agent must be <b style="color:#10b981;">Online</b>.
                 </p>
                 <div style="background-color: #1f2937; padding: 12px; border-radius: 8px; border: 1px solid #374151;">
                   <p style="font-weight: 600; color: #f59e0b; margin-bottom: 6px;">⚠️ Current Status:</p>
-                  <p style="color: #e5e7eb;">Agent <b>${agentData.agentName || "Shakeel Ahmed"} (Extension 1001)</b> abhi CloudTalk Phone app me <b>Offline</b> hai.</p>
-                  <p style="margin-top: 8px; color: #38bdf8;">👉 <b>Solution:</b> Agent PC par Shakeel ko boliye ki wo apna CloudTalk Phone app open kare aur status toggle ko <b>Online (Green)</b> karein. Fir aap yahan se Start Calling dabayein.</p>
+                  <p style="color: #e5e7eb;">Agent <b>${agentData.agentName || "Shakeel Ahmed"} (Extension 1001)</b> is currently <b>Offline</b> in the CloudTalk Phone app.</p>
+                  <p style="margin-top: 8px; color: #38bdf8;">👉 <b>Solution:</b> Please ask agent Shakeel to open the CloudTalk Phone app on their PC and set their status toggle to <b>Online (Green)</b>. Once online, click "Start Calling" again.</p>
                 </div>
               </div>
             `,
@@ -791,7 +791,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
             color: "#ffffff",
             iconColor: "#f59e0b",
             confirmButtonColor: "#0284c7",
-            confirmButtonText: "Theek Hai, Samajh Gaya",
+            confirmButtonText: "Got It, Understood",
             customClass: {
               popup: "border border-gray-700 rounded-2xl shadow-2xl",
             },
