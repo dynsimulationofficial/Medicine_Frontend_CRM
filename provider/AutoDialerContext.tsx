@@ -253,18 +253,18 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
             : null;
         if (!token) return;
 
-        const userRole =
-          typeof window !== "undefined"
-            ? (localStorage.getItem("userRole") || "").toLowerCase()
-            : "";
-
-        // STRICT ROLE IMMUNITY: Admin must NEVER screen-pop or be redirected to lead details!
-        if (userRole === "admin") return;
+        // If this specific tab is the Admin campaign launcher on /campaigns, keep Admin on campaigns view
+        if (
+          activeCampaignIdRef.current &&
+          typeof window !== "undefined" &&
+          window.location.pathname === "/campaigns"
+        ) {
+          return;
+        }
 
         const res = await AxiosProvider.get("/leads/dialer/active-call");
         const activeCall = res.data?.data;
         if (!activeCall || !activeCall.lead_id) {
-          lastPoppedLeadIdRef.current = null;
           return;
         }
 
@@ -297,8 +297,14 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
           startCallTimer();
           startCallSession(activeCall.lead_id, activeCall.full_name, activeCall.phone, activeCall.call_id);
 
-          // Auto-navigate Agent screen to the lead details
-          router.push(`/leadsdetails?id=${activeCall.lead_id}`);
+          // Force Agent screen to the lead details page
+          if (typeof window !== "undefined") {
+            const targetUrl = `/leadsdetails?id=${activeCall.lead_id}`;
+            const currentUrl = window.location.pathname + window.location.search;
+            if (currentUrl !== targetUrl) {
+              window.location.href = targetUrl;
+            }
+          }
           toast.info(`📞 Live Call: ${activeCall.full_name || "Customer"}`);
         }
       } catch {}
@@ -806,6 +812,12 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         params: { campaign_id: campaignId, limit: 200 },
       });
       const leadsList: any[] = res.data?.data?.leads || [];
+      // Ensure sequence strictly matches the Unassigned Leads table top-to-bottom (Sameer -> Ismail -> Wasique)
+      leadsList.sort((a: any, b: any) => {
+        const timeA = new Date(a.created_at || 0).getTime();
+        const timeB = new Date(b.created_at || 0).getTime();
+        return timeB - timeA;
+      });
       if (leadsList.length === 0) {
         Swal.fire({
           title: "All Leads Already Dialed",

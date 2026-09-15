@@ -61,8 +61,9 @@ export default function AutoDialerBar() {
   const isAlreadyOnLeadDetails = pathname === "/leadsdetails";
 
   const userRole = typeof window !== "undefined" ? (localStorage.getItem("userRole") || "").toLowerCase() : "";
-  // Admin PC NEVER renders the dialer bottom bar under ANY circumstance!
-  if (!isOpen || userRole === "admin") return null;
+  // Only hide bottom bar if it's admin on the campaigns page
+  if (!isOpen) return null;
+  if (userRole === "admin" && pathname === "/campaigns") return null;
 
   // Format call duration MM:SS
   const formatTime = (secs: number) => {
