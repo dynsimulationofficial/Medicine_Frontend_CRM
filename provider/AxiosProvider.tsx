@@ -9,7 +9,7 @@ import StorageManager from "./StorageManager";
 export const LOCAL_API_URL =
   process.env.NEXT_PUBLIC_LOCAL_API_URL || "http://localhost:8016/api/v1/managelead";
 export const STAGING_API_URL =
-  "https://medicine-crm-backend-staging.dynsimulation.com/api/v1/managelead";
+  "https://medico-production-x7k9-backend.medicos-pharma.com/api/v1/managelead";
 
 export const getBaseURL = (): string => {
   if (process.env.NEXT_PUBLIC_API_URL) {
