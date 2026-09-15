@@ -258,16 +258,16 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
             ? (localStorage.getItem("userRole") || "").toLowerCase()
             : "";
 
-        // STRICT ROLE IMMUNITY: Admin must NEVER screen-pop or be redirected to lead details!
+        // STRICT: Admin must NEVER screen-pop or be redirected to lead details! Only agents get screen-pop.
         if (userRole === "admin") return;
-
-        // If this tab is actively running the campaign dialer, keep it on current view
-        if (activeCampaignIdRef.current) return;
 
         const res = await AxiosProvider.get("/leads/dialer/active-call");
         const activeCall = res.data?.data;
+        if (!activeCall || !activeCall.lead_id) {
+          return;
+        }
+
         if (
-          activeCall &&
           activeCall.lead_id &&
           activeCall.lead_id !== lastPoppedLeadIdRef.current &&
           Date.now() - Number(activeCall.timestamp || 0) < 900000
@@ -294,9 +294,16 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
           setIsOpen(true);
           setIsMinimized(false);
           startCallTimer();
+          startCallSession(activeCall.lead_id, activeCall.full_name, activeCall.phone, activeCall.call_id);
 
-          // Auto-navigate Agent screen to the lead details
-          router.push(`/leadsdetails?id=${activeCall.lead_id}`);
+          // Force Agent screen to the lead details page
+          if (typeof window !== "undefined") {
+            const targetUrl = `/leadsdetails?id=${activeCall.lead_id}`;
+            const currentUrl = window.location.pathname + window.location.search;
+            if (currentUrl !== targetUrl) {
+              window.location.href = targetUrl;
+            }
+          }
           toast.info(`📞 Live Call: ${activeCall.full_name || "Customer"}`);
         }
       } catch {}
@@ -315,8 +322,8 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     setStatus("in-call");
     startCallTimer();
 
-    // Start 18-second Smart Ring Timeout / Auto-skip (stops immediately when answered)
-    setRingSecondsLeft(18);
+    // Start 35-second Smart Ring Timeout / Auto-skip (stops immediately when answered)
+    setRingSecondsLeft(35);
     let callAnswered = false;
     if (ringTimerRef.current) clearInterval(ringTimerRef.current);
     ringTimerRef.current = setInterval(() => {
@@ -390,7 +397,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
           toast.info(`Call ended with ${leadName || "Lead"}. Please save disposition to advance.`);
         }
       } catch {}
-    }, 2000);
+    }, 5000);
   };
 
   // Dial specific lead
@@ -520,6 +527,18 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
           err?.response?.data?.message || err?.response?.data?.msg || err?.message || ""
         ).toLowerCase();
 
+        // If CloudTalk hit rate limit (too many calls/min), pause gracefully instead of skipping all leads!
+        if (
+          errorMsg.includes("rate limit") ||
+          errorMsg.includes("429") ||
+          errorMsg.includes("too many requests")
+        ) {
+          toast.warn("⏳ CloudTalk API Rate Limit reached. Dialing paused for 15s, please wait a moment...");
+          setStatus("paused");
+          clearTimers();
+          return;
+        }
+
         // If agent is currently on a call, wait 6s and retry (do not skip remaining leads!)
         if (
           errorMsg.includes("already calling") ||
@@ -540,8 +559,8 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
             err?.response?.data?.msg ||
             "Failed to initiate call for this lead"
         );
-        setStatus("wrap-up");
-        startCountdown();
+        setStatus("paused");
+        clearTimers();
       }
     } finally {
       setIsLoading(false);
@@ -674,22 +693,10 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  // Start Wrap-up Countdown Timer
+  // Start Wrap-up Mode (Waits for agent to click Save & Next, no auto-skipping)
   const startCountdown = () => {
     clearTimers();
     setStatus("wrap-up");
-    setCountdown(5);
-
-    countdownTimerRef.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearTimers();
-          advanceToNext();
-          return 5;
-        }
-        return prev - 1;
-      });
-    }, 1000);
   };
 
   /**
@@ -864,9 +871,8 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       setCurrentLead(firstLead);
       currentLeadRef.current = firstLead;
 
-      // Start Campaign Calling: Immediately dial Lead 1 and sync campaign to CloudTalk in background
+      // Start Campaign Calling: Immediately dial Lead 1
       try {
-        AxiosProvider.post("/leads/dialer/start-parallel", { campaign_id: campaignId }).catch(() => {});
         toast.success(`🚀 Campaign started! Dialing Lead 1: ${firstLead.full_name || firstLead.phone}...`);
         await dialLead(firstLead.id, firstLead.full_name, firstLead.phone);
       } catch (callErr: any) {

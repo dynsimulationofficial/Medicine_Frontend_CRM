@@ -213,8 +213,8 @@ export default function AutoDialerBar() {
                 )}
                 {status === "wrap-up" && (
                   <div className="flex items-center gap-2 bg-amber-950/80 border border-amber-500/40 px-3 py-1.5 rounded-lg text-amber-300 text-xs font-medium">
-                    <span className="font-bold text-amber-400">{countdown}s</span>
-                    <span>Next lead...</span>
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                    <span>Call Ended • Add Disposition & Save & Next</span>
                   </div>
                 )}
                 {status === "paused" && (
