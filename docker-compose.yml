@@ -1,0 +1,12 @@
+services:
+  medicine-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8015:8015"
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 8015
+    restart: unless-stopped
