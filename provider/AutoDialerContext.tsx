@@ -261,13 +261,14 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         // STRICT ROLE IMMUNITY: Admin must NEVER screen-pop or be redirected to lead details!
         if (userRole === "admin") return;
 
-        // If this tab is actively running the campaign dialer, keep it on current view
-        if (activeCampaignIdRef.current) return;
-
         const res = await AxiosProvider.get("/leads/dialer/active-call");
         const activeCall = res.data?.data;
+        if (!activeCall || !activeCall.lead_id) {
+          lastPoppedLeadIdRef.current = null;
+          return;
+        }
+
         if (
-          activeCall &&
           activeCall.lead_id &&
           activeCall.lead_id !== lastPoppedLeadIdRef.current &&
           Date.now() - Number(activeCall.timestamp || 0) < 900000
@@ -294,6 +295,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
           setIsOpen(true);
           setIsMinimized(false);
           startCallTimer();
+          startCallSession(activeCall.lead_id, activeCall.full_name, activeCall.phone, activeCall.call_id);
 
           // Auto-navigate Agent screen to the lead details
           router.push(`/leadsdetails?id=${activeCall.lead_id}`);
@@ -864,9 +866,8 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       setCurrentLead(firstLead);
       currentLeadRef.current = firstLead;
 
-      // Start Campaign Calling: Immediately dial Lead 1 and sync campaign to CloudTalk in background
+      // Start Campaign Calling: Immediately dial Lead 1
       try {
-        AxiosProvider.post("/leads/dialer/start-parallel", { campaign_id: campaignId }).catch(() => {});
         toast.success(`🚀 Campaign started! Dialing Lead 1: ${firstLead.full_name || firstLead.phone}...`);
         await dialLead(firstLead.id, firstLead.full_name, firstLead.phone);
       } catch (callErr: any) {
