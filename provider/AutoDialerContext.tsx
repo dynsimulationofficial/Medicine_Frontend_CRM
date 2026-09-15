@@ -253,14 +253,13 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
             : null;
         if (!token) return;
 
-        // If this specific tab is the Admin campaign launcher on /campaigns, keep Admin on campaigns view
-        if (
-          activeCampaignIdRef.current &&
-          typeof window !== "undefined" &&
-          window.location.pathname === "/campaigns"
-        ) {
-          return;
-        }
+        const userRole =
+          typeof window !== "undefined"
+            ? (localStorage.getItem("userRole") || "").toLowerCase()
+            : "";
+
+        // STRICT: Admin must NEVER screen-pop or be redirected to lead details! Only agents get screen-pop.
+        if (userRole === "admin") return;
 
         const res = await AxiosProvider.get("/leads/dialer/active-call");
         const activeCall = res.data?.data;
@@ -323,8 +322,8 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     setStatus("in-call");
     startCallTimer();
 
-    // Start 18-second Smart Ring Timeout / Auto-skip (stops immediately when answered)
-    setRingSecondsLeft(18);
+    // Start 35-second Smart Ring Timeout / Auto-skip (stops immediately when answered)
+    setRingSecondsLeft(35);
     let callAnswered = false;
     if (ringTimerRef.current) clearInterval(ringTimerRef.current);
     ringTimerRef.current = setInterval(() => {
@@ -560,8 +559,8 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
             err?.response?.data?.msg ||
             "Failed to initiate call for this lead"
         );
-        setStatus("wrap-up");
-        startCountdown();
+        setStatus("paused");
+        clearTimers();
       }
     } finally {
       setIsLoading(false);
@@ -824,12 +823,6 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         params: { campaign_id: campaignId, limit: 200 },
       });
       const leadsList: any[] = res.data?.data?.leads || [];
-      // Ensure sequence strictly matches the Unassigned Leads table top-to-bottom (Sameer -> Ismail -> Wasique)
-      leadsList.sort((a: any, b: any) => {
-        const timeA = new Date(a.created_at || 0).getTime();
-        const timeB = new Date(b.created_at || 0).getTime();
-        return timeB - timeA;
-      });
       if (leadsList.length === 0) {
         Swal.fire({
           title: "All Leads Already Dialed",
