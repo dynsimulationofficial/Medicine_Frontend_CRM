@@ -3,10 +3,17 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+
     ports:
       - "127.0.0.1:8016:8016"
+
     environment:
       NODE_ENV: production
       HOSTNAME: 0.0.0.0
       PORT: 8016
+
+      NEXT_PUBLIC_API_URL: "https://medico-production-x7k9-backend.medicos-pharma.com/api/v1/managelead"
+      NEXT_PUBLIC_APP_ENV: production
+      NEXT_PUBLIC_S3_BUCKET_NAME: medicine-crm-staging-bucket-2026
+
     restart: unless-stopped
