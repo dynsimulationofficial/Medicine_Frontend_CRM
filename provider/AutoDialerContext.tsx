@@ -693,22 +693,10 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  // Start Wrap-up Countdown Timer
+  // Start Wrap-up Mode (Waits for agent to click Save & Next, no auto-skipping)
   const startCountdown = () => {
     clearTimers();
     setStatus("wrap-up");
-    setCountdown(5);
-
-    countdownTimerRef.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearTimers();
-          advanceToNext();
-          return 5;
-        }
-        return prev - 1;
-      });
-    }, 1000);
   };
 
   /**
