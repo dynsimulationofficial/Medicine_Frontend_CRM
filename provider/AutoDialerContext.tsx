@@ -398,7 +398,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
           toast.info(`Call ended with ${leadName || "Lead"}. Please save disposition to advance.`);
         }
       } catch {}
-    }, 2000);
+    }, 5000);
   };
 
   // Dial specific lead
@@ -527,6 +527,18 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         const errorMsg = String(
           err?.response?.data?.message || err?.response?.data?.msg || err?.message || ""
         ).toLowerCase();
+
+        // If CloudTalk hit rate limit (too many calls/min), pause gracefully instead of skipping all leads!
+        if (
+          errorMsg.includes("rate limit") ||
+          errorMsg.includes("429") ||
+          errorMsg.includes("too many requests")
+        ) {
+          toast.warn("⏳ CloudTalk API Rate Limit reached. Dialing paused for 15s, please wait a moment...");
+          setStatus("paused");
+          clearTimers();
+          return;
+        }
 
         // If agent is currently on a call, wait 6s and retry (do not skip remaining leads!)
         if (
