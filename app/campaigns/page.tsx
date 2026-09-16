@@ -116,7 +116,11 @@ export default function CampaignsPage() {
     await fetchData(true);
   };
 
-  const handleStartCampaign = async (campaignId: string, campaignName?: string) => {
+  const handleStartCampaign = async (campaignId: string, campaignName?: string, pendingCount?: number) => {
+    if (pendingCount !== undefined && pendingCount <= 0) {
+      toast.info("No leads in this campaign to call.");
+      return;
+    }
     setManuallyStoppedCampaigns((prev) => prev.filter((id) => id !== campaignId));
     await startCampaignDialer(campaignId, campaignName);
   };
@@ -481,7 +485,17 @@ export default function CampaignsPage() {
                         <td className="px-3 py-2 md:table-cell">
                           <div className="inline-flex items-center rounded-lg border border-gray-700 bg-black p-1 gap-1.5 shadow-sm">
                             {/* 📞 Start / Stop / Completed Campaign Calling Button */}
-                            {isLive && !isAllCompleted ? (
+                            {Number(row.total_leads || 0) === 0 ? (
+                              <button
+                                type="button"
+                                disabled
+                                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-800/80 text-gray-500 border border-gray-700 cursor-not-allowed opacity-60 select-none"
+                                title="No leads in this campaign to call"
+                              >
+                                <FaPhoneAlt className="w-2.5 h-2.5 text-gray-500" />
+                                <span>Start (0)</span>
+                              </button>
+                            ) : isLive && !isAllCompleted ? (
                               <button
                                 type="button"
                                 onClick={() => handleStopCampaign(row.id)}
@@ -513,7 +527,7 @@ export default function CampaignsPage() {
                             ) : (
                               <button
                                 type="button"
-                                onClick={() => handleStartCampaign(row.id, row.name)}
+                                onClick={() => handleStartCampaign(row.id, row.name, Number(row.pending_leads ?? (row.total_leads || 0)))}
                                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow transition cursor-pointer"
                                 title="Start Calling Pending Leads"
                               >
