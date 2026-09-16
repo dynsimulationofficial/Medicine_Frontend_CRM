@@ -166,14 +166,26 @@ export default function LeadActivityTab({
     fetchInitialData();
   }, []);
 
+  // Track currently requested lead ID to prevent race conditions across lead navigation
+  const activeLeadIdRef = useRef(leadId);
+  activeLeadIdRef.current = leadId;
+
+  // Immediately clear previous lead's activities whenever leadId changes
+  useEffect(() => {
+    setActivities([]);
+  }, [leadId]);
+
   // Fetch Activities (All Rows - No Limit)
   const fetchActivities = async () => {
     if (!leadId) return;
+    const requestedLeadId = leadId;
     setIsLoading(true);
     try {
       const res = await AxiosProvider.post("/leads/activities/list", {
-        lead_id: leadId,
+        lead_id: requestedLeadId,
       });
+      // Guard: If user navigated to another lead while this request was in-flight, discard stale result!
+      if (activeLeadIdRef.current !== requestedLeadId) return;
       const list = Array.isArray(res.data?.data)
         ? res.data.data
         : res.data?.data?.activities || res.data?.data?.data || [];
@@ -181,18 +193,21 @@ export default function LeadActivityTab({
     } catch (err) {
       console.error("Error fetching activities:", err);
     } finally {
-      setIsLoading(false);
+      if (activeLeadIdRef.current === requestedLeadId) {
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     fetchActivities();
-  }, [leadId, hitApi, refreshTrigger]);
+  }, [leadId, hitApi]);
 
   // Global event listener for instant activity updates from AutoDialer or external actions
   useEffect(() => {
     const handleActivityUpdated = (e: any) => {
-      if (!e?.detail?.lead_id || e.detail.lead_id === leadId) {
+      // ONLY refresh if this specific lead was updated
+      if (e?.detail?.lead_id && e.detail.lead_id === leadId) {
         fetchActivities();
         if (setHitApi) setHitApi((prev) => !prev);
       }

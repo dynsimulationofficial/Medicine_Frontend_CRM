@@ -78,7 +78,8 @@ interface AutoDialerContextType {
   saveDispositionAndNext: (
     dispositionId: string,
     conversationNote: string,
-    leadStatus?: string
+    leadStatus?: string,
+    targetLeadId?: string
   ) => Promise<void>;
   stopAutoDialer: () => void;
   toggleMinimize: () => void;
@@ -954,9 +955,11 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
   const saveDispositionAndNext = async (
     dispositionId: string,
     conversationNote: string,
-    leadStatus?: string
+    leadStatus?: string,
+    targetLeadId?: string
   ) => {
-    if (!currentLead) return;
+    const finalLeadId = targetLeadId || currentLead?.id;
+    if (!finalLeadId) return;
 
     clearTimers();
     setIsLoading(true);
@@ -985,7 +988,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       const campId = activeCampaignIdRef.current || currentLeadRef.current?.campaign_id;
 
       const res = await AxiosProvider.post("/leads/dialer/save-and-advance", {
-        lead_id: currentLead.id,
+        lead_id: finalLeadId,
         activity_id: lastActivityId || undefined,
         disposition_id: dispositionId || undefined,
         conversation: conversationNote || "Auto-dialer call completed",
@@ -997,11 +1000,10 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       });
 
       setStats((s) => ({ ...s, completed: s.completed + 1 }));
-      setRefreshTrigger((prev) => prev + 1);
       if (typeof window !== "undefined") {
         window.dispatchEvent(
           new CustomEvent("lead-activity-updated", {
-            detail: { lead_id: currentLead.id },
+            detail: { lead_id: finalLeadId },
           })
         );
       }
