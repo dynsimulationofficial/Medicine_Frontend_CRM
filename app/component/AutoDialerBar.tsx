@@ -72,7 +72,9 @@ export default function AutoDialerBar() {
   };
 
   const handleSaveDisposition = async () => {
-    await saveDispositionAndNext(selectedDispId, quickNote);
+    const targetLeadId = currentLead?.id;
+    if (!targetLeadId) return;
+    await saveDispositionAndNext(selectedDispId, quickNote, undefined, targetLeadId);
     setSelectedDispId("");
     setQuickNote("");
     setShowDispositionBox(false);
