@@ -244,6 +244,8 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
 
   // 🚀 Automatic Screen-Pop: Listen for live connected calls and auto-navigate to lead details
   const lastPoppedLeadIdRef = useRef<string | null>(null);
+  const lastCompletedLeadIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     // Continuously monitor active calls for Agents
     const interval = setInterval(async () => {
@@ -265,6 +267,16 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         const res = await AxiosProvider.get("/leads/dialer/active-call");
         const activeCall = res.data?.data;
         if (!activeCall || !activeCall.lead_id) {
+          return;
+        }
+
+        // Never screen pop a lead that was already completed / wrapped-up
+        if (activeCall.lead_id === lastCompletedLeadIdRef.current) {
+          return;
+        }
+
+        // If this lead is already currently active in the dialer, do not restart session
+        if (currentLeadRef.current?.id === activeCall.lead_id) {
           return;
         }
 
@@ -297,12 +309,12 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
           startCallTimer();
           startCallSession(activeCall.lead_id, activeCall.full_name, activeCall.phone, activeCall.call_id);
 
-          // Force Agent screen to the lead details page
+          // Smooth Next.js client-side navigation (NEVER window.location.href which causes hard page reload)
           if (typeof window !== "undefined") {
             const targetUrl = `/leadsdetails?id=${activeCall.lead_id}`;
             const currentUrl = window.location.pathname + window.location.search;
             if (currentUrl !== targetUrl) {
-              window.location.href = targetUrl;
+              router.push(targetUrl);
             }
           }
           toast.info(`📞 Live Call: ${activeCall.full_name || "Customer"}`);
@@ -612,6 +624,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         setStats((s) => ({ ...s, total: s.total + 1 }));
 
         toast.info(`📞 Dialing next campaign lead: ${nextLead.full_name || nextLead.phone}...`);
+        router.push(`/leadsdetails?id=${nextLead.id}`);
         await dialLead(
           nextLead.id,
           nextLead.full_name,
@@ -651,14 +664,8 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         return;
       }
 
-      // Smoothly navigate the UI to the next lead details page (Agents only)
-      const userRole =
-        typeof window !== "undefined"
-          ? (localStorage.getItem("userRole") || "").toLowerCase()
-          : "";
-      if (userRole !== "admin") {
-        router.push(`/leadsdetails?id=${nextLead.id}`);
-      }
+      // Smoothly navigate the UI to the next lead details page
+      router.push(`/leadsdetails?id=${nextLead.id}`);
 
       const nextLeadObj: AutoDialerLead = {
         id: nextLead.id,
@@ -961,6 +968,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
     const finalLeadId = targetLeadId || currentLead?.id;
     if (!finalLeadId) return;
 
+    lastCompletedLeadIdRef.current = finalLeadId;
     clearTimers();
     setIsLoading(true);
 
@@ -1013,6 +1021,10 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       const data = res.data;
       if (data?.has_next && data?.data?.next_lead) {
         const next = data.data.next_lead;
+        lastPoppedLeadIdRef.current = next.id;
+        setCampaignIndex((prev) => prev + 1);
+        campaignIndexRef.current = campaignIndexRef.current + 1;
+
         const nextLeadObj: AutoDialerLead = {
           id: next.id,
           lead_number: next.lead_number,
@@ -1049,11 +1061,8 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         toast.info(`📞 Calling next lead: ${next.full_name || next.phone}...`);
         startCallSession(next.id, next.full_name, next.phone, next.call_id);
 
-        // Smoothly navigate the UI to the next lead details page (Agents only)
-        const userRole = typeof window !== "undefined" ? (localStorage.getItem("userRole") || "").toLowerCase() : "";
-        if (userRole !== "admin") {
-          router.push(`/leadsdetails?id=${next.id}`);
-        }
+        // Smoothly navigate the UI to the next lead details page
+        router.push(`/leadsdetails?id=${next.id}`);
       } else if (data?.completed || !data?.has_next) {
         setStatus("completed");
         setActiveCampaignId(null);
