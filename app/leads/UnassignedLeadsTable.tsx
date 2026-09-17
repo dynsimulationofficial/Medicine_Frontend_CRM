@@ -119,7 +119,7 @@ const UnassignedLeadsTable = ({
   const [data, setData] = useState<any[]>([]);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [pageSize] = useState<number>(500);
+  const [pageSize, setPageSize] = useState<number>(50);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
 
@@ -173,19 +173,23 @@ const UnassignedLeadsTable = ({
   }, []);
 
   // Fetch Unassigned Leads API (Standard or Filtered)
-  const fetchLeads = async (targetPage: number = page, appliedFilter: any = filterData) => {
+  const fetchLeads = async (
+    targetPage: number = page,
+    appliedFilter: any = filterData,
+    size: number = pageSize
+  ) => {
     setIsLoading(true);
     setIsError(false);
     try {
       let response;
       if (appliedFilter && Object.keys(appliedFilter).length > 0) {
         response = await AxiosProvider.post(
-          `/unassignedleads/filter?page=${targetPage}&pageSize=${pageSize}`,
+          `/unassignedleads/filter?page=${targetPage}&pageSize=${size}`,
           appliedFilter,
         );
       } else {
         response = await AxiosProvider.get(
-          `/leads/unassigned?page=${targetPage}&pageSize=${pageSize}`,
+          `/leads/unassigned?page=${targetPage}&pageSize=${size}`,
         );
       }
 
@@ -205,8 +209,8 @@ const UnassignedLeadsTable = ({
   };
 
   useEffect(() => {
-    fetchLeads(page, filterData);
-  }, [page, refreshKey, filterData]);
+    fetchLeads(page, filterData, pageSize);
+  }, [page, refreshKey, filterData, pageSize]);
 
   // Clear selection on refreshKey change
   useEffect(() => {
@@ -358,9 +362,28 @@ const UnassignedLeadsTable = ({
 
   return (
     <>
-      {/* Table Toolbar (Bulk Action on Left, Search & Filter on Right) */}
+      {/* Table Toolbar (Bulk Action & Rows Selector on Left, Search & Filter on Right) */}
       <div className="flex justify-between items-center gap-3 mb-4">
-        <div>
+        <div className="flex items-center gap-3">
+          {/* Rows Dropdown (50, 100, 200, 500) */}
+          <div className="flex items-center gap-2">
+            <span className="text-white text-xs font-semibold">Rows:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                const newSize = Number(e.target.value);
+                setPageSize(newSize);
+                setPage(1);
+              }}
+              className="h-[30px] w-[84px] px-3 bg-[#181818] border border-gray-600 text-white text-xs font-medium rounded-[6px] focus:outline-none focus:border-primary-500 cursor-pointer shadow-sm"
+            >
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={200}>200</option>
+              <option value={500}>500</option>
+            </select>
+          </div>
+
           {selectedIds.length > 0 && userRole === "Admin" && (
             <button
               onClick={() => setFlyout("bulk_assign")}

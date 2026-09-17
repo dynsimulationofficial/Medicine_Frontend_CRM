@@ -683,6 +683,33 @@ export default function LeadProfileSidebar({
                     </a>
                   ) : "-",
                 },
+                ...(data?.product
+                  ? [
+                      {
+                        label: "Last Purchase",
+                        value: (
+                          <div>
+                            <p className="font-semibold text-white">
+                              {data.product}
+                            </p>
+                            <p className="text-[11px] text-gray-400 mt-0.5">
+                              {data.quantity ? `${data.quantity} Pcs • ` : ""}
+                              <span className="text-yellow-400 font-mono font-medium">
+                                {(data.phone && (data.phone.startsWith("+44") || data.phone.startsWith("44"))) || (data.country && (data.country.toLowerCase() === "uk" || data.country.toLowerCase() === "united kingdom")) || data.currency === "GBP"
+                                  ? "£"
+                                  : (data.phone && (data.phone.startsWith("+1") || (data.phone.startsWith("1") && data.phone.length >= 11))) || (data.country && (data.country.toLowerCase() === "usa" || data.country.toLowerCase() === "us")) || data.currency === "USD"
+                                  ? "$"
+                                  : (data.country && (data.country.toLowerCase() === "india" || data.country.toLowerCase() === "in")) || data.currency === "INR"
+                                  ? "₹"
+                                  : "$"}
+                                {Number(data.price || 0).toLocaleString()}
+                              </span>
+                            </p>
+                          </div>
+                        ),
+                      },
+                    ]
+                  : []),
               ].map((row, idx) => (
                 <tr
                   key={idx}
