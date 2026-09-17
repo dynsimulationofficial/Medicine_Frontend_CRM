@@ -31,6 +31,7 @@ export default function AutoDialerBar() {
     stats,
     dispositions,
     activeCampaignName,
+    isAssignedQueue,
     ringSecondsLeft,
     pauseAutoDialer,
     resumeAutoDialer,
@@ -278,15 +279,17 @@ export default function AutoDialerBar() {
                   </button>
                 )}
 
-                {/* Skip Lead Button */}
-                <button
-                  type="button"
-                  onClick={skipCurrentLead}
-                  className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded-lg text-xs transition cursor-pointer"
-                  title="Skip to next lead"
-                >
-                  <FaForward className="w-3 h-3" />
-                </button>
+                {/* Skip Lead Button (Campaign or Assigned Queue Mode only) */}
+                {(activeCampaignName || isAssignedQueue || (queue && queue.length > 1)) && (
+                  <button
+                    type="button"
+                    onClick={skipCurrentLead}
+                    className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded-lg text-xs transition cursor-pointer"
+                    title="Skip to next lead"
+                  >
+                    <FaForward className="w-3 h-3" />
+                  </button>
+                )}
 
                 {/* Minimize Button */}
                 <button
@@ -348,7 +351,7 @@ export default function AutoDialerBar() {
                     className="w-full sm:w-auto px-5 h-9 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap shadow-md flex items-center justify-center gap-1.5"
                   >
                     <IoCheckmarkDoneCircleSharp className="w-4 h-4" />
-                    <span>{activeCampaignName || (queue && queue.length > 1) ? "Save & Next" : "Save Disposition"}</span>
+                    <span>{activeCampaignName || isAssignedQueue || (queue && queue.length > 1) ? "Save & Next" : "Save Disposition"}</span>
                   </button>
                 </div>
               </div>

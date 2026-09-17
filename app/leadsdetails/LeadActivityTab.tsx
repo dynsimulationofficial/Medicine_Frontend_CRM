@@ -143,7 +143,9 @@ export default function LeadActivityTab({
   const {
     status: dialerStatus,
     startAutoDialerFromLead,
+    startAssignedAutoDialer,
     stopAutoDialer,
+    isAssignedQueue,
     refreshTrigger,
   } = useAutoDialer();
   const isDialerActive = dialerStatus !== "idle" && dialerStatus !== "completed";
@@ -296,8 +298,8 @@ export default function LeadActivityTab({
     <div className="w-full">
       {/* Top Actions: Start Auto-Dialer, Call Lead & Add Activity Buttons */}
       <div className="flex justify-end items-center gap-3 mb-4">
-        {/* Auto-Dialer Button */}
-        {isDialerActive ? (
+        {/* Continuous Auto-Dialer Button for Assigned Leads */}
+        {isDialerActive && isAssignedQueue ? (
           <button
             type="button"
             onClick={stopAutoDialer}
@@ -310,12 +312,12 @@ export default function LeadActivityTab({
         ) : (
           <button
             type="button"
-            onClick={() => startAutoDialerFromLead(leadId, leadName, leadPhone)}
+            onClick={() => startAssignedAutoDialer(leadId, leadName, leadPhone)}
             disabled={!leadPhone}
             className={`flex items-center justify-center gap-2 px-4 h-[38px] rounded-[4px] border border-amber-500 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:bg-amber-800 text-white text-xs font-semibold tracking-wide transition shadow-sm ${
               !leadPhone ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
             }`}
-            title={!leadPhone ? "No phone number available" : `Start Auto-Dialer from ${leadName || "this lead"}`}
+            title={!leadPhone ? "No phone number available" : `Start Continuous Auto-Dialer for your assigned leads`}
           >
             <FaBolt className="w-3.5 h-3.5 text-yellow-200 animate-pulse" />
             <span>Start Auto-Dialer</span>
