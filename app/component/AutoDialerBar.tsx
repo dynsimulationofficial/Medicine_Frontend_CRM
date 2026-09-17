@@ -348,7 +348,7 @@ export default function AutoDialerBar() {
                     className="w-full sm:w-auto px-5 h-9 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap shadow-md flex items-center justify-center gap-1.5"
                   >
                     <IoCheckmarkDoneCircleSharp className="w-4 h-4" />
-                    <span>Save & Next</span>
+                    <span>{activeCampaignName || (queue && queue.length > 1) ? "Save & Next" : "Save Disposition"}</span>
                   </button>
                 </div>
               </div>

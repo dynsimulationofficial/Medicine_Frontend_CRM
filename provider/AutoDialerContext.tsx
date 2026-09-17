@@ -999,7 +999,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         lead_id: finalLeadId,
         activity_id: lastActivityId || undefined,
         disposition_id: dispositionId || undefined,
-        conversation: conversationNote || "Auto-dialer call completed",
+        conversation: conversationNote || (activeCampaignIdRef.current ? "Auto-dialer call completed" : "Manual call completed"),
         lead_status: leadStatus || undefined,
         campaign_id: campId || undefined,
         call_id: nonConnected ? undefined : (lastCallInfo.call_id || undefined),
@@ -1065,11 +1065,19 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         router.push(`/leadsdetails?id=${next.id}`);
       } else if (data?.completed || !data?.has_next) {
         setStatus("completed");
+        const wasCampaign = Boolean(activeCampaignIdRef.current);
         setActiveCampaignId(null);
         activeCampaignIdRef.current = null;
-        toast.success(`🎉 Campaign "${activeCampaignNameRef.current || "Campaign"}" calling finished! All leads dialed.`);
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("campaign-dialer-finished"));
+        if (wasCampaign) {
+          toast.success(`🎉 Campaign "${activeCampaignNameRef.current || "Campaign"}" calling finished! All leads dialed.`);
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("campaign-dialer-finished"));
+          }
+        } else {
+          // Single manual call finished: close the dialer bar smoothly
+          setTimeout(() => {
+            setIsOpen(false);
+          }, 1200);
         }
       }
     } catch (err: any) {

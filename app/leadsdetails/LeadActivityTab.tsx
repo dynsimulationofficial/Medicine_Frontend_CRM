@@ -287,75 +287,7 @@ export default function LeadActivityTab({
       toast.warn("Lead has no phone number to call");
       return;
     }
-    setIsCalling(true);
-    try {
-      const res = await AxiosProvider.post("/cloudtalk/call", { lead_id: leadId });
-      const dialLink = res.data?.data?.dialLink;
-      const fallbackTel = res.data?.data?.fallbackTel;
-
-      toast.success(res.data?.message || `Calling ${leadName || leadPhone} via CloudTalk...`);
-
-      if (dialLink) {
-        const iframe = document.createElement("iframe");
-        iframe.style.display = "none";
-        iframe.src = dialLink;
-        document.body.appendChild(iframe);
-        setTimeout(() => {
-          try {
-            document.body.removeChild(iframe);
-          } catch {}
-        }, 3000);
-      } else if (fallbackTel) {
-        window.location.href = fallbackTel;
-      }
-    } catch (err: any) {
-      console.error("CloudTalk call error:", err);
-      const isOffline =
-        err?.response?.data?.isOffline ||
-        err?.response?.data?.message?.toLowerCase()?.includes("offline") ||
-        err?.response?.data?.message?.toLowerCase()?.includes("online");
-
-      if (isOffline) {
-        Swal.fire({
-          title: "CloudTalk Phone Offline",
-          html: `
-            <div style="text-align: left; font-size: 13px; color: #d1d5db; line-height: 1.5;">
-              <p style="margin-bottom: 10px;">Your CloudTalk agent is not online right now. To talk to leads from <b>+1 239-329-0248</b>, your CloudTalk Phone must be open with status set to <b>Online</b>.</p>
-              <div style="background-color: #1f2937; padding: 12px; border-radius: 6px; border: 1px solid #374151;">
-                <p style="font-weight: 600; color: #38bdf8; margin-bottom: 6px;">How to connect:</p>
-                <ol style="margin-left: 18px; padding: 0;">
-                  <li>Click <b>"Open CloudTalk Phone"</b> below.</li>
-                  <li>Log in with your agent account (<b>info@medicos-pharma.com</b>).</li>
-                  <li>Ensure your status toggle is green (<b>Online</b>).</li>
-                  <li>Click <b>"Call Lead"</b> again to dial!</li>
-                </ol>
-              </div>
-            </div>
-          `,
-          icon: "warning",
-          background: "#181818",
-          color: "#ffffff",
-          iconColor: "#f59e0b",
-          showCancelButton: true,
-          confirmButtonColor: "#0284c7",
-          cancelButtonColor: "#374151",
-          confirmButtonText: "🌐 Open CloudTalk Phone",
-          cancelButtonText: "Close",
-          customClass: {
-            popup: "border border-gray-700 rounded-2xl shadow-2xl",
-          },
-        }).then((result) => {
-          if (result.isConfirmed) {
-            window.open("https://phone.cloudtalk.io", "_blank", "width=460,height=750,noopener,noreferrer");
-          }
-        });
-        return;
-      }
-
-      toast.error(err?.response?.data?.message || err?.response?.data?.msg || "Failed to trigger call");
-    } finally {
-      setIsCalling(false);
-    }
+    await startAutoDialerFromLead(leadId, leadName, leadPhone);
   };
 
   const isDrawerVisible = isCreateOpen || Boolean(editingActivity);
