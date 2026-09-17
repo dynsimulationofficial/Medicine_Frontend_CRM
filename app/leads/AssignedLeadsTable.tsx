@@ -139,8 +139,9 @@ const AssignedLeadsTable = ({
   const [selectedData, setSelectedData] = useState<any | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<any | null>(null);
 
-  // Export Agent Data State (Admin Only - simplified: select agent only)
+  // Export Agent Data State (Admin Only - simplified: select agent + call type)
   const [exportAgentId, setExportAgentId] = useState<string>("all");
+  const [exportCallType, setExportCallType] = useState<"all" | "campaign" | "manual">("all");
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
   const handleExportAgentData = async () => {
@@ -150,6 +151,9 @@ const AssignedLeadsTable = ({
       if (exportAgentId && exportAgentId !== "all") {
         params.agent_id = exportAgentId;
       }
+      if (exportCallType && exportCallType !== "all") {
+        params.call_type = exportCallType;
+      }
 
       const res = await AxiosProvider.get("/leads/export/agent-data", {
         params,
@@ -158,7 +162,8 @@ const AssignedLeadsTable = ({
 
       const selectedAgentObj = agentList.find((a: any) => a.id === exportAgentId);
       const agentLabel = selectedAgentObj ? selectedAgentObj.name.replace(/[^a-zA-Z0-9]/g, "_") : "All_Agents";
-      const filename = `Agent_${agentLabel}_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      const typeLabel = exportCallType === "campaign" ? "_Campaign" : exportCallType === "manual" ? "_Manual" : "";
+      const filename = `Agent_${agentLabel}${typeLabel}_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
 
       const blob = new Blob([res.data], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1293,7 +1298,25 @@ const AssignedLeadsTable = ({
                   ))}
                 </select>
                 <p className="text-[11px] text-gray-400 mt-1.5">
-                  Choose a specific agent or select "All Agents" to export all assigned records.
+                  Choose a specific agent or select &quot;All Agents&quot; to export all assigned records.
+                </p>
+              </div>
+
+              <div className="w-full">
+                <p className="text-white text-xs font-medium mb-1.5">
+                  Call Type / Dialing Source
+                </p>
+                <select
+                  value={exportCallType}
+                  onChange={(e) => setExportCallType(e.target.value as "all" | "campaign" | "manual")}
+                  className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow cursor-pointer"
+                >
+                  <option value="all">All Calls & Leads</option>
+                  <option value="campaign">Campaign / Auto-Dialer (Admin Started)</option>
+                  <option value="manual">Manual Calls</option>
+                </select>
+                <p className="text-[11px] text-gray-400 mt-1.5">
+                  Filter records originated from automated campaign dialer vs agent manual calling.
                 </p>
               </div>
 
