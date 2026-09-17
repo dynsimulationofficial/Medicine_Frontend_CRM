@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { FaRegCheckCircle, FaSearchPlus, FaBullhorn } from "react-icons/fa";
+import { FaRegCheckCircle, FaSearchPlus, FaBullhorn, FaFileExcel } from "react-icons/fa";
 import { RxAvatar } from "react-icons/rx";
 import { IoMailOpenOutline, IoCloseOutline } from "react-icons/io5";
 import { MdOutlinePhone, MdOutlineLocationCity, MdOutlineSettings, MdEdit } from "react-icons/md";
@@ -9,7 +9,7 @@ import { ImUserTie } from "react-icons/im";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { HiChevronDoubleLeft, HiChevronDoubleRight } from "react-icons/hi";
 import { FaEllipsisVertical } from "react-icons/fa6";
-import { FiFilter } from "react-icons/fi";
+import { FiFilter, FiDownload } from "react-icons/fi";
 import { Tooltip } from "react-tooltip";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
@@ -135,9 +135,52 @@ const AssignedLeadsTable = ({
   const [agentList, setAgentList] = useState<any[]>([]);
 
   // ✅ Exact sample code formula: single flyout state
-  const [flyout, setFlyout] = useState<"edit" | "search" | "bulk_assign" | "">("");
+  const [flyout, setFlyout] = useState<"edit" | "search" | "bulk_assign" | "export" | "">("");
   const [selectedData, setSelectedData] = useState<any | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<any | null>(null);
+
+  // Export Agent Data State (Admin Only - simplified: select agent only)
+  const [exportAgentId, setExportAgentId] = useState<string>("all");
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+
+  const handleExportAgentData = async () => {
+    try {
+      setIsExporting(true);
+      const params: any = {};
+      if (exportAgentId && exportAgentId !== "all") {
+        params.agent_id = exportAgentId;
+      }
+
+      const res = await AxiosProvider.get("/leads/export/agent-data", {
+        params,
+        responseType: "blob",
+      });
+
+      const selectedAgentObj = agentList.find((a: any) => a.id === exportAgentId);
+      const agentLabel = selectedAgentObj ? selectedAgentObj.name.replace(/[^a-zA-Z0-9]/g, "_") : "All_Agents";
+      const filename = `Agent_${agentLabel}_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Agent data exported successfully!");
+      closeFlyout();
+    } catch (error: any) {
+      console.error("Export error:", error);
+      toast.error("Failed to export agent data. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const closeFlyout = () => {
     setFlyout("");
@@ -382,6 +425,17 @@ const AssignedLeadsTable = ({
             >
               <IoCloseOutline className="w-4 h-4" />
               <span>Clear Filter</span>
+            </button>
+          )}
+          {userRole === "Admin" && (
+            <button
+              type="button"
+              onClick={() => setFlyout("export")}
+              className="flex items-center justify-center gap-2 h-[38px] px-4 rounded-[4px] border border-[#E7E7E7] bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs font-semibold tracking-wide transition cursor-pointer shadow-sm"
+              title="Export Agent Performance & Sales Data to Excel"
+            >
+              <FaFileExcel className="w-4 h-4 text-white" />
+              <span>Export Agent Data</span>
             </button>
           )}
           <button
@@ -1198,6 +1252,71 @@ const AssignedLeadsTable = ({
                 </form>
               )}
             </Formik>
+          </div>
+        )}
+
+        {/* --- EXPORT AGENT DATA DRAWER (ADMIN ONLY) --- */}
+        {flyout === "export" && (
+          <div className="w-full min-h-auto p-6 sm:p-8 text-white">
+            <div className="flex justify-between items-center mb-6">
+              <p className="text-primary-600 text-2xl font-bold leading-9">
+                Export Agent Data
+              </p>
+              <IoCloseOutline
+                onClick={closeFlyout}
+                className="h-8 w-8 border border-[#E7E7E7] text-white rounded cursor-pointer"
+              />
+            </div>
+            <div className="w-full border-b border-gray-700 mb-6"></div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleExportAgentData();
+              }}
+              className="w-full space-y-6"
+            >
+              <div className="w-full">
+                <p className="text-white text-xs font-medium mb-1.5">
+                  Select Agent *
+                </p>
+                <select
+                  value={exportAgentId}
+                  onChange={(e) => setExportAgentId(e.target.value)}
+                  className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow cursor-pointer"
+                >
+                  <option value="all">All Agents</option>
+                  {agentList.map((agent: any) => (
+                    <option key={agent.id} value={agent.id}>
+                      {agent.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[11px] text-gray-400 mt-1.5">
+                  Choose a specific agent or select "All Agents" to export all assigned records.
+                </p>
+              </div>
+
+              <div className="flex gap-4 pt-2">
+                <button
+                  type="submit"
+                  disabled={isExporting}
+                  className="py-[13px] px-[26px] bg-primary-600 rounded-[4px] text-base font-medium leading-6 text-white hover:bg-primary-700 w-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isExporting ? (
+                    <>
+                      <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      Exporting to Excel...
+                    </>
+                  ) : (
+                    <>
+                      <FiDownload className="w-4 h-4 text-white" />
+                      Download Excel (.xlsx)
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         )}
       </div>
