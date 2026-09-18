@@ -37,6 +37,7 @@ export interface AutoDialerLead {
   lead_source_name?: string;
   campaign_name?: string;
   campaign_id?: string;
+  agent_id?: string;
   agent_name?: string;
 }
 
@@ -1101,6 +1102,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         campaign_id: isCampaignMode ? activeCampaignIdRef.current : undefined,
         is_campaign: isCampaignMode,
         is_assigned_queue: isQueueMode,
+        agent_id: currentLead?.agent_id || undefined,
         advance: shouldAdvance,
         call_id: nonConnected ? undefined : (lastCallInfo.call_id || undefined),
         recording_url: nonConnected ? undefined : (lastCallInfo.recording_url || undefined),
@@ -1129,7 +1131,7 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
           id: next.id,
           lead_number: next.lead_number,
           full_name: next.full_name,
-          phone: next.phone,
+          phone: next.phone || next.whatsapp_number,
           whatsapp_number: next.whatsapp_number,
           email: next.email,
           campaign_id: next.campaign_id || activeCampaignIdRef.current,
@@ -1163,10 +1165,12 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
 
         // Smoothly navigate the UI to the next lead details page
         router.push(`/leadsdetails?id=${next.id}`);
+      } else if (isQueueMode) {
+        // Fallback for Assigned Leads Queue: Use advanceToNext to query /leads/assigned/next
+        await advanceToNext();
       } else {
         setStatus("completed");
         const wasCampaign = Boolean(activeCampaignIdRef.current);
-        const wasQueue = Boolean(isAssignedQueueRef.current);
         const campName = activeCampaignNameRef.current;
         setActiveCampaignId(null);
         activeCampaignIdRef.current = null;
@@ -1184,11 +1188,9 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
           if (typeof window !== "undefined") {
             window.dispatchEvent(new CustomEvent("campaign-dialer-finished"));
           }
-        } else if (wasQueue) {
-          toast.success("🎉 All your assigned leads have been dialed!");
           setTimeout(() => {
             setIsOpen(false);
-          }, 1200);
+          }, 1500);
         } else {
           // Single manual call finished: close the dialer bar smoothly
           setTimeout(() => {
