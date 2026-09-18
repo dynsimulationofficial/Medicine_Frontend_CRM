@@ -273,6 +273,15 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         if (userRole === "admin") return;
 
         const res = await AxiosProvider.get("/leads/dialer/active-call");
+        const stoppedCamps: string[] = res.data?.stopped_campaigns || [];
+        if (activeCampaignIdRef.current && stoppedCamps.includes(activeCampaignIdRef.current)) {
+          setActiveCampaignId(null);
+          activeCampaignIdRef.current = null;
+          setActiveCampaignName(null);
+          activeCampaignNameRef.current = null;
+          toast.info("⏹️ Campaign calling was stopped by Admin.");
+        }
+
         const activeCall = res.data?.data;
         if (!activeCall || !activeCall.lead_id) {
           return;
@@ -928,6 +937,9 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
       setIsAssignedQueue(false);
       isAssignedQueueRef.current = false;
 
+      // Notify backend to activate campaign
+      AxiosProvider.post("/leads/dialer/start", { campaign_id: campaignId }).catch(() => {});
+
       const mappedLeads: AutoDialerLead[] = leadsList.map((l: any) => ({
         id: l.id,
         lead_number: l.lead_number,
@@ -1162,7 +1174,12 @@ export const AutoDialerProvider: React.FC<{ children: ReactNode }> = ({
         activeCampaignNameRef.current = null;
         setIsAssignedQueue(false);
         isAssignedQueueRef.current = false;
-        if (wasCampaign) {
+        if (data?.campaign_stopped) {
+          toast.info("⏹️ Campaign calling was stopped by Admin. Activity saved.");
+          setTimeout(() => {
+            setIsOpen(false);
+          }, 1200);
+        } else if (wasCampaign) {
           toast.success(`🎉 Campaign "${campName || "Campaign"}" calling finished! All leads dialed.`);
           if (typeof window !== "undefined") {
             window.dispatchEvent(new CustomEvent("campaign-dialer-finished"));
