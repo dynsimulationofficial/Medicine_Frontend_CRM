@@ -139,9 +139,11 @@ const AssignedLeadsTable = ({
   const [selectedData, setSelectedData] = useState<any | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<any | null>(null);
 
-  // Export Agent Data State (Admin Only - simplified: select agent + call type)
+  // Export Agent Data State (Admin Only - simplified: select agent + call type + disposition)
   const [exportAgentId, setExportAgentId] = useState<string>("all");
   const [exportCallType, setExportCallType] = useState<"all" | "campaign" | "manual">("all");
+  const [exportDispositionId, setExportDispositionId] = useState<string>("all");
+  const [dispositionList, setDispositionList] = useState<any[]>([]);
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
   const handleExportAgentData = async () => {
@@ -154,6 +156,9 @@ const AssignedLeadsTable = ({
       if (exportCallType && exportCallType !== "all") {
         params.call_type = exportCallType;
       }
+      if (exportDispositionId && exportDispositionId !== "all") {
+        params.disposition_id = exportDispositionId;
+      }
 
       const res = await AxiosProvider.get("/leads/export/agent-data", {
         params,
@@ -163,7 +168,12 @@ const AssignedLeadsTable = ({
       const selectedAgentObj = agentList.find((a: any) => a.id === exportAgentId);
       const agentLabel = selectedAgentObj ? selectedAgentObj.name.replace(/[^a-zA-Z0-9]/g, "_") : "All_Agents";
       const typeLabel = exportCallType === "campaign" ? "_Campaign" : exportCallType === "manual" ? "_Manual" : "";
-      const filename = `Agent_${agentLabel}${typeLabel}_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      const selectedDispObj = dispositionList.find((d: any) => d.id === exportDispositionId);
+      const dispLabel = selectedDispObj ? `_${selectedDispObj.name.replace(/[^a-zA-Z0-9]/g, "_")}` : exportDispositionId === "none" ? "_No_Disposition" : "";
+      const filename = `Agent_${agentLabel}${typeLabel}${dispLabel}_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+      const rowCountHeader = res.headers?.["x-row-count"];
+      const rowCount = rowCountHeader !== undefined && rowCountHeader !== null ? Number(rowCountHeader) : null;
 
       const blob = new Blob([res.data], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -177,7 +187,12 @@ const AssignedLeadsTable = ({
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      toast.success("Agent data exported successfully!");
+      if (rowCount === 0) {
+        const dispName = selectedDispObj ? selectedDispObj.name : exportDispositionId === "none" ? "Not Disposed" : "selected filter";
+        toast.info(`0 leads found matching "${dispName}". Downloaded Excel template with headers.`);
+      } else {
+        toast.success(`Agent data exported successfully!${rowCount ? ` (${rowCount} leads)` : ""}`);
+      }
       closeFlyout();
     } catch (error: any) {
       console.error("Export error:", error);
@@ -197,9 +212,10 @@ const AssignedLeadsTable = ({
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
-        const [srcRes, agentRes] = await Promise.all([
+        const [srcRes, agentRes, dispRes] = await Promise.all([
           AxiosProvider.get("/leadsources"),
           AxiosProvider.get("/allagents"),
+          AxiosProvider.get("/leads/dispositions/all"),
         ]);
         const srcList = Array.isArray(srcRes.data?.data)
           ? srcRes.data.data
@@ -211,8 +227,16 @@ const AssignedLeadsTable = ({
           : Array.isArray(agentRes.data?.data?.data)
           ? agentRes.data.data.data
           : [];
+        const dispList = Array.isArray(dispRes.data?.data)
+          ? dispRes.data.data
+          : Array.isArray(dispRes.data?.data?.data)
+          ? dispRes.data.data.data
+          : Array.isArray(dispRes.data?.data?.items)
+          ? dispRes.data.data.items
+          : [];
         setLeadSourceData(srcList);
         setAgentList(agList);
+        setDispositionList(dispList);
       } catch (err) {
         console.error("Error fetching dropdowns in AssignedLeadsTable:", err);
       }
@@ -1317,6 +1341,28 @@ const AssignedLeadsTable = ({
                 </select>
                 <p className="text-[11px] text-gray-400 mt-1.5">
                   Filter records originated from automated campaign dialer vs agent manual calling.
+                </p>
+              </div>
+
+              <div className="w-full">
+                <p className="text-white text-xs font-medium mb-1.5">
+                  Call Disposition
+                </p>
+                <select
+                  value={exportDispositionId}
+                  onChange={(e) => setExportDispositionId(e.target.value)}
+                  className="w-full h-[38px] border border-gray-700 rounded-[4px] bg-black text-white text-xs px-3 outline-none focus:outline-none focus:border-primary-600 hover:shadow-hoverInputShadow cursor-pointer"
+                >
+                  <option value="all">All Dispositions</option>
+                  {dispositionList.map((disp: any) => (
+                    <option key={disp.id} value={disp.id}>
+                      {disp.name}
+                    </option>
+                  ))}
+                  <option value="none">No Disposition / Not Disposed</option>
+                </select>
+                <p className="text-[11px] text-gray-400 mt-1.5">
+                  Filter exported leads by their call outcome (e.g. Sale Made, Callback, No Answer, etc.).
                 </p>
               </div>
 
