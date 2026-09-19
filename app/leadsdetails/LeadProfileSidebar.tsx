@@ -765,7 +765,8 @@ export default function LeadProfileSidebar({
               try {
                 const payload: any = {
                   id: leadId,
-                  agent_id: values.agent_id || undefined,
+                  agent_id: values.agent_id ? values.agent_id : null,
+                  clear_agent: !values.agent_id,
                   lead_status: values.lead_status || undefined,
                   lead_source_id: values.lead_source_id || undefined,
                   campaign_id: values.campaign_id || undefined,

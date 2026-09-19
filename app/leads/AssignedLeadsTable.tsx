@@ -10,6 +10,7 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { HiChevronDoubleLeft, HiChevronDoubleRight } from "react-icons/hi";
 import { FaEllipsisVertical } from "react-icons/fa6";
 import { FiFilter, FiDownload } from "react-icons/fi";
+import { BiUserX } from "react-icons/bi";
 import { Tooltip } from "react-tooltip";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
@@ -379,6 +380,97 @@ const AssignedLeadsTable = ({
     }
   };
 
+  // --- Unassign Leads (Bulk & Single) ---
+  const [isUnassigning, setIsUnassigning] = useState<boolean>(false);
+
+  const handleBulkUnassign = async () => {
+    if (!selectedIds.length) {
+      toast.error("Please select at least one lead");
+      return;
+    }
+
+    const res = await Swal.fire({
+      title: "Unassign Selected Leads?",
+      html: `
+        <div style="text-align: left; font-size: 13px; color: #d1d5db; line-height: 1.6;">
+          <p style="margin-bottom: 8px;">Are you sure you want to unassign <b style="color: #fbbf24;">${selectedIds.length}</b> lead(s)?</p>
+          <div style="background-color: #1f2937; padding: 10px 12px; border-radius: 6px; border: 1px solid #374151;">
+            <p style="color: #9ca3af; margin: 0;">ℹ️ These leads will be moved to <b style="color: #38bdf8;">Unassigned Leads</b> so you can assign them to other agents later.</p>
+          </div>
+        </div>
+      `,
+      icon: "warning",
+      iconColor: "#f59e0b",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Unassign",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#d97706",
+      cancelButtonColor: "#374151",
+      background: "#181818",
+      color: "#ffffff",
+      customClass: {
+        popup: "border border-gray-700 rounded-2xl shadow-2xl",
+      },
+    });
+
+    if (res.isConfirmed) {
+      setIsUnassigning(true);
+      try {
+        const resp = await AxiosProvider.post("/leads/unassign", {
+          lead_ids: selectedIds,
+        });
+        toast.success(resp.data?.message || `${selectedIds.length} leads unassigned successfully`);
+        setSelectedIds([]);
+        await fetchLeads(page, filterData);
+        if (onRefresh) onRefresh();
+      } catch (error: any) {
+        toast.error(error?.response?.data?.message || error?.response?.data?.msg || "Failed to unassign leads");
+      } finally {
+        setIsUnassigning(false);
+      }
+    }
+  };
+
+  const handleSingleUnassign = async (leadItem: any) => {
+    const leadName = leadItem?.full_name || leadItem?.lead_number || "this lead";
+    const res = await Swal.fire({
+      title: "Unassign Lead?",
+      html: `
+        <div style="text-align: left; font-size: 13px; color: #d1d5db; line-height: 1.6;">
+          <p style="margin-bottom: 8px;">Are you sure you want to unassign <b style="color: #fbbf24;">${leadName}</b>?</p>
+          <div style="background-color: #1f2937; padding: 10px 12px; border-radius: 6px; border: 1px solid #374151;">
+            <p style="color: #9ca3af; margin: 0;">ℹ️ This lead will be moved to <b style="color: #38bdf8;">Unassigned Leads</b>.</p>
+          </div>
+        </div>
+      `,
+      icon: "warning",
+      iconColor: "#f59e0b",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Unassign",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#d97706",
+      cancelButtonColor: "#374151",
+      background: "#181818",
+      color: "#ffffff",
+      customClass: {
+        popup: "border border-gray-700 rounded-2xl shadow-2xl",
+      },
+    });
+
+    if (res.isConfirmed) {
+      try {
+        const resp = await AxiosProvider.post("/leads/unassign", {
+          lead_id: leadItem.id,
+        });
+        toast.success(resp.data?.message || "Lead unassigned successfully");
+        await fetchLeads(page, filterData);
+        if (onRefresh) onRefresh();
+      } catch (error: any) {
+        toast.error(error?.response?.data?.message || error?.response?.data?.msg || "Failed to unassign lead");
+      }
+    }
+  };
+
   // --- Delete Lead ---
   const handleDeleteLead = async (leadId: string) => {
     const res = await Swal.fire({
@@ -436,13 +528,25 @@ const AssignedLeadsTable = ({
           </div>
 
           {selectedIds.length > 0 && userRole === "Admin" && (
-            <button
-              onClick={() => setFlyout("bulk_assign")}
-              className="flex items-center justify-center gap-2 h-[38px] px-4 rounded-[4px] border border-[#E7E7E7] bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs font-semibold tracking-wide transition cursor-pointer shadow-sm"
-            >
-              <FiFilter className="w-4 h-4 text-white" />
-              <span>Assign Agent Bulk ({selectedIds.length})</span>
-            </button>
+            <>
+              <button
+                onClick={() => setFlyout("bulk_assign")}
+                className="flex items-center justify-center gap-2 h-[38px] px-4 rounded-[4px] border border-[#E7E7E7] bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs font-semibold tracking-wide transition cursor-pointer shadow-sm"
+              >
+                <FiFilter className="w-4 h-4 text-white" />
+                <span>Assign Agent Bulk ({selectedIds.length})</span>
+              </button>
+
+              <button
+                onClick={handleBulkUnassign}
+                disabled={isUnassigning}
+                className="flex items-center justify-center gap-2 h-[38px] px-4 rounded-[4px] border border-amber-500/40 bg-amber-600/20 hover:bg-amber-600/30 active:bg-amber-600/40 text-amber-300 hover:text-amber-200 text-xs font-semibold tracking-wide transition cursor-pointer shadow-sm disabled:opacity-50"
+                title="Unassign selected leads"
+              >
+                <BiUserX className="w-4 h-4 text-amber-400" />
+                <span>{isUnassigning ? "Unassigning..." : `Unassign Leads (${selectedIds.length})`}</span>
+              </button>
+            </>
           )}
         </div>
 
@@ -654,13 +758,23 @@ const AssignedLeadsTable = ({
                     </button>
 
                     {userRole === "Admin" && (
-                      <button
-                        onClick={() => handleDeleteLead(item.id)}
-                        className="p-1 hover:bg-red-700 rounded-md text-white transition cursor-pointer flex items-center justify-center"
-                        title="Delete Lead"
-                      >
-                        <RiDeleteBin6Line className="text-white w-3.5 h-3.5" />
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleSingleUnassign(item)}
+                          className="p-1 hover:bg-amber-600/30 rounded-md text-amber-400 hover:text-amber-300 transition cursor-pointer flex items-center justify-center"
+                          title="Unassign Lead"
+                        >
+                          <BiUserX className="w-3.5 h-3.5" />
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteLead(item.id)}
+                          className="p-1 hover:bg-red-700 rounded-md text-white transition cursor-pointer flex items-center justify-center"
+                          title="Delete Lead"
+                        >
+                          <RiDeleteBin6Line className="text-white w-3.5 h-3.5" />
+                        </button>
+                      </>
                     )}
                   </div>
                 </td>
