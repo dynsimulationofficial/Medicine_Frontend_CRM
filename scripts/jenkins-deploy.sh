@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 APP_DIR="/root/Medicine_Frontend_CRM"
 SERVICE_NAME="medicine-frontend"
-CONTAINER_NAME="medicine_frontend_crm-medicine-frontend-1"
+CONTAINER_NAME="medicine-crm-frontend-production"
 DOCKER_IMAGE="ghcr.io/wasiquekh/medicine-frontend-production:latest"
 HEALTH_TIMEOUT=60
 
