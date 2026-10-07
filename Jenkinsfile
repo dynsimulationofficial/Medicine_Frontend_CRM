@@ -65,7 +65,7 @@ pipeline {
 
                 withCredentials([
                     sshUserPrivateKey(
-                        credentialsId: 'ssh-medicine-production',
+                        credentialsId: 'ssh-medicine-frontend-production',
                         keyFileVariable: 'SSH_KEY',
                         usernameVariable: 'SSH_USER'
                     )
