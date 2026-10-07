@@ -112,6 +112,7 @@ export default function LeadDetailsPage() {
       label: "Activity History",
       content: (
         <LeadActivityTab
+          key={`activity-${leadId}`}
           leadId={leadId || ""}
           leadPhone={data?.phone || data?.whatsapp_number}
           leadName={data?.full_name}
@@ -124,6 +125,7 @@ export default function LeadDetailsPage() {
       label: "Task",
       content: (
         <LeadTasksTab
+          key={`tasks-${leadId}`}
           leadId={leadId || ""}
           leadName={data?.full_name}
           agentId={data?.agent_id}
@@ -137,6 +139,7 @@ export default function LeadDetailsPage() {
       label: "Document",
       content: (
         <LeadDocumentsTab
+          key={`docs-${leadId}`}
           leadId={leadId || ""}
           hitApi={hitApi}
           setHitApi={setHitApi}
@@ -147,6 +150,7 @@ export default function LeadDetailsPage() {
       label: "Order",
       content: (
         <LeadOrdersTab
+          key={`orders-${leadId}`}
           leadId={leadId || ""}
           hitApi={hitApi}
           setHitApi={setHitApi}

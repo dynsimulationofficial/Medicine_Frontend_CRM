@@ -143,7 +143,9 @@ export default function LeadActivityTab({
   const {
     status: dialerStatus,
     startAutoDialerFromLead,
+    startAssignedAutoDialer,
     stopAutoDialer,
+    isAssignedQueue,
     refreshTrigger,
   } = useAutoDialer();
   const isDialerActive = dialerStatus !== "idle" && dialerStatus !== "completed";
@@ -166,14 +168,26 @@ export default function LeadActivityTab({
     fetchInitialData();
   }, []);
 
+  // Track currently requested lead ID to prevent race conditions across lead navigation
+  const activeLeadIdRef = useRef(leadId);
+  activeLeadIdRef.current = leadId;
+
+  // Immediately clear previous lead's activities whenever leadId changes
+  useEffect(() => {
+    setActivities([]);
+  }, [leadId]);
+
   // Fetch Activities (All Rows - No Limit)
   const fetchActivities = async () => {
     if (!leadId) return;
+    const requestedLeadId = leadId;
     setIsLoading(true);
     try {
       const res = await AxiosProvider.post("/leads/activities/list", {
-        lead_id: leadId,
+        lead_id: requestedLeadId,
       });
+      // Guard: If user navigated to another lead while this request was in-flight, discard stale result!
+      if (activeLeadIdRef.current !== requestedLeadId) return;
       const list = Array.isArray(res.data?.data)
         ? res.data.data
         : res.data?.data?.activities || res.data?.data?.data || [];
@@ -181,18 +195,21 @@ export default function LeadActivityTab({
     } catch (err) {
       console.error("Error fetching activities:", err);
     } finally {
-      setIsLoading(false);
+      if (activeLeadIdRef.current === requestedLeadId) {
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     fetchActivities();
-  }, [leadId, hitApi, refreshTrigger]);
+  }, [leadId, hitApi]);
 
   // Global event listener for instant activity updates from AutoDialer or external actions
   useEffect(() => {
     const handleActivityUpdated = (e: any) => {
-      if (!e?.detail?.lead_id || e.detail.lead_id === leadId) {
+      // ONLY refresh if this specific lead was updated
+      if (e?.detail?.lead_id && e.detail.lead_id === leadId) {
         fetchActivities();
         if (setHitApi) setHitApi((prev) => !prev);
       }
@@ -272,75 +289,7 @@ export default function LeadActivityTab({
       toast.warn("Lead has no phone number to call");
       return;
     }
-    setIsCalling(true);
-    try {
-      const res = await AxiosProvider.post("/cloudtalk/call", { lead_id: leadId });
-      const dialLink = res.data?.data?.dialLink;
-      const fallbackTel = res.data?.data?.fallbackTel;
-
-      toast.success(res.data?.message || `Calling ${leadName || leadPhone} via CloudTalk...`);
-
-      if (dialLink) {
-        const iframe = document.createElement("iframe");
-        iframe.style.display = "none";
-        iframe.src = dialLink;
-        document.body.appendChild(iframe);
-        setTimeout(() => {
-          try {
-            document.body.removeChild(iframe);
-          } catch {}
-        }, 3000);
-      } else if (fallbackTel) {
-        window.location.href = fallbackTel;
-      }
-    } catch (err: any) {
-      console.error("CloudTalk call error:", err);
-      const isOffline =
-        err?.response?.data?.isOffline ||
-        err?.response?.data?.message?.toLowerCase()?.includes("offline") ||
-        err?.response?.data?.message?.toLowerCase()?.includes("online");
-
-      if (isOffline) {
-        Swal.fire({
-          title: "CloudTalk Phone Offline",
-          html: `
-            <div style="text-align: left; font-size: 13px; color: #d1d5db; line-height: 1.5;">
-              <p style="margin-bottom: 10px;">Your CloudTalk agent is not online right now. To talk to leads from <b>+1 239-329-0248</b>, your CloudTalk Phone must be open with status set to <b>Online</b>.</p>
-              <div style="background-color: #1f2937; padding: 12px; border-radius: 6px; border: 1px solid #374151;">
-                <p style="font-weight: 600; color: #38bdf8; margin-bottom: 6px;">How to connect:</p>
-                <ol style="margin-left: 18px; padding: 0;">
-                  <li>Click <b>"Open CloudTalk Phone"</b> below.</li>
-                  <li>Log in with your agent account (<b>info@medicos-pharma.com</b>).</li>
-                  <li>Ensure your status toggle is green (<b>Online</b>).</li>
-                  <li>Click <b>"Call Lead"</b> again to dial!</li>
-                </ol>
-              </div>
-            </div>
-          `,
-          icon: "warning",
-          background: "#181818",
-          color: "#ffffff",
-          iconColor: "#f59e0b",
-          showCancelButton: true,
-          confirmButtonColor: "#0284c7",
-          cancelButtonColor: "#374151",
-          confirmButtonText: "🌐 Open CloudTalk Phone",
-          cancelButtonText: "Close",
-          customClass: {
-            popup: "border border-gray-700 rounded-2xl shadow-2xl",
-          },
-        }).then((result) => {
-          if (result.isConfirmed) {
-            window.open("https://phone.cloudtalk.io", "_blank", "width=460,height=750,noopener,noreferrer");
-          }
-        });
-        return;
-      }
-
-      toast.error(err?.response?.data?.message || err?.response?.data?.msg || "Failed to trigger call");
-    } finally {
-      setIsCalling(false);
-    }
+    await startAutoDialerFromLead(leadId, leadName, leadPhone);
   };
 
   const isDrawerVisible = isCreateOpen || Boolean(editingActivity);
@@ -349,8 +298,8 @@ export default function LeadActivityTab({
     <div className="w-full">
       {/* Top Actions: Start Auto-Dialer, Call Lead & Add Activity Buttons */}
       <div className="flex justify-end items-center gap-3 mb-4">
-        {/* Auto-Dialer Button */}
-        {isDialerActive ? (
+        {/* Continuous Auto-Dialer Button for Assigned Leads */}
+        {isDialerActive && isAssignedQueue ? (
           <button
             type="button"
             onClick={stopAutoDialer}
@@ -363,12 +312,12 @@ export default function LeadActivityTab({
         ) : (
           <button
             type="button"
-            onClick={() => startAutoDialerFromLead(leadId, leadName, leadPhone)}
+            onClick={() => startAssignedAutoDialer(leadId, leadName, leadPhone)}
             disabled={!leadPhone}
             className={`flex items-center justify-center gap-2 px-4 h-[38px] rounded-[4px] border border-amber-500 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:bg-amber-800 text-white text-xs font-semibold tracking-wide transition shadow-sm ${
               !leadPhone ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
             }`}
-            title={!leadPhone ? "No phone number available" : `Start Auto-Dialer from ${leadName || "this lead"}`}
+            title={!leadPhone ? "No phone number available" : `Start Continuous Auto-Dialer for your assigned leads`}
           >
             <FaBolt className="w-3.5 h-3.5 text-yellow-200 animate-pulse" />
             <span>Start Auto-Dialer</span>

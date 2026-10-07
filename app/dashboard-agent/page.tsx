@@ -355,13 +355,14 @@ export default function AgentDashboardPage() {
                   <th className="p-4">Lead Status</th>
                   <th className="p-4 text-center">Multi-Orders</th>
                   <th className="p-4 text-center">Latest Status</th>
+                  <th className="p-4 text-center">Last Purchase</th>
                   <th className="p-4 text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {assignedLeads.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-6 text-center text-gray-500">
+                    <td colSpan={7} className="p-6 text-center text-gray-500">
                       No leads assigned to you yet.
                     </td>
                   </tr>
@@ -468,6 +469,30 @@ export default function AgentDashboardPage() {
                                   {lead.latest_order_number}
                                 </p>
                               )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-500">-</span>
+                          )}
+                        </td>
+
+                        {/* Last Purchase (Imported / Previous purchase) */}
+                        <td className="p-4 text-center">
+                          {lead.product ? (
+                            <div>
+                              <p className="text-xs font-semibold text-white">
+                                {lead.product}
+                              </p>
+                              <p className="text-[11px] text-gray-400 mt-0.5">
+                                {lead.quantity ? `${lead.quantity} Pcs • ` : ""}
+                                <span className="text-yellow-400 font-mono font-medium">
+                                  {(lead.phone && (lead.phone.startsWith("+44") || lead.phone.startsWith("44"))) || lead.country === "UK"
+                                    ? "£"
+                                    : (lead.phone && (lead.phone.startsWith("+1") || (lead.phone.startsWith("1") && lead.phone.length >= 11))) || lead.country === "USA"
+                                    ? "$"
+                                    : "₹"}
+                                  {Number(lead.price || 0).toLocaleString("en-IN")}
+                                </span>
+                              </p>
                             </div>
                           ) : (
                             <span className="text-xs text-gray-500">-</span>

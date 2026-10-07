@@ -31,6 +31,7 @@ export default function AutoDialerBar() {
     stats,
     dispositions,
     activeCampaignName,
+    isAssignedQueue,
     ringSecondsLeft,
     pauseAutoDialer,
     resumeAutoDialer,
@@ -72,7 +73,9 @@ export default function AutoDialerBar() {
   };
 
   const handleSaveDisposition = async () => {
-    await saveDispositionAndNext(selectedDispId, quickNote);
+    const targetLeadId = currentLead?.id;
+    if (!targetLeadId) return;
+    await saveDispositionAndNext(selectedDispId, quickNote, undefined, targetLeadId);
     setSelectedDispId("");
     setQuickNote("");
     setShowDispositionBox(false);
@@ -213,8 +216,8 @@ export default function AutoDialerBar() {
                 )}
                 {status === "wrap-up" && (
                   <div className="flex items-center gap-2 bg-amber-950/80 border border-amber-500/40 px-3 py-1.5 rounded-lg text-amber-300 text-xs font-medium">
-                    <span className="font-bold text-amber-400">{countdown}s</span>
-                    <span>Next lead...</span>
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                    <span>Call Ended • Add Disposition & Save & Next</span>
                   </div>
                 )}
                 {status === "paused" && (
@@ -276,15 +279,17 @@ export default function AutoDialerBar() {
                   </button>
                 )}
 
-                {/* Skip Lead Button */}
-                <button
-                  type="button"
-                  onClick={skipCurrentLead}
-                  className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded-lg text-xs transition cursor-pointer"
-                  title="Skip to next lead"
-                >
-                  <FaForward className="w-3 h-3" />
-                </button>
+                {/* Skip Lead Button (Campaign or Assigned Queue Mode only) */}
+                {(activeCampaignName || isAssignedQueue || (queue && queue.length > 1)) && (
+                  <button
+                    type="button"
+                    onClick={skipCurrentLead}
+                    className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded-lg text-xs transition cursor-pointer"
+                    title="Skip to next lead"
+                  >
+                    <FaForward className="w-3 h-3" />
+                  </button>
+                )}
 
                 {/* Minimize Button */}
                 <button
@@ -346,7 +351,7 @@ export default function AutoDialerBar() {
                     className="w-full sm:w-auto px-5 h-9 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap shadow-md flex items-center justify-center gap-1.5"
                   >
                     <IoCheckmarkDoneCircleSharp className="w-4 h-4" />
-                    <span>Save & Next</span>
+                    <span>{activeCampaignName || isAssignedQueue || (queue && queue.length > 1) ? "Save & Next" : "Save Disposition"}</span>
                   </button>
                 </div>
               </div>
